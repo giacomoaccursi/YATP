@@ -1,4 +1,4 @@
-"""Analisi rendimenti: calcoli per strumento e portafoglio aggregato."""
+"""Return analysis: per-instrument and aggregate portfolio calculations."""
 
 from datetime import datetime
 from portfolio.returns import calc_xirr, calc_twr, calc_simple_return, calc_estimated_tax
@@ -6,7 +6,7 @@ from portfolio.allocation import calc_allocation, calc_allocation_by_asset_class
 
 
 def analyze_instrument(data, current_price, capital_gains_rate):
-    """Calcola tutti i rendimenti per un singolo strumento."""
+    """Calculate all returns for a single instrument."""
     market_value = current_price * data["shares_held"]
     unrealized_pnl = market_value - data["cost_basis"]
     estimated_tax = calc_estimated_tax(unrealized_pnl, capital_gains_rate)
@@ -24,7 +24,7 @@ def analyze_instrument(data, current_price, capital_gains_rate):
 
 
 def analyze_portfolio(results, instruments):
-    """Calcola i rendimenti aggregati dell'intero portafoglio."""
+    """Calculate aggregate returns for the entire portfolio."""
     totals = {"cost": 0, "market_value": 0, "unrealized": 0, "realized": 0, "tax": 0}
     all_cashflows = []
 

@@ -1,11 +1,11 @@
 """
 Portfolio Tracker
-Calcola rendimenti, P&L e stima tasse per un portafoglio di strumenti finanziari.
+Calculates returns, P&L and tax estimates for a financial portfolio.
 
-Uso:
-  python run.py                          # solo output a terminale
-  python run.py --export report.json     # salva anche in JSON
-  python run.py -t mio.csv -c mio.json  # file custom
+Usage:
+  python run.py                          # terminal output only
+  python run.py --export report.json     # also save to JSON
+  python run.py -t my.csv -c my.json    # custom files
 """
 
 import argparse
@@ -20,9 +20,9 @@ from portfolio.export import export_json
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Portfolio Tracker")
-    parser.add_argument("-t", "--transactions", default="transactions.csv", help="File CSV transazioni")
-    parser.add_argument("-c", "--config", default="config.json", help="File configurazione JSON")
-    parser.add_argument("--export", metavar="FILE", help="Esporta il report in JSON")
+    parser.add_argument("-t", "--transactions", default="transactions.csv", help="Transactions CSV file")
+    parser.add_argument("-c", "--config", default="config.json", help="Configuration JSON file")
+    parser.add_argument("--export", metavar="FILE", help="Export report to JSON")
     return parser.parse_args()
 
 
@@ -35,19 +35,19 @@ def main():
     df = load_transactions(args.transactions)
     portfolio = build_portfolio(df)
 
-    print("\n📊 Scarico prezzi correnti...\n")
+    print("\n📊 Fetching current prices...\n")
 
-    # Analisi per strumento
+    # Per-instrument analysis
     results = []
     for security, data in portfolio.items():
         instrument = instruments.get(security.strip())
         if not instrument:
-            print(f"⚠️  Strumento '{security}' non trovato in config.json. Aggiungilo.")
+            print(f"⚠️  Instrument '{security}' not found in config.json. Please add it.")
             continue
 
         current_price = fetch_current_price(instrument["ticker"])
         if current_price is None:
-            print(f"⚠️  Nessun dato per {instrument['ticker']}")
+            print(f"⚠️  No data for {instrument['ticker']}")
             continue
 
         capital_gains_rate = instrument.get("capital_gains_rate", 0.26)
@@ -56,26 +56,26 @@ def main():
                         "ticker": instrument["ticker"], "isin": instrument.get("isin"),
                         "capital_gains_rate": capital_gains_rate})
 
-    # Output per strumento
+    # Per-instrument output
     for result in results:
         print_instrument(result["security"], result["ticker"], result["data"],
                         result["analysis"], result["capital_gains_rate"], tax_info)
 
-    # Output portafoglio totale
+    # Portfolio summary
     summary = None
     if results:
         summary = analyze_portfolio(results, instruments)
         print_portfolio_summary(summary)
 
-    # Storico portafoglio
-    print("\n📈 Calcolo storico portafoglio...\n")
+    # Historical performance
+    print("\n📈 Calculating historical performance...\n")
     history = build_history(df, instruments)
     print_history(history)
 
-    # Export JSON
+    # JSON export
     if args.export:
         export_json(args.export, results, summary, history, tax_info)
-        print(f"\n💾 Report esportato in {args.export}")
+        print(f"\n💾 Report exported to {args.export}")
 
 
 if __name__ == "__main__":

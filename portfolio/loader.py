@@ -1,4 +1,4 @@
-"""Caricamento dati: configurazione e transazioni."""
+"""Data loading: configuration and transactions."""
 
 import pandas as pd
 import json
@@ -6,27 +6,27 @@ import sys
 
 
 def load_config(path):
-    """Carica il file di configurazione JSON."""
+    """Load the JSON configuration file."""
     try:
         with open(path) as f:
             return json.load(f)
     except FileNotFoundError:
-        print(f"❌ File di configurazione non trovato: {path}")
+        print(f"❌ Config file not found: {path}")
         sys.exit(1)
     except json.JSONDecodeError as error:
-        print(f"❌ Errore nel parsing di {path}: {error}")
+        print(f"❌ Error parsing {path}: {error}")
         sys.exit(1)
 
 
 def load_transactions(path):
-    """Legge il CSV delle transazioni e converte i tipi delle colonne."""
+    """Read the transactions CSV and convert column types."""
     try:
         df = pd.read_csv(path)
     except FileNotFoundError:
-        print(f"❌ File transazioni non trovato: {path}")
+        print(f"❌ Transactions file not found: {path}")
         sys.exit(1)
     except pd.errors.ParserError as error:
-        print(f"❌ Errore nel parsing del CSV {path}: {error}")
+        print(f"❌ Error parsing CSV {path}: {error}")
         sys.exit(1)
 
     df.columns = df.columns.str.strip()
@@ -34,7 +34,7 @@ def load_transactions(path):
     required_columns = ["Date", "Type", "Security", "Shares", "Quote", "Net Transaction Value"]
     missing = [col for col in required_columns if col not in df.columns]
     if missing:
-        print(f"❌ Colonne mancanti nel CSV: {', '.join(missing)}")
+        print(f"❌ Missing columns in CSV: {', '.join(missing)}")
         sys.exit(1)
 
     df["Date"] = pd.to_datetime(df["Date"])

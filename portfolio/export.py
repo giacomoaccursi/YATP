@@ -1,11 +1,11 @@
-"""Export del report in formato JSON."""
+"""JSON report export."""
 
 import json
 from datetime import datetime
 
 
 def export_json(path, results, summary, history, tax_info):
-    """Salva il report completo in un file JSON."""
+    """Save the full report to a JSON file."""
     report = {
         "generated_at": datetime.now().isoformat(),
         "tax_info": tax_info,
@@ -19,7 +19,7 @@ def export_json(path, results, summary, history, tax_info):
 
 
 def _build_instruments_section(results):
-    """Costruisce la sezione strumenti per l'export."""
+    """Build the instruments section for export."""
     instruments = []
     for result in results:
         analysis = result["analysis"]
@@ -46,7 +46,7 @@ def _build_instruments_section(results):
 
 
 def _build_portfolio_section(summary):
-    """Costruisce la sezione portafoglio totale per l'export."""
+    """Build the total portfolio section for export."""
     if not summary:
         return None
     return {
@@ -65,7 +65,7 @@ def _build_portfolio_section(summary):
 
 
 def _build_history_section(history):
-    """Costruisce la sezione storica per l'export."""
+    """Build the historical performance section for export."""
     if not history:
         return None
     periods = []

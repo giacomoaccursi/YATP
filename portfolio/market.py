@@ -1,11 +1,11 @@
-"""Fetch prezzi di mercato da Yahoo Finance."""
+"""Market price fetching from Yahoo Finance."""
 
 import yfinance as yf
 from datetime import timedelta
 
 
 def fetch_current_price(ticker_symbol):
-    """Scarica il prezzo corrente da Yahoo Finance. Ritorna None se non disponibile."""
+    """Fetch current price from Yahoo Finance. Returns None if unavailable."""
     try:
         ticker = yf.Ticker(ticker_symbol)
         hist = ticker.history(period="1d")
@@ -13,12 +13,12 @@ def fetch_current_price(ticker_symbol):
             return None
         return hist["Close"].iloc[-1]
     except Exception as error:
-        print(f"⚠️  Errore nel fetch di {ticker_symbol}: {error}")
+        print(f"⚠️  Error fetching {ticker_symbol}: {error}")
         return None
 
 
 def fetch_price_history(ticker_symbol, start_date, end_date):
-    """Scarica lo storico prezzi da Yahoo Finance. Ritorna una Series di Close prices."""
+    """Fetch historical prices from Yahoo Finance. Returns a Close price Series."""
     try:
         hist = yf.Ticker(ticker_symbol).history(
             start=start_date - timedelta(days=5),
@@ -29,5 +29,5 @@ def fetch_price_history(ticker_symbol, start_date, end_date):
         hist.index = hist.index.tz_localize(None)
         return hist["Close"]
     except Exception as error:
-        print(f"⚠️  Errore nel fetch storico di {ticker_symbol}: {error}")
+        print(f"⚠️  Error fetching history for {ticker_symbol}: {error}")
         return None

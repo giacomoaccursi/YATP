@@ -1,4 +1,4 @@
-"""Performance storica del portafoglio: 1 mese, 6 mesi, 1 anno, dall'inizio."""
+"""Historical portfolio performance: 1 month, 6 months, 1 year, since inception."""
 
 import pandas as pd
 from datetime import timedelta
@@ -12,20 +12,19 @@ from portfolio.returns import calc_simple_return, calc_period_mwrr, calc_period_
 
 
 PERIODS = [
-    ("1 mese", 30),
-    ("6 mesi", 182),
-    ("1 anno", 365),
-    ("Dall'inizio", None),
+    ("1 month", 30),
+    ("6 months", 182),
+    ("1 year", 365),
+    ("Since start", None),
 ]
 
 
 def build_history(df, instruments):
-    """Calcola la performance del portafoglio per ogni periodo."""
+    """Calculate portfolio performance for each period."""
     df = df.sort_values("Date")
     first_date = df["Date"].min()
     today = pd.Timestamp.now().normalize()
 
-    # Scarica prezzi storici
     price_histories = _fetch_all_histories(df, instruments, first_date, today)
     if not price_histories:
         return None
@@ -44,7 +43,7 @@ def build_history(df, instruments):
 
 
 def _fetch_all_histories(df, instruments, start_date, end_date):
-    """Scarica i prezzi storici per tutti gli strumenti nel portafoglio."""
+    """Fetch historical prices for all instruments in the portfolio."""
     price_histories = {}
     for security in df["Security"].unique():
         instrument = instruments.get(security.strip())
@@ -57,7 +56,7 @@ def _fetch_all_histories(df, instruments, start_date, end_date):
 
 
 def _resolve_period(today, first_date, days):
-    """Determina la data di inizio e la durata del periodo."""
+    """Determine period start date and duration."""
     if days is not None:
         period_start = today - timedelta(days=days)
         if period_start < first_date:
@@ -68,8 +67,7 @@ def _resolve_period(today, first_date, days):
 
 
 def _analyze_period(label, period_start, today, days, df, price_histories):
-    """Analizza un singolo periodo: calcola tutti i rendimenti."""
-    # Valori del portafoglio
+    """Analyze a single period: calculate all returns."""
     start_value = value_holdings(
         get_holdings_at(period_start, df), price_histories, period_start
     )
@@ -77,15 +75,15 @@ def _analyze_period(label, period_start, today, days, df, price_histories):
         get_holdings_at(today, df), price_histories, today
     )
 
-    # Guadagno di mercato
+    # Market gain
     net_new_money = get_net_new_money_between(period_start, today, df)
     market_gain = (end_value - start_value) - net_new_money
 
-    # Rendimento semplice
+    # Simple return
     cost_basis = get_cost_basis_at(period_start, df) + net_new_money
     simple_return = calc_simple_return(market_gain, cost_basis)
 
-    # MWRR (via XIRR de-annualizzato)
+    # MWRR (de-annualized XIRR)
     cashflows = []
     if start_value > 0:
         cashflows.append((period_start.to_pydatetime(), -start_value))

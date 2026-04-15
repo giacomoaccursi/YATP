@@ -1,8 +1,8 @@
-"""Calcolo allocazione percentuale del portafoglio."""
+"""Portfolio allocation breakdown calculations."""
 
 
 def calc_allocation(results):
-    """Calcola il peso percentuale di ogni strumento sul valore totale di mercato."""
+    """Calculate percentage weight of each instrument by market value."""
     total_market_value = sum(result["analysis"]["market_value"] for result in results)
 
     allocations = {}
@@ -15,13 +15,13 @@ def calc_allocation(results):
 
 
 def calc_allocation_by_asset_class(results, instruments):
-    """Calcola il peso percentuale per asset class (ETF, ETC, Azione, ecc.)."""
+    """Calculate percentage weight by asset class (ETF, ETC, Stock, etc.)."""
     total_market_value = sum(result["analysis"]["market_value"] for result in results)
     by_class = {}
 
     for result in results:
         instrument = instruments.get(result["security"].strip(), {})
-        asset_class = instrument.get("type", "Altro")
+        asset_class = instrument.get("type", "Other")
         market_value = result["analysis"]["market_value"]
         by_class[asset_class] = by_class.get(asset_class, 0) + market_value
 

@@ -1,10 +1,10 @@
-"""Calcoli di rendimento: XIRR, TWR, rendimento semplice, stima tasse."""
+"""Return calculations: XIRR, TWR, simple return, tax estimation."""
 
 from scipy.optimize import brentq
 
 
 def calc_xirr(cashflows):
-    """XIRR: rendimento annualizzato pesato per i flussi di cassa (Money-Weighted Return)."""
+    """XIRR: annualized money-weighted return."""
     if len(cashflows) < 2:
         return None
     dates, amounts = zip(*cashflows)
@@ -21,7 +21,7 @@ def calc_xirr(cashflows):
 
 
 def calc_twr(twr_txns, current_price):
-    """TWR: rendimento ponderato per il tempo (Time-Weighted Return)."""
+    """TWR: time-weighted return."""
     txns = sorted(twr_txns, key=lambda x: x[0])
     if not txns:
         return None
@@ -48,20 +48,20 @@ def calc_twr(twr_txns, current_price):
 
 
 def calc_simple_return(pnl, cost_basis):
-    """Rendimento semplice percentuale."""
+    """Simple return as a percentage."""
     return (pnl / cost_basis) * 100 if cost_basis > 0 else 0
 
 
 def calc_estimated_tax(unrealized_pnl, rate):
-    """Stima tasse: aliquota applicata solo su plusvalenza positiva."""
+    """Estimated tax: rate applied only on positive gains."""
     return max(0, unrealized_pnl) * rate
 
 
 def calc_period_mwrr(cashflows, days):
-    """Calcola il MWRR de-annualizzato per un periodo specifico.
+    """De-annualized MWRR for a specific period.
 
-    cashflows: lista di (date, amount) già completa (incluso valore iniziale e finale)
-    days: durata del periodo in giorni
+    cashflows: list of (date, amount) including start value and end value
+    days: period duration in days
     """
     xirr_annual = calc_xirr(cashflows)
     if xirr_annual is None:
@@ -71,11 +71,11 @@ def calc_period_mwrr(cashflows, days):
 
 
 def calc_period_twr(eval_dates, get_value_before, get_value_after):
-    """Calcola il TWR tra punti di valutazione.
+    """TWR between evaluation points.
 
-    eval_dates: lista di date ordinate
-    get_value_before: funzione(date) -> valore del portafoglio con holdings del giorno prima
-    get_value_after: funzione(date) -> valore del portafoglio con holdings di quel giorno
+    eval_dates: sorted list of dates
+    get_value_before: function(date) -> portfolio value with previous day's holdings
+    get_value_after: function(date) -> portfolio value with that day's holdings
     """
     twr = 1.0
     prev_value = None

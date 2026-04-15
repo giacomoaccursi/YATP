@@ -1,8 +1,8 @@
-"""Costruzione portafoglio dalle transazioni (costo medio progressivo)."""
+"""Portfolio construction from transactions (progressive average cost)."""
 
 
 def build_portfolio(df):
-    """Processa le transazioni in ordine cronologico per ogni strumento."""
+    """Process transactions chronologically for each instrument."""
     portfolio = {}
 
     for security, group in df.groupby("Security"):
@@ -33,7 +33,7 @@ def build_portfolio(df):
                 shares_held -= shares
                 cashflows.append((date, net_value))
             else:
-                print(f"⚠️  Tipo transazione sconosciuto: '{tx_type}' per {security} in data {date}")
+                print(f"⚠️  Unknown transaction type: '{tx_type}' for {security} on {date}")
                 continue
 
             twr_txns.append((date, tx_type, quote))
@@ -53,7 +53,7 @@ def build_portfolio(df):
 
 
 def get_holdings_at(date, transactions_df):
-    """Calcola le shares possedute per ogni strumento ad una data."""
+    """Get shares held per instrument at a given date."""
     holdings = {}
     for security, group in transactions_df.groupby("Security"):
         past = group[group["Date"] <= date].sort_values("Date")
@@ -70,7 +70,7 @@ def get_holdings_at(date, transactions_df):
 
 
 def get_cost_basis_at(date, transactions_df):
-    """Calcola il cost basis del portafoglio ad una data."""
+    """Get portfolio cost basis at a given date."""
     total_cost = 0.0
     for security, group in transactions_df.groupby("Security"):
         past = group[group["Date"] <= date].sort_values("Date")
@@ -90,7 +90,7 @@ def get_cost_basis_at(date, transactions_df):
 
 
 def value_holdings(holdings, price_histories, date):
-    """Calcola il valore di mercato totale delle holdings ad una data."""
+    """Calculate total market value of holdings at a given date."""
     total = 0.0
     for security, shares in holdings.items():
         if security not in price_histories:
@@ -104,7 +104,7 @@ def value_holdings(holdings, price_histories, date):
 
 
 def get_cashflows_between(start_date, end_date, transactions_df):
-    """Estrae i cashflow (per XIRR) tra due date."""
+    """Extract cashflows (for XIRR) between two dates."""
     period_txns = transactions_df[
         (transactions_df["Date"] > start_date) & (transactions_df["Date"] <= end_date)
     ]
@@ -120,7 +120,7 @@ def get_cashflows_between(start_date, end_date, transactions_df):
 
 
 def get_net_new_money_between(start_date, end_date, transactions_df):
-    """Calcola i soldi netti versati tra due date (acquisti - vendite)."""
+    """Calculate net new money invested between two dates (buys - sells)."""
     period_txns = transactions_df[
         (transactions_df["Date"] > start_date) & (transactions_df["Date"] <= end_date)
     ]
