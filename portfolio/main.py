@@ -20,6 +20,7 @@ def parse_args():
     parser.add_argument("--export", metavar="FILE", help="Export report to JSON")
     parser.add_argument("--rebalance", action="store_true", help="Show rebalancing suggestions")
     parser.add_argument("--summary", action="store_true", help="Show transaction summary (no market data needed)")
+    parser.add_argument("--ui", action="store_true", help="Launch web dashboard")
     return parser.parse_args()
 
 
@@ -31,6 +32,12 @@ def main():
     instruments = config["instruments"]
     df = load_transactions(args.transactions)
     portfolio = build_portfolio(df)
+
+    # Web UI mode
+    if args.ui:
+        from web.app import launch
+        launch(args.config, args.transactions)
+        return
 
     # Summary mode: no market data needed
     if args.summary:
