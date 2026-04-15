@@ -196,7 +196,7 @@
           <label class="block text-xs text-gray-500 mb-1">Fees</label>
           <input v-model="form.fees" type="number" step="any" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
         </div>
-        <div>
+        <div v-if="form.type === 'Sell'">
           <label class="block text-xs text-gray-500 mb-1">Taxes</label>
           <input v-model="form.taxes" type="number" step="any" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
         </div>
