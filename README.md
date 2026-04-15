@@ -61,3 +61,7 @@ pytest tests/ -v
 - Tax estimates per instrument (configurable rate)
 - Allocation by instrument and asset class
 - Historical performance: 1 month, 6 months, 1 year, since inception
+
+## Market Data
+
+Current and historical prices are fetched from [Yahoo Finance](https://finance.yahoo.com/) via the `yfinance` library. The `ticker` field in `config.json` must match a valid Yahoo Finance symbol (e.g. `VWCE.DE` for Xetra, `VWRL.AS` for Amsterdam).
