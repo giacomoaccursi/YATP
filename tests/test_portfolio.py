@@ -39,6 +39,17 @@ TWO_INSTRUMENTS = [
     {"Date": "2025-01-01", "Type": "Buy", "Security": "GOLD", "Shares": 5, "Quote": 80, "Net Transaction Value": 400},
 ]
 
+BUY_WITH_DIVIDEND = [
+    {"Date": "2025-01-01", "Type": "Buy", "Security": "DIST_ETF", "Shares": 10, "Quote": 100, "Net Transaction Value": 1000},
+    {"Date": "2025-06-15", "Type": "Dividend", "Security": "DIST_ETF", "Shares": 0, "Quote": 0, "Net Transaction Value": 37},
+]
+
+BUY_WITH_COUPON = [
+    {"Date": "2025-01-01", "Type": "Buy", "Security": "BTP", "Shares": 10, "Quote": 95, "Net Transaction Value": 950},
+    {"Date": "2025-06-15", "Type": "Coupon", "Security": "BTP", "Shares": 0, "Quote": 0, "Net Transaction Value": 21.87},
+    {"Date": "2025-12-15", "Type": "Coupon", "Security": "BTP", "Shares": 0, "Quote": 0, "Net Transaction Value": 21.87},
+]
+
 
 # ── build_portfolio ──
 
@@ -200,3 +211,76 @@ class TestGetNetNewMoneyBetween:
         df = _make_df(SIMPLE_BUY)
         net = get_net_new_money_between(pd.Timestamp("2025-06-01"), pd.Timestamp("2025-07-01"), df)
         assert net == 0
+
+
+# ── Dividend and Coupon tracking ──
+
+class TestDividendTracking:
+    def test_dividend_tracked_as_income(self):
+        portfolio = build_portfolio(_make_df(BUY_WITH_DIVIDEND))
+        p = portfolio["DIST_ETF"]
+        assert p.total_income == 37
+
+    def test_dividend_does_not_affect_shares(self):
+        portfolio = build_portfolio(_make_df(BUY_WITH_DIVIDEND))
+        p = portfolio["DIST_ETF"]
+        assert p.shares_held == 10
+
+    def test_dividend_does_not_affect_cost_basis(self):
+        portfolio = build_portfolio(_make_df(BUY_WITH_DIVIDEND))
+        p = portfolio["DIST_ETF"]
+        assert p.cost_basis == 1000
+
+    def test_dividend_included_in_cashflows(self):
+        portfolio = build_portfolio(_make_df(BUY_WITH_DIVIDEND))
+        cashflows = portfolio["DIST_ETF"].cashflows
+        assert len(cashflows) == 2
+        assert cashflows[1][1] == 37  # positive cashflow
+
+    def test_no_dividend_zero_income(self):
+        portfolio = build_portfolio(_make_df(SIMPLE_BUY))
+        p = portfolio["ETF_A"]
+        assert p.total_income == 0
+
+
+class TestCouponTracking:
+    def test_multiple_coupons_accumulated(self):
+        portfolio = build_portfolio(_make_df(BUY_WITH_COUPON))
+        p = portfolio["BTP"]
+        assert abs(p.total_income - 43.74) < 0.01
+
+    def test_coupon_does_not_affect_shares(self):
+        portfolio = build_portfolio(_make_df(BUY_WITH_COUPON))
+        p = portfolio["BTP"]
+        assert p.shares_held == 10
+
+    def test_coupon_does_not_affect_cost_basis(self):
+        portfolio = build_portfolio(_make_df(BUY_WITH_COUPON))
+        p = portfolio["BTP"]
+        assert p.cost_basis == 950
+
+
+class TestGetCashflowsBetweenWithIncome:
+    def test_dividend_is_positive_cashflow(self):
+        df = _make_df(BUY_WITH_DIVIDEND)
+        cashflows = get_cashflows_between(pd.Timestamp("2025-06-01"), pd.Timestamp("2025-07-01"), df)
+        assert len(cashflows) == 1
+        assert cashflows[0][1] == 37
+
+    def test_coupon_is_positive_cashflow(self):
+        df = _make_df(BUY_WITH_COUPON)
+        cashflows = get_cashflows_between(pd.Timestamp("2025-06-01"), pd.Timestamp("2025-07-01"), df)
+        assert len(cashflows) == 1
+        assert cashflows[0][1] == 21.87
+
+
+class TestGetNetNewMoneyWithIncome:
+    def test_dividend_not_counted_as_new_money(self):
+        df = _make_df(BUY_WITH_DIVIDEND)
+        net = get_net_new_money_between(pd.Timestamp("2025-06-01"), pd.Timestamp("2025-07-01"), df)
+        assert net == 0  # dividend is not new money
+
+    def test_coupon_not_counted_as_new_money(self):
+        df = _make_df(BUY_WITH_COUPON)
+        net = get_net_new_money_between(pd.Timestamp("2025-06-01"), pd.Timestamp("2025-12-31"), df)
+        assert net == 0  # coupons are not new money
