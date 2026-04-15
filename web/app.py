@@ -7,7 +7,7 @@ from flask import Flask, render_template
 from web.api import register_api_routes
 
 
-def create_app(config_path="config.json", transactions_path="transactions.csv"):
+def create_app(config_path, transactions_path):
     """Create and configure the Flask app."""
     app = Flask(
         __name__,
@@ -25,7 +25,7 @@ def create_app(config_path="config.json", transactions_path="transactions.csv"):
     return app
 
 
-def launch(config_path="config.json", transactions_path="transactions.csv", port=5000):
+def launch(config_path, transactions_path, port=5000):
     """Launch the web UI and open the browser."""
     app = create_app(config_path, transactions_path)
 
