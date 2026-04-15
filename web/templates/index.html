@@ -170,9 +170,14 @@
 
       <div>
         <label class="block text-xs text-gray-500 mb-1">Security</label>
-        <select v-model="form.security" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+        <select v-if="!customSecurity" v-model="form.security" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
           <option v-for="name in availableInstruments" :key="name" :value="name">{{ name }}</option>
+          <option value="__custom__">+ New instrument...</option>
         </select>
+        <div v-else class="flex gap-2">
+          <input v-model="form.security" type="text" placeholder="Instrument name" class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+          <button @click="customSecurity = false; form.security = availableInstruments[0] || ''" class="px-3 py-2 text-xs text-gray-400 hover:text-white bg-gray-800 border border-gray-700 rounded-lg">Cancel</button>
+        </div>
       </div>
 
       <div class="grid grid-cols-2 gap-3" v-if="form.type === 'Buy' || form.type === 'Sell'">
@@ -225,6 +230,7 @@ createApp({
     const rebalance = ref([]);
     const availableInstruments = ref([]);
     const showAddForm = ref(false);
+    const customSecurity = ref(false);
     const formMessage = ref('');
     const formError = ref(false);
 
@@ -378,9 +384,16 @@ createApp({
 
     onMounted(fetchData);
 
+    watch(() => form.value.security, (val) => {
+      if (val === '__custom__') {
+        customSecurity.value = true;
+        form.value.security = '';
+      }
+    });
+
     return {
       loading, instruments, summary, rebalance, availableInstruments,
-      showAddForm, form, formMessage, formError, computedNetValue,
+      showAddForm, customSecurity, form, formMessage, formError, computedNetValue,
       allocChart, classChart,
       fmt, fmtSigned, pnlColor,
       refreshPrices, submitTransaction,
