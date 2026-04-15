@@ -14,6 +14,7 @@ pip install -r requirements.txt
 python run.py                            # terminal output
 python run.py --export report.json       # also export to JSON
 python run.py --rebalance                # show rebalancing suggestions
+python run.py --summary                  # transaction summary (no market data needed)
 python run.py --transactions my.csv --config my.json
 ```
 
@@ -89,6 +90,10 @@ Add a `target_allocation` to `config.json` with target percentages by asset clas
 ```
 
 Asset classes are defined by the `type` field of each instrument. Run with `--rebalance` to see how much to buy or sell per class to reach your target.
+
+## Transaction Summary
+
+Run with `--summary` for a quick offline overview of your transactions. No market data is fetched. Shows per instrument: number of transactions, total invested/sold/income, shares held, average cost, and date range.
 
 ## Market Data
 
