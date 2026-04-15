@@ -11,6 +11,7 @@ class InstrumentData:
     avg_cost_per_share: float
     cost_basis: float
     realized_pnl: float
+    total_income: float = 0.0
     cashflows: list = field(default_factory=list)
     twr_txns: list = field(default_factory=list)
 
@@ -26,6 +27,9 @@ class InstrumentAnalysis:
     xirr: Optional[float]
     estimated_tax: float
     net_after_tax: float
+    total_income: float = 0.0
+    yield_on_cost: float = 0.0
+    total_return: float = 0.0
 
 
 @dataclass

@@ -39,5 +39,5 @@ def load_transactions(path):
 
     df["Date"] = pd.to_datetime(df["Date"])
     for col in ["Shares", "Quote", "Net Transaction Value"]:
-        df[col] = pd.to_numeric(df[col])
+        df[col] = pd.to_numeric(df[col], errors="coerce").fillna(0)
     return df

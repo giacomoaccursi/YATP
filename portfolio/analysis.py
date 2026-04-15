@@ -21,6 +21,9 @@ def analyze_instrument(data: InstrumentData, current_price, capital_gains_rate):
         xirr=calc_xirr(data.cashflows + [(datetime.now(), market_value)]),
         estimated_tax=estimated_tax,
         net_after_tax=unrealized_pnl - estimated_tax,
+        total_income=data.total_income,
+        yield_on_cost=(data.total_income / data.cost_basis * 100) if data.cost_basis > 0 else 0,
+        total_return=unrealized_pnl + data.realized_pnl + data.total_income,
     )
 
 

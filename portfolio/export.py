@@ -48,6 +48,9 @@ def _instrument_to_dict(result: InstrumentResult):
         "xirr": round(result.analysis.xirr * 100, 2) if result.analysis.xirr is not None else None,
         "estimated_tax": round(result.analysis.estimated_tax, 2),
         "net_after_tax": round(result.analysis.net_after_tax, 2),
+        "total_income": round(result.analysis.total_income, 2),
+        "yield_on_cost": round(result.analysis.yield_on_cost, 2),
+        "total_return": round(result.analysis.total_return, 2),
         "capital_gains_rate": result.capital_gains_rate,
     }
 

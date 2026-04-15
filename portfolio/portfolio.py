@@ -13,6 +13,7 @@ def build_portfolio(df):
         shares_held = 0.0
         total_cost = 0.0
         realized_pnl = 0.0
+        total_income = 0.0
         cashflows = []
         twr_txns = []
 
@@ -34,6 +35,9 @@ def build_portfolio(df):
                 total_cost -= cost_of_sold
                 shares_held -= shares
                 cashflows.append((date, net_value))
+            elif tx_type in ("dividend", "coupon"):
+                total_income += net_value
+                cashflows.append((date, net_value))
             else:
                 print(f"⚠️  Unknown transaction type: '{tx_type}' for {security} on {date}")
                 continue
@@ -47,6 +51,7 @@ def build_portfolio(df):
             avg_cost_per_share=avg_cost,
             cost_basis=total_cost,
             realized_pnl=realized_pnl,
+            total_income=total_income,
             cashflows=cashflows,
             twr_txns=twr_txns,
         )
@@ -86,6 +91,7 @@ def _replay_transactions(past_df):
                 avg = cost / shares if shares > 0 else 0
                 cost -= avg * row["Shares"]
                 shares -= row["Shares"]
+            # dividend/coupon don't affect shares or cost
         state[security] = {"shares": shares, "cost": cost}
     return state
 
@@ -127,7 +133,7 @@ def get_cashflows_between(start_date, end_date, transactions_df):
         date = row["Date"].to_pydatetime()
         if tx_type == "buy":
             cashflows.append((date, -row["Net Transaction Value"]))
-        elif tx_type == "sell":
+        elif tx_type in ("sell", "dividend", "coupon"):
             cashflows.append((date, row["Net Transaction Value"]))
     return cashflows
 
@@ -141,4 +147,4 @@ def get_net_new_money_between(start_date, end_date, transactions_df):
     sells = sum(row["Net Transaction Value"]
                 for _, row in period_df.iterrows()
                 if row["Type"].strip().lower() == "sell")
-    return buys - sells
+    return buys - sells  # dividends/coupons are not new money
