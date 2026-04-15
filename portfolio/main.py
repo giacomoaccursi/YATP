@@ -1,5 +1,5 @@
 """
-Portfolio Tracker
+Simple Portfolio Tracker
 Calculates returns, P&L and tax estimates for a financial portfolio.
 
 Usage:
@@ -19,7 +19,7 @@ from portfolio.export import export_json
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Portfolio Tracker")
+    parser = argparse.ArgumentParser(description="Simple Portfolio Tracker")
     parser.add_argument("--transactions", default="transactions.csv", help="Transactions CSV file")
     parser.add_argument("--config", default="config.json", help="Configuration JSON file")
     parser.add_argument("--export", metavar="FILE", help="Export report to JSON")
