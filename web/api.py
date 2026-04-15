@@ -60,20 +60,28 @@ def register_api_routes(app):
     @app.route("/api/transactions/list")
     def api_transactions_list():
         """Return all transactions from the CSV with row index."""
+        import math
         df = load_transactions(app.config["TRANSACTIONS_PATH"])
         df = df.sort_values("Date", ascending=False)
         transactions = []
         for idx, row in df.iterrows():
+            def safe_float(col, decimals=2):
+                try:
+                    val = float(row.get(col, 0))
+                    return round(val, decimals) if not math.isnan(val) else 0
+                except (ValueError, TypeError):
+                    return 0
+
             transactions.append({
                 "index": int(idx),
                 "date": row["Date"].strftime("%Y-%m-%d"),
                 "type": row["Type"].strip(),
                 "security": row["Security"].strip(),
-                "shares": round(row["Shares"], 6) if row["Shares"] else 0,
-                "quote": round(row["Quote"], 2) if row["Quote"] else 0,
-                "fees": round(float(row.get("Fees", 0) or 0), 2),
-                "taxes": round(float(row.get("Taxes", 0) or 0), 2),
-                "net_transaction_value": round(row["Net Transaction Value"], 2) if row["Net Transaction Value"] else 0,
+                "shares": safe_float("Shares", 6),
+                "quote": safe_float("Quote"),
+                "fees": safe_float("Fees"),
+                "taxes": safe_float("Taxes"),
+                "net_transaction_value": safe_float("Net Transaction Value"),
             })
         return jsonify({"transactions": transactions})
 
