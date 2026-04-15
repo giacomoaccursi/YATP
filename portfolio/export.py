@@ -13,7 +13,7 @@ def _safe_round(value, decimals=2):
     return round(value, decimals)
 
 
-def export_json(path, results, summary, history, tax_info):
+def export_json(path, results, summary, history, tax_info, rebalance_actions=None):
     """Save the full report to a JSON file."""
     report = {
         "generated_at": datetime.now().isoformat(),
@@ -22,6 +22,9 @@ def export_json(path, results, summary, history, tax_info):
         "portfolio": _summary_to_dict(summary),
         "history": _history_to_dict(history),
     }
+
+    if rebalance_actions is not None:
+        report["rebalance"] = _rebalance_to_dict(rebalance_actions)
 
     with open(path, "w") as f:
         json.dump(report, f, indent=2, ensure_ascii=False)
@@ -87,3 +90,15 @@ def _history_to_dict(history):
                 "mwrr": _safe_round(entry.mwrr),
             })
     return periods
+
+
+def _rebalance_to_dict(actions):
+    """Convert rebalance actions to JSON-serializable dicts."""
+    return [{
+        "asset_class": action.asset_class,
+        "current_weight": round(action.current_weight, 2),
+        "target_weight": round(action.target_weight, 2),
+        "current_value": round(action.current_value, 2),
+        "target_value": round(action.target_value, 2),
+        "difference": round(action.difference, 2),
+    } for action in actions]

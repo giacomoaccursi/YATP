@@ -72,9 +72,7 @@ def main():
     print_history(history)
 
     # JSON export
-    if args.export:
-        export_json(args.export, results, summary, history, tax_info)
-        print(f"\n💾 Report exported to {args.export}")
+    rebalance_actions = None
 
     # Rebalancing
     if args.rebalance:
@@ -82,8 +80,12 @@ def main():
         if not target_allocation:
             print("\n⚠️  No target_allocation defined in config.json.")
         elif results:
-            actions = calc_rebalance(results, target_allocation, instruments)
-            print_rebalance(actions)
+            rebalance_actions = calc_rebalance(results, target_allocation, instruments)
+            print_rebalance(rebalance_actions)
+
+    if args.export:
+        export_json(args.export, results, summary, history, tax_info, rebalance_actions)
+        print(f"\n💾 Report exported to {args.export}")
 
 
 if __name__ == "__main__":
