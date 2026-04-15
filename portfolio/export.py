@@ -1,8 +1,16 @@
 """JSON report export."""
 
 import json
+import math
 from datetime import datetime
 from portfolio.models import InstrumentResult, PortfolioSummary, PeriodPerformance
+
+
+def _safe_round(value, decimals=2):
+    """Round a value, returning None if NaN or None."""
+    if value is None or (isinstance(value, float) and math.isnan(value)):
+        return None
+    return round(value, decimals)
 
 
 def export_json(path, results, summary, history, tax_info):
@@ -73,9 +81,9 @@ def _history_to_dict(history):
                 "period": entry.period,
                 "available": True,
                 "from_date": entry.past_date.strftime("%Y-%m-%d"),
-                "market_gain": round(entry.market_gain, 2),
-                "simple_return": round(entry.simple_return, 2),
-                "twr": round(entry.twr * 100, 2) if entry.twr is not None else None,
-                "mwrr": round(entry.mwrr, 2) if entry.mwrr is not None else None,
+                "market_gain": _safe_round(entry.market_gain),
+                "simple_return": _safe_round(entry.simple_return),
+                "twr": _safe_round(entry.twr * 100) if entry.twr is not None else None,
+                "mwrr": _safe_round(entry.mwrr),
             })
     return periods

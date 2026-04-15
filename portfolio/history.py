@@ -76,6 +76,10 @@ def _analyze_period(label, period_start, today, days, df, price_histories):
         get_holdings_at(today, df), price_histories, today
     )
 
+    # If we can't value the portfolio, mark as unavailable
+    if end_value <= 0:
+        return PeriodPerformance(period=label, available=False)
+
     # Market gain
     net_new_money = get_net_new_money_between(period_start, today, df)
     market_gain = (end_value - start_value) - net_new_money
