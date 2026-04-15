@@ -197,7 +197,8 @@
         </div>
         <div>
           <label class="block text-xs text-gray-500 mb-1">Net Value</label>
-          <input v-model="form.net_transaction_value" type="number" step="any" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+          <input v-if="form.type === 'Dividend' || form.type === 'Coupon'" v-model="form.net_transaction_value" type="number" step="any" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+          <input v-else :value="computedNetValue" readonly class="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-400 cursor-not-allowed">
         </div>
       </div>
 
@@ -214,7 +215,7 @@
 </div>
 
 <script>
-const { createApp, ref, onMounted, nextTick, watch } = Vue;
+const { createApp, ref, computed, onMounted, nextTick, watch } = Vue;
 
 createApp({
   setup() {
@@ -240,6 +241,18 @@ createApp({
 
     // Chart refs
     const allocChart = ref(null);
+
+    const computedNetValue = computed(() => {
+      const shares = parseFloat(form.value.shares) || 0;
+      const quote = parseFloat(form.value.quote) || 0;
+      const fees = parseFloat(form.value.fees) || 0;
+      const taxes = parseFloat(form.value.taxes) || 0;
+      const amount = shares * quote;
+
+      if (form.value.type === 'Buy') return (amount + fees).toFixed(2);
+      if (form.value.type === 'Sell') return (amount - fees - taxes).toFixed(2);
+      return form.value.net_transaction_value || '0.00';
+    });
     const classChart = ref(null);
     let allocChartInstance = null;
     let classChartInstance = null;
@@ -345,7 +358,7 @@ createApp({
         const res = await fetch('/api/transactions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(form.value),
+          body: JSON.stringify({ ...form.value, net_transaction_value: computedNetValue.value }),
         });
         const data = await res.json();
 
@@ -367,7 +380,7 @@ createApp({
 
     return {
       loading, instruments, summary, rebalance, availableInstruments,
-      showAddForm, form, formMessage, formError,
+      showAddForm, form, formMessage, formError, computedNetValue,
       allocChart, classChart,
       fmt, fmtSigned, pnlColor,
       refreshPrices, submitTransaction,
