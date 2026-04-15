@@ -59,12 +59,13 @@ def register_api_routes(app):
 
     @app.route("/api/transactions/list")
     def api_transactions_list():
-        """Return all transactions from the CSV."""
+        """Return all transactions from the CSV with row index."""
         df = load_transactions(app.config["TRANSACTIONS_PATH"])
         df = df.sort_values("Date", ascending=False)
         transactions = []
-        for _, row in df.iterrows():
+        for idx, row in df.iterrows():
             transactions.append({
+                "index": int(idx),
                 "date": row["Date"].strftime("%Y-%m-%d"),
                 "type": row["Type"].strip(),
                 "security": row["Security"].strip(),
@@ -104,6 +105,18 @@ def register_api_routes(app):
                 writer.writeheader()
             writer.writerow(row)
 
+        return jsonify({"success": True})
+
+    @app.route("/api/transactions/<int:row_index>", methods=["DELETE"])
+    def api_delete_transaction(row_index):
+        """Delete a transaction by its row index."""
+        import pandas as pd
+        csv_path = app.config["TRANSACTIONS_PATH"]
+        df = pd.read_csv(csv_path)
+        if row_index < 0 or row_index >= len(df):
+            return jsonify({"error": "Invalid row index"}), 400
+        df = df.drop(index=row_index).reset_index(drop=True)
+        df.to_csv(csv_path, index=False)
         return jsonify({"success": True})
 
     @app.route("/api/refresh", methods=["POST"])
