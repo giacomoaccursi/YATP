@@ -27,7 +27,7 @@ def fetch_price_history(ticker_symbol, start_date, end_date):
         if hist.empty:
             return None
         hist.index = hist.index.tz_localize(None)
-        return hist["Close"]
+        return hist["Close"].dropna()
     except Exception as error:
         print(f"⚠️  Error fetching history for {ticker_symbol}: {error}")
         return None
