@@ -1,5 +1,7 @@
 """Portfolio construction from transactions (progressive average cost)."""
 
+from portfolio.models import InstrumentData
+
 
 def build_portfolio(df):
     """Process transactions chronologically for each instrument."""
@@ -40,14 +42,14 @@ def build_portfolio(df):
 
         avg_cost = total_cost / shares_held if shares_held > 0 else 0
 
-        portfolio[security] = {
-            "shares_held": shares_held,
-            "avg_cost_per_share": avg_cost,
-            "cost_basis": total_cost,
-            "realized_pnl": realized_pnl,
-            "cashflows": cashflows,
-            "twr_txns": twr_txns,
-        }
+        portfolio[security] = InstrumentData(
+            shares_held=shares_held,
+            avg_cost_per_share=avg_cost,
+            cost_basis=total_cost,
+            realized_pnl=realized_pnl,
+            cashflows=cashflows,
+            twr_txns=twr_txns,
+        )
 
     return portfolio
 

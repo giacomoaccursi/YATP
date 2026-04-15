@@ -47,38 +47,38 @@ class TestBuildPortfolio:
         portfolio = build_portfolio(_make_df(SIMPLE_BUY))
         assert "ETF_A" in portfolio
         p = portfolio["ETF_A"]
-        assert p["shares_held"] == 10
-        assert p["cost_basis"] == 1000
-        assert p["avg_cost_per_share"] == 100
-        assert p["realized_pnl"] == 0
+        assert p.shares_held == 10
+        assert p.cost_basis == 1000
+        assert p.avg_cost_per_share == 100
+        assert p.realized_pnl == 0
 
     def test_two_buys_avg_cost(self):
         portfolio = build_portfolio(_make_df(TWO_BUYS))
         p = portfolio["ETF_A"]
-        assert p["shares_held"] == 15
-        assert p["cost_basis"] == 1600
-        assert abs(p["avg_cost_per_share"] - 1600 / 15) < 0.01
+        assert p.shares_held == 15
+        assert p.cost_basis == 1600
+        assert abs(p.avg_cost_per_share - 1600 / 15) < 0.01
 
     def test_buy_and_sell_progressive_cost(self):
         """Sell uses cost basis at time of sale, not global average."""
         portfolio = build_portfolio(_make_df(BUY_AND_SELL))
         p = portfolio["ETF_A"]
-        assert p["shares_held"] == 7  # 15 - 8
+        assert p.shares_held == 7  # 15 - 8
         avg_at_sell = 1600 / 15  # ~106.67
         expected_realized = 1040 - (avg_at_sell * 8)
-        assert abs(p["realized_pnl"] - expected_realized) < 0.01
+        assert abs(p.realized_pnl - expected_realized) < 0.01
 
     def test_two_instruments_separate(self):
         portfolio = build_portfolio(_make_df(TWO_INSTRUMENTS))
         assert "ETF_A" in portfolio
         assert "GOLD" in portfolio
-        assert portfolio["ETF_A"]["shares_held"] == 10
-        assert portfolio["GOLD"]["shares_held"] == 5
+        assert portfolio["ETF_A"].shares_held == 10
+        assert portfolio["GOLD"].shares_held == 5
 
     def test_cashflows_signs(self):
         """Buys are negative cashflows, sells are positive."""
         portfolio = build_portfolio(_make_df(BUY_AND_SELL))
-        cashflows = portfolio["ETF_A"]["cashflows"]
+        cashflows = portfolio["ETF_A"].cashflows
         assert cashflows[0][1] < 0  # first buy
         assert cashflows[1][1] < 0  # second buy
         assert cashflows[2][1] > 0  # sell
@@ -90,8 +90,8 @@ class TestBuildPortfolio:
         ]
         portfolio = build_portfolio(_make_df(rows))
         p = portfolio["X"]
-        assert p["shares_held"] == 0
-        assert abs(p["realized_pnl"] - 100) < 0.01
+        assert p.shares_held == 0
+        assert abs(p.realized_pnl - 100) < 0.01
 
 
 # ── get_holdings_at ──

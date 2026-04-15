@@ -9,6 +9,7 @@ from portfolio.portfolio import (
     get_cashflows_between, get_net_new_money_between,
 )
 from portfolio.returns import calc_simple_return, calc_period_mwrr, calc_period_twr
+from portfolio.models import PeriodPerformance
 
 
 PERIODS = [
@@ -33,7 +34,7 @@ def build_history(df, instruments):
     for label, days in PERIODS:
         period_start, period_days = _resolve_period(today, first_date, days)
         if period_start is None:
-            results.append({"period": label, "available": False})
+            results.append(PeriodPerformance(period=label, available=False))
             continue
 
         result = _analyze_period(label, period_start, today, period_days, df, price_histories)
@@ -108,12 +109,12 @@ def _analyze_period(label, period_start, today, days, df, price_histories):
 
     twr = calc_period_twr(eval_dates, get_value_before, get_value_after)
 
-    return {
-        "period": label,
-        "available": True,
-        "past_date": period_start,
-        "market_gain": market_gain,
-        "simple_return": simple_return,
-        "twr": twr,
-        "mwrr": mwrr,
-    }
+    return PeriodPerformance(
+        period=label,
+        available=True,
+        past_date=period_start,
+        market_gain=market_gain,
+        simple_return=simple_return,
+        twr=twr,
+        mwrr=mwrr,
+    )

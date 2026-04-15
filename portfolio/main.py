@@ -9,6 +9,7 @@ from portfolio.output import print_instrument, print_portfolio_summary, print_hi
 from portfolio.history import build_history
 from portfolio.export import export_json
 from portfolio.rebalance import calc_rebalance
+from portfolio.models import InstrumentResult
 
 
 def parse_args():
@@ -46,14 +47,18 @@ def main():
 
         capital_gains_rate = instrument.get("capital_gains_rate", 0.26)
         analysis = analyze_instrument(data, current_price, capital_gains_rate)
-        results.append({"security": security, "data": data, "analysis": analysis,
-                        "ticker": instrument["ticker"], "isin": instrument.get("isin"),
-                        "capital_gains_rate": capital_gains_rate})
+        results.append(InstrumentResult(
+            security=security,
+            ticker=instrument["ticker"],
+            isin=instrument.get("isin"),
+            capital_gains_rate=capital_gains_rate,
+            data=data,
+            analysis=analysis,
+        ))
 
     # Per-instrument output
     for result in results:
-        print_instrument(result["security"], result["ticker"], result["data"],
-                        result["analysis"], result["capital_gains_rate"], tax_info)
+        print_instrument(result, tax_info)
 
     # Portfolio summary
     summary = None
