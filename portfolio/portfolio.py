@@ -52,31 +52,30 @@ def build_portfolio(df):
     return portfolio
 
 
-def get_holdings_at(date, transactions_df):
-    """Get shares held per instrument at a given date."""
-    holdings = {}
-    for security, group in transactions_df.groupby("Security"):
-        past = group[group["Date"] <= date].sort_values("Date")
-        shares = 0.0
-        for _, row in past.iterrows():
-            tx_type = row["Type"].strip().lower()
-            if tx_type == "buy":
-                shares += row["Shares"]
-            elif tx_type == "sell":
-                shares -= row["Shares"]
-        if shares > 0:
-            holdings[security] = shares
-    return holdings
+# ── Snapshot functions: portfolio state at a given date ──
+
+def _get_transactions_until(date, transactions_df):
+    """Filter transactions up to a given date, grouped by security."""
+    return transactions_df[transactions_df["Date"] <= date]
 
 
-def get_cost_basis_at(date, transactions_df):
-    """Get portfolio cost basis at a given date."""
-    total_cost = 0.0
-    for security, group in transactions_df.groupby("Security"):
-        past = group[group["Date"] <= date].sort_values("Date")
+def _get_transactions_between(start_date, end_date, transactions_df):
+    """Filter transactions between two dates (exclusive start, inclusive end)."""
+    return transactions_df[
+        (transactions_df["Date"] > start_date) & (transactions_df["Date"] <= end_date)
+    ]
+
+
+def _replay_transactions(past_df):
+    """Replay transactions to get shares and cost per security.
+
+    Returns dict of security -> {"shares": float, "cost": float}
+    """
+    state = {}
+    for security, group in past_df.groupby("Security"):
         shares = 0.0
         cost = 0.0
-        for _, row in past.iterrows():
+        for _, row in group.sort_values("Date").iterrows():
             tx_type = row["Type"].strip().lower()
             if tx_type == "buy":
                 shares += row["Shares"]
@@ -85,8 +84,22 @@ def get_cost_basis_at(date, transactions_df):
                 avg = cost / shares if shares > 0 else 0
                 cost -= avg * row["Shares"]
                 shares -= row["Shares"]
-        total_cost += cost
-    return total_cost
+        state[security] = {"shares": shares, "cost": cost}
+    return state
+
+
+def get_holdings_at(date, transactions_df):
+    """Get shares held per instrument at a given date."""
+    past_df = _get_transactions_until(date, transactions_df)
+    state = _replay_transactions(past_df)
+    return {sec: s["shares"] for sec, s in state.items() if s["shares"] > 0}
+
+
+def get_cost_basis_at(date, transactions_df):
+    """Get portfolio cost basis at a given date."""
+    past_df = _get_transactions_until(date, transactions_df)
+    state = _replay_transactions(past_df)
+    return sum(s["cost"] for s in state.values())
 
 
 def value_holdings(holdings, price_histories, date):
@@ -105,11 +118,9 @@ def value_holdings(holdings, price_histories, date):
 
 def get_cashflows_between(start_date, end_date, transactions_df):
     """Extract cashflows (for XIRR) between two dates."""
-    period_txns = transactions_df[
-        (transactions_df["Date"] > start_date) & (transactions_df["Date"] <= end_date)
-    ]
+    period_df = _get_transactions_between(start_date, end_date, transactions_df)
     cashflows = []
-    for _, row in period_txns.iterrows():
+    for _, row in period_df.iterrows():
         tx_type = row["Type"].strip().lower()
         date = row["Date"].to_pydatetime()
         if tx_type == "buy":
@@ -121,13 +132,11 @@ def get_cashflows_between(start_date, end_date, transactions_df):
 
 def get_net_new_money_between(start_date, end_date, transactions_df):
     """Calculate net new money invested between two dates (buys - sells)."""
-    period_txns = transactions_df[
-        (transactions_df["Date"] > start_date) & (transactions_df["Date"] <= end_date)
-    ]
+    period_df = _get_transactions_between(start_date, end_date, transactions_df)
     buys = sum(row["Net Transaction Value"]
-               for _, row in period_txns.iterrows()
+               for _, row in period_df.iterrows()
                if row["Type"].strip().lower() == "buy")
     sells = sum(row["Net Transaction Value"]
-                for _, row in period_txns.iterrows()
+                for _, row in period_df.iterrows()
                 if row["Type"].strip().lower() == "sell")
     return buys - sells
