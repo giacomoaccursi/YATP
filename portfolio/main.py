@@ -5,9 +5,10 @@ from portfolio.loader import load_config, load_transactions
 from portfolio.portfolio import build_portfolio
 from portfolio.analysis import analyze_instrument, analyze_portfolio
 from portfolio.market import fetch_current_price
-from portfolio.output import print_instrument, print_portfolio_summary, print_history
+from portfolio.output import print_instrument, print_portfolio_summary, print_history, print_rebalance
 from portfolio.history import build_history
 from portfolio.export import export_json
+from portfolio.rebalance import calc_rebalance
 
 
 def parse_args():
@@ -15,6 +16,7 @@ def parse_args():
     parser.add_argument("--transactions", default="transactions.csv", help="Transactions CSV file")
     parser.add_argument("--config", default="config.json", help="Configuration JSON file")
     parser.add_argument("--export", metavar="FILE", help="Export report to JSON")
+    parser.add_argument("--rebalance", action="store_true", help="Show rebalancing suggestions")
     return parser.parse_args()
 
 
@@ -68,6 +70,15 @@ def main():
     if args.export:
         export_json(args.export, results, summary, history, tax_info)
         print(f"\n💾 Report exported to {args.export}")
+
+    # Rebalancing
+    if args.rebalance:
+        target_allocation = config.get("target_allocation")
+        if not target_allocation:
+            print("\n⚠️  No target_allocation defined in config.json.")
+        elif results:
+            actions = calc_rebalance(results, target_allocation)
+            print_rebalance(actions)
 
 
 if __name__ == "__main__":
