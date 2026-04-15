@@ -209,7 +209,8 @@
 
       <div class="flex justify-end gap-3 pt-2">
         <button @click="showAddForm = false" class="px-4 py-2 text-sm text-gray-400 hover:text-white transition">Cancel</button>
-        <button @click="submitTransaction" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 rounded-lg transition">Save</button>
+        <button @click="submitTransaction(true)" class="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 rounded-lg transition">Save & New</button>
+        <button @click="submitTransaction(false)" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 rounded-lg transition">Save</button>
       </div>
 
       <div v-if="formMessage" class="text-sm" :class="formError ? 'text-red-400' : 'text-green-400'">
@@ -356,7 +357,7 @@ createApp({
       await fetchData();
     }
 
-    async function submitTransaction() {
+    async function submitTransaction(keepOpen) {
       formMessage.value = '';
       formError.value = false;
 
@@ -372,6 +373,17 @@ createApp({
           formMessage.value = 'Transaction added successfully';
           formError.value = false;
           await fetchData();
+
+          if (keepOpen) {
+            // Reset form but keep date, type and security
+            form.value.shares = '';
+            form.value.quote = '';
+            form.value.fees = '';
+            form.value.taxes = '';
+            form.value.net_transaction_value = '';
+          } else {
+            showAddForm.value = false;
+          }
         } else {
           formMessage.value = data.error || 'Failed to add transaction';
           formError.value = true;
