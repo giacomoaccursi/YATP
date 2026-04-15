@@ -39,12 +39,12 @@
     <section v-if="summary" class="grid grid-cols-2 md:grid-cols-4 gap-4">
       <div class="bg-gray-900 rounded-xl p-5 border border-gray-800">
         <div class="text-xs text-gray-500 uppercase tracking-wide">Market Value</div>
-        <div class="text-2xl font-semibold mt-1">€{{ fmt(summary.market_value) }}</div>
+        <div class="text-2xl font-semibold mt-1">{{ fmt(summary.market_value) }} €</div>
       </div>
       <div class="bg-gray-900 rounded-xl p-5 border border-gray-800">
         <div class="text-xs text-gray-500 uppercase tracking-wide">Total P&L</div>
         <div class="text-2xl font-semibold mt-1" :class="pnlColor(summary.total_pnl)">
-          €{{ fmtSigned(summary.total_pnl) }}
+          {{ fmtSigned(summary.total_pnl) }} €
         </div>
       </div>
       <div class="bg-gray-900 rounded-xl p-5 border border-gray-800">
@@ -87,10 +87,10 @@
                 <div class="text-xs text-gray-500">{{ inst.ticker }}</div>
               </td>
               <td class="px-5 py-3 text-right">{{ inst.shares_held }}</td>
-              <td class="px-5 py-3 text-right">€{{ fmt(inst.avg_cost_per_share) }}</td>
-              <td class="px-5 py-3 text-right">€{{ fmt(inst.market_value) }}</td>
+              <td class="px-5 py-3 text-right">{{ fmt(inst.avg_cost_per_share) }} €</td>
+              <td class="px-5 py-3 text-right">{{ fmt(inst.market_value) }} €</td>
               <td class="px-5 py-3 text-right" :class="pnlColor(inst.total_pnl)">
-                €{{ fmtSigned(inst.total_pnl) }}
+                {{ fmtSigned(inst.total_pnl) }} €
               </td>
               <td class="px-5 py-3 text-right" :class="pnlColor(inst.simple_return)">
                 {{ fmtSigned(inst.simple_return) }}%
@@ -98,7 +98,7 @@
               <td class="px-5 py-3 text-right" :class="pnlColor(inst.xirr)">
                 {{ inst.xirr != null ? fmtSigned(inst.xirr) + '% p.a.' : 'N/A' }}
               </td>
-              <td class="px-5 py-3 text-right">€{{ fmt(inst.estimated_tax) }}</td>
+              <td class="px-5 py-3 text-right">{{ fmt(inst.estimated_tax) }} €</td>
             </tr>
           </tbody>
         </table>
@@ -138,7 +138,7 @@
             <td class="px-5 py-3 text-right">{{ action.target_weight.toFixed(1) }}%</td>
             <td class="px-5 py-3 text-right" :class="action.difference > 0 ? 'text-green-400' : action.difference < 0 ? 'text-red-400' : 'text-gray-400'">
               {{ action.difference > 0 ? 'Buy' : action.difference < 0 ? 'Sell' : 'On target' }}
-              {{ action.difference !== 0 ? ' €' + Math.abs(action.difference).toFixed(0) : '' }}
+              {{ action.difference !== 0 ? Math.abs(action.difference).toFixed(0) + ' €' : '' }}
             </td>
           </tr>
         </tbody>
