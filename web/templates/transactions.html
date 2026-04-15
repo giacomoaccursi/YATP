@@ -61,6 +61,8 @@
               <th class="px-5 py-3 text-left">Security</th>
               <th class="px-5 py-3 text-right">Shares</th>
               <th class="px-5 py-3 text-right">Quote</th>
+              <th class="px-5 py-3 text-right">Fees</th>
+              <th class="px-5 py-3 text-right">Taxes</th>
               <th class="px-5 py-3 text-right">Net Value</th>
               <th class="px-5 py-3 text-right w-16"></th>
             </tr>
@@ -82,6 +84,8 @@
               <td class="px-5 py-3">{{ tx.security }}</td>
               <td class="px-5 py-3 text-right">{{ tx.shares > 0 ? tx.shares : '—' }}</td>
               <td class="px-5 py-3 text-right">{{ tx.quote > 0 ? tx.quote.toFixed(2) + ' €' : '—' }}</td>
+              <td class="px-5 py-3 text-right text-gray-500">{{ tx.fees > 0 ? tx.fees.toFixed(2) + ' €' : '—' }}</td>
+              <td class="px-5 py-3 text-right text-gray-500">{{ tx.taxes > 0 ? tx.taxes.toFixed(2) + ' €' : '—' }}</td>
               <td class="px-5 py-3 text-right font-medium">{{ tx.net_transaction_value.toFixed(2) }} €</td>
               <td class="px-5 py-3 text-right">
                 <button @click="confirmDelete(tx.index)" class="p-1.5 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-400/10 transition">
@@ -92,7 +96,7 @@
               </td>
             </tr>
             <tr v-if="!filteredTransactions.length">
-              <td colspan="7" class="px-5 py-8 text-center text-gray-500">No transactions found</td>
+              <td colspan="9" class="px-5 py-8 text-center text-gray-500">No transactions found</td>
             </tr>
           </tbody>
         </table>

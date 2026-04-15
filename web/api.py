@@ -71,6 +71,8 @@ def register_api_routes(app):
                 "security": row["Security"].strip(),
                 "shares": round(row["Shares"], 6) if row["Shares"] else 0,
                 "quote": round(row["Quote"], 2) if row["Quote"] else 0,
+                "fees": round(float(row.get("Fees", 0) or 0), 2),
+                "taxes": round(float(row.get("Taxes", 0) or 0), 2),
                 "net_transaction_value": round(row["Net Transaction Value"], 2) if row["Net Transaction Value"] else 0,
             })
         return jsonify({"transactions": transactions})
