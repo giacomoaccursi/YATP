@@ -47,7 +47,18 @@ Required columns:
 Date,Type,Security,Shares,Quote,Amount,Fees,Taxes,Net Transaction Value
 ```
 
-`Type` must be `Buy` or `Sell`. `Security` must match a key in `config.json` instruments.
+`Security` must match a key in `config.json` instruments.
+
+Supported transaction types:
+
+| Type | Description | Required fields |
+|---|---|---|
+| `Buy` | Purchase shares | Shares, Quote, Net Transaction Value |
+| `Sell` | Sell shares (also used for bond maturity/redemption) | Shares, Quote, Net Transaction Value |
+| `Dividend` | Dividend payment from distributing funds | Net Transaction Value (Shares/Quote can be empty) |
+| `Coupon` | Coupon payment from bonds | Net Transaction Value (Shares/Quote can be empty) |
+
+Empty numeric fields are treated as zero. For dividends and coupons, only `Date`, `Type`, `Security` and `Net Transaction Value` are needed.
 
 ## Tests
 
