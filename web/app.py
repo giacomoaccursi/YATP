@@ -25,12 +25,12 @@ def create_app(config_path, transactions_path):
     return app
 
 
-def launch(config_path, transactions_path, port=5000):
+def launch(config_path, transactions_path, port=5050):
     """Launch the web UI and open the browser."""
     app = create_app(config_path, transactions_path)
 
     def open_browser():
-        webbrowser.open(f"http://localhost:{port}")
+        webbrowser.open(f"http://127.0.0.1:{port}")
 
     threading.Timer(1.0, open_browser).start()
-    app.run(port=port, debug=False)
+    app.run(host="127.0.0.1", port=port, debug=False)
