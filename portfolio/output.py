@@ -94,12 +94,12 @@ def print_rebalance(actions):
     print(f"\n{'═' * 72}")
     print(f"⚖️  REBALANCE")
     print(f"{'─' * 72}")
-    print(f"   {'Instrument':<25s} {'Current':>8s} {'Target':>8s} {'Action':>12s}")
+    print(f"   {'Asset Class':<25s} {'Current':>8s} {'Target':>8s} {'Action':>12s}")
     print(f"   {'─' * 25} {'─' * 8} {'─' * 8} {'─' * 12}")
 
     for action in actions:
         diff = action["difference"]
         label = f"Buy €{diff:,.0f}" if diff > 0 else f"Sell €{abs(diff):,.0f}" if diff < 0 else "On target"
-        print(f"   {action['security']:<25s} {action['current_weight']:>+7.1f}% {action['target_weight']:>+7.1f}% {label:>12s}")
+        print(f"   {action['asset_class']:<25s} {action['current_weight']:>7.1f}% {action['target_weight']:>7.1f}% {label:>12s}")
 
     print(f"{'═' * 72}")

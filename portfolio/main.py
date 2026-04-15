@@ -77,7 +77,7 @@ def main():
         if not target_allocation:
             print("\n⚠️  No target_allocation defined in config.json.")
         elif results:
-            actions = calc_rebalance(results, target_allocation)
+            actions = calc_rebalance(results, target_allocation, instruments)
             print_rebalance(actions)
 
 

@@ -1,47 +1,44 @@
-"""Portfolio rebalancing: compare current vs target allocation."""
+"""Portfolio rebalancing: compare current vs target allocation by asset class."""
 
 
-def calc_rebalance(results, target_allocation):
-    """Calculate buy/sell amounts to reach target allocation.
+def calc_rebalance(results, target_allocation, instruments):
+    """Calculate buy/sell amounts per asset class to reach target allocation.
 
-    Returns a list of dicts with security, current weight, target weight,
-    and the euro amount to buy (positive) or sell (negative).
+    target_allocation: dict of asset_class -> target percentage (e.g. {"ETF": 80, "ETC": 20})
+    instruments: config instruments dict (used to map security -> asset class)
+
+    Returns a list of dicts with asset class, current/target weights, and difference in euros.
     """
     total_market_value = sum(result["analysis"]["market_value"] for result in results)
 
     if total_market_value <= 0:
         return []
 
-    actions = []
+    # Group current values by asset class
+    current_by_class = {}
     for result in results:
-        security = result["security"]
-        current_value = result["analysis"]["market_value"]
+        instrument = instruments.get(result["security"].strip(), {})
+        asset_class = instrument.get("type", "Other")
+        current_by_class[asset_class] = current_by_class.get(asset_class, 0) + result["analysis"]["market_value"]
+
+    # All asset classes (from current holdings + target)
+    all_classes = set(current_by_class.keys()) | set(target_allocation.keys())
+
+    actions = []
+    for asset_class in sorted(all_classes):
+        current_value = current_by_class.get(asset_class, 0)
         current_weight = (current_value / total_market_value) * 100
-        target_weight = target_allocation.get(security, 0)
+        target_weight = target_allocation.get(asset_class, 0)
         target_value = total_market_value * (target_weight / 100)
         difference = target_value - current_value
 
         actions.append({
-            "security": security,
+            "asset_class": asset_class,
             "current_weight": current_weight,
             "target_weight": target_weight,
             "current_value": current_value,
             "target_value": target_value,
             "difference": difference,
         })
-
-    # Include instruments in target but not in portfolio
-    portfolio_securities = {result["security"] for result in results}
-    for security, target_weight in target_allocation.items():
-        if security not in portfolio_securities:
-            target_value = total_market_value * (target_weight / 100)
-            actions.append({
-                "security": security,
-                "current_weight": 0,
-                "target_weight": target_weight,
-                "current_value": 0,
-                "target_value": target_value,
-                "difference": target_value,
-            })
 
     return actions
