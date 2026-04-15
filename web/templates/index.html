@@ -175,7 +175,7 @@
           <option value="__custom__">+ New instrument...</option>
         </select>
         <div v-else class="flex gap-2">
-          <input v-model="form.security" type="text" placeholder="Instrument name" class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+          <input v-model="form.security" type="text" placeholder="e.g. ISHARES CORE S&P 500" class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
           <button @click="customSecurity = false; form.security = availableInstruments[0] || ''" class="px-3 py-2 text-xs text-gray-400 hover:text-white bg-gray-800 border border-gray-700 rounded-lg">Cancel</button>
         </div>
       </div>
