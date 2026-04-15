@@ -5,7 +5,7 @@ Calculates returns, P&L and tax estimates for a financial portfolio.
 Usage:
   python run.py                          # terminal output only
   python run.py --export report.json     # also save to JSON
-  python run.py -t my.csv -c my.json    # custom files
+  python run.py --transactions my.csv --config my.json
 """
 
 import argparse
@@ -20,8 +20,8 @@ from portfolio.export import export_json
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Portfolio Tracker")
-    parser.add_argument("-t", "--transactions", default="transactions.csv", help="Transactions CSV file")
-    parser.add_argument("-c", "--config", default="config.json", help="Configuration JSON file")
+    parser.add_argument("--transactions", default="transactions.csv", help="Transactions CSV file")
+    parser.add_argument("--config", default="config.json", help="Configuration JSON file")
     parser.add_argument("--export", metavar="FILE", help="Export report to JSON")
     return parser.parse_args()
 

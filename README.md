@@ -13,7 +13,7 @@ pip install -r requirements.txt
 ```bash
 python run.py                            # terminal output
 python run.py --export report.json       # also export to JSON
-python run.py -t my.csv -c my.json       # custom files
+python run.py --transactions my.csv --config my.json
 ```
 
 ## Configuration
