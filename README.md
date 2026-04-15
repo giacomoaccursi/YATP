@@ -13,6 +13,7 @@ pip install -r requirements.txt
 ```bash
 python run.py                            # terminal output
 python run.py --export report.json       # also export to JSON
+python run.py --rebalance                # show rebalancing suggestions
 python run.py --transactions my.csv --config my.json
 ```
 
@@ -61,6 +62,22 @@ pytest tests/ -v
 - Tax estimates per instrument (configurable rate)
 - Allocation by instrument and asset class
 - Historical performance: 1 month, 6 months, 1 year, since inception
+- Rebalancing suggestions by asset class
+
+## Rebalancing
+
+Add a `target_allocation` to `config.json` with target percentages by asset class:
+
+```json
+{
+  "target_allocation": {
+    "ETF": 80,
+    "ETC": 20
+  }
+}
+```
+
+Asset classes are defined by the `type` field of each instrument. Run with `--rebalance` to see how much to buy or sell per class to reach your target.
 
 ## Market Data
 
