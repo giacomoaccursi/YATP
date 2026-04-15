@@ -112,3 +112,43 @@ def print_rebalance(actions):
         print(f"   {action.asset_class:<25s} {action.current_weight:>7.1f}% {action.target_weight:>7.1f}% {label:>12s}")
 
     print(f"{'═' * 72}")
+
+
+def print_summary(summary):
+    """Print transaction summary (no market data needed)."""
+    print(f"\n{'═' * 60}")
+    print(f"📋 TRANSACTION SUMMARY")
+    print(f"{'═' * 60}")
+
+    for inst in summary.instruments:
+        print(f"\n{'─' * 60}")
+        print(f"📌 {inst.security}")
+        print(f"{'─' * 60}")
+        print(f"   Period:                 {inst.first_transaction.strftime('%Y-%m-%d')} → {inst.last_transaction.strftime('%Y-%m-%d')}")
+        print(f"   Transactions:           {inst.total_buys} buys, {inst.total_sells} sells", end="")
+        if inst.total_dividends > 0:
+            print(f", {inst.total_dividends} dividends", end="")
+        if inst.total_coupons > 0:
+            print(f", {inst.total_coupons} coupons", end="")
+        print()
+        print(f"   Total invested:         €{inst.total_invested:,.2f}")
+        if inst.total_sold > 0:
+            print(f"   Total sold:             €{inst.total_sold:,.2f}")
+        if inst.total_income > 0:
+            print(f"   Total income:           €{inst.total_income:,.2f}")
+        print(f"   Net invested:           €{inst.net_invested:,.2f}")
+        print(f"   Shares held:            {inst.shares_held:.4f}")
+        if inst.shares_held > 0:
+            print(f"   Avg cost per share:     €{inst.avg_cost_per_share:.2f}")
+
+    print(f"\n{'═' * 60}")
+    print(f"📌 TOTAL")
+    print(f"{'─' * 60}")
+    print(f"   Transactions:           {summary.total_transactions}")
+    print(f"   Total invested:         €{summary.total_invested:,.2f}")
+    if summary.total_sold > 0:
+        print(f"   Total sold:             €{summary.total_sold:,.2f}")
+    if summary.total_income > 0:
+        print(f"   Total income:           €{summary.total_income:,.2f}")
+    print(f"   Net invested:           €{summary.net_invested:,.2f}")
+    print(f"{'═' * 60}")

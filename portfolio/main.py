@@ -5,11 +5,12 @@ from portfolio.loader import load_config, load_transactions
 from portfolio.portfolio import build_portfolio
 from portfolio.analysis import analyze_instrument, analyze_portfolio
 from portfolio.market import fetch_current_price
-from portfolio.output import print_instrument, print_portfolio_summary, print_history, print_rebalance
+from portfolio.output import print_instrument, print_portfolio_summary, print_history, print_rebalance, print_summary
 from portfolio.history import build_history
 from portfolio.export import export_json
 from portfolio.rebalance import calc_rebalance
 from portfolio.models import InstrumentResult
+from portfolio.summary import build_summary
 
 
 def parse_args():
@@ -18,6 +19,7 @@ def parse_args():
     parser.add_argument("--config", default="config.json", help="Configuration JSON file")
     parser.add_argument("--export", metavar="FILE", help="Export report to JSON")
     parser.add_argument("--rebalance", action="store_true", help="Show rebalancing suggestions")
+    parser.add_argument("--summary", action="store_true", help="Show transaction summary (no market data needed)")
     return parser.parse_args()
 
 
@@ -29,6 +31,12 @@ def main():
     instruments = config["instruments"]
     df = load_transactions(args.transactions)
     portfolio = build_portfolio(df)
+
+    # Summary mode: no market data needed
+    if args.summary:
+        summary = build_summary(df)
+        print_summary(summary)
+        return
 
     print("\n📊 Fetching current prices...\n")
 
