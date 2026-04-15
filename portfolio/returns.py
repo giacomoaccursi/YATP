@@ -77,18 +77,19 @@ def calc_period_twr(eval_dates, get_value_before, get_value_after):
     get_value_before: function(date) -> portfolio value with previous day's holdings
     get_value_after: function(date) -> portfolio value with that day's holdings
     """
+    if len(eval_dates) < 2:
+        return None
+
     twr = 1.0
-    prev_value = None
+    prev_value = get_value_after(eval_dates[0])
 
-    for i, date in enumerate(eval_dates):
-        if i == 0:
-            prev_value = get_value_after(date)
-            continue
+    if prev_value <= 0:
+        return None
 
+    for date in eval_dates[1:]:
         value_before = get_value_before(date)
-        if prev_value is not None and prev_value > 0:
+        if prev_value > 0:
             twr *= value_before / prev_value
-
         prev_value = get_value_after(date)
 
     return twr - 1
