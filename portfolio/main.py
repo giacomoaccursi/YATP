@@ -1,12 +1,4 @@
-"""
-Simple Portfolio Tracker
-Calculates returns, P&L and tax estimates for a financial portfolio.
-
-Usage:
-  python run.py                          # terminal output only
-  python run.py --export report.json     # also save to JSON
-  python run.py --transactions my.csv --config my.json
-"""
+"""Simple Portfolio Tracker"""
 
 import argparse
 from portfolio.loader import load_config, load_transactions
