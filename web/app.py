@@ -22,6 +22,10 @@ def create_app(config_path, transactions_path):
     def index():
         return send_from_directory(templates_dir, "index.html")
 
+    @app.route("/transactions")
+    def transactions_page():
+        return send_from_directory(templates_dir, "transactions.html")
+
     register_api_routes(app)
     return app
 

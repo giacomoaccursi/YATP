@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transactions — Simple Portfolio Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <style>
+    [v-cloak] { display: none; }
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+  </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+
+<div id="app" v-cloak>
+  <!-- Header -->
+  <header class="border-b border-gray-800 px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-6">
+      <h1 class="text-xl font-semibold tracking-tight">Transactions</h1>
+      <a href="/" class="text-sm text-gray-400 hover:text-white transition">← Dashboard</a>
+    </div>
+    <button @click="showAddForm = true" class="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-500 rounded-lg transition">
+      + Add Transaction
+    </button>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 py-8 space-y-6">
+
+    <!-- Filters -->
+    <section class="flex flex-wrap gap-3">
+      <select v-model="filterSecurity" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+        <option value="">All instruments</option>
+        <option v-for="sec in securities" :key="sec" :value="sec">{{ sec }}</option>
+      </select>
+      <select v-model="filterType" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+        <option value="">All types</option>
+        <option value="Buy">Buy</option>
+        <option value="Sell">Sell</option>
+        <option value="Dividend">Dividend</option>
+        <option value="Coupon">Coupon</option>
+      </select>
+      <input v-model="filterDateFrom" type="date" placeholder="From" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+      <input v-model="filterDateTo" type="date" placeholder="To" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+      <button v-if="hasFilters" @click="clearFilters" class="px-3 py-2 text-sm text-gray-400 hover:text-white transition">
+        Clear filters
+      </button>
+      <div class="ml-auto text-sm text-gray-500">
+        {{ filteredTransactions.length }} transactions
+      </div>
+    </section>
+
+    <!-- Transactions Table -->
+    <section class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="text-xs text-gray-500 uppercase bg-gray-900/50">
+            <tr>
+              <th class="px-5 py-3 text-left">Date</th>
+              <th class="px-5 py-3 text-left">Type</th>
+              <th class="px-5 py-3 text-left">Security</th>
+              <th class="px-5 py-3 text-right">Shares</th>
+              <th class="px-5 py-3 text-right">Quote</th>
+              <th class="px-5 py-3 text-right">Net Value</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-800">
+            <tr v-for="(tx, i) in filteredTransactions" :key="i" class="hover:bg-gray-800/50 transition">
+              <td class="px-5 py-3">{{ tx.date }}</td>
+              <td class="px-5 py-3">
+                <span class="px-2 py-0.5 rounded text-xs font-medium"
+                  :class="{
+                    'bg-green-900/50 text-green-400': tx.type === 'Buy',
+                    'bg-red-900/50 text-red-400': tx.type === 'Sell',
+                    'bg-blue-900/50 text-blue-400': tx.type === 'Dividend',
+                    'bg-yellow-900/50 text-yellow-400': tx.type === 'Coupon',
+                  }">
+                  {{ tx.type }}
+                </span>
+              </td>
+              <td class="px-5 py-3">{{ tx.security }}</td>
+              <td class="px-5 py-3 text-right">{{ tx.shares > 0 ? tx.shares : '—' }}</td>
+              <td class="px-5 py-3 text-right">{{ tx.quote > 0 ? tx.quote.toFixed(2) + ' €' : '—' }}</td>
+              <td class="px-5 py-3 text-right font-medium">{{ tx.net_transaction_value.toFixed(2) }} €</td>
+            </tr>
+            <tr v-if="!filteredTransactions.length">
+              <td colspan="6" class="px-5 py-8 text-center text-gray-500">No transactions found</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Add Transaction Modal -->
+  <div v-if="showAddForm" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50" @click.self="showAddForm = false">
+    <div class="bg-gray-900 rounded-2xl border border-gray-700 p-6 w-full max-w-md space-y-4">
+      <h2 class="text-lg font-semibold">Add Transaction</h2>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Date</label>
+          <input v-model="form.date" type="date" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Type</label>
+          <select v-model="form.type" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+            <option value="Buy">Buy</option>
+            <option value="Sell">Sell</option>
+            <option value="Dividend">Dividend</option>
+            <option value="Coupon">Coupon</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-xs text-gray-500 mb-1">Security</label>
+        <select v-if="!customSecurity" v-model="form.security" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+          <option v-for="name in availableInstruments" :key="name" :value="name">{{ name }}</option>
+          <option value="__custom__">+ New instrument...</option>
+        </select>
+        <div v-else class="flex gap-2">
+          <input v-model="form.security" type="text" placeholder="e.g. ISHARES CORE S&P 500" class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+          <button @click="customSecurity = false; form.security = availableInstruments[0] || ''" class="px-3 py-2 text-xs text-gray-400 hover:text-white bg-gray-800 border border-gray-700 rounded-lg">Cancel</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3" v-if="form.type === 'Buy' || form.type === 'Sell'">
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Shares</label>
+          <input v-model="form.shares" type="number" step="any" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Quote</label>
+          <input v-model="form.quote" type="number" step="any" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-3 gap-3">
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Fees</label>
+          <input v-model="form.fees" type="number" step="any" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div v-if="form.type !== 'Buy'">
+          <label class="block text-xs text-gray-500 mb-1">Taxes</label>
+          <input v-model="form.taxes" type="number" step="any" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 mb-1">Net Value</label>
+          <input v-if="form.type === 'Dividend' || form.type === 'Coupon'" v-model="form.net_transaction_value" type="number" step="any" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+          <input v-else :value="computedNetValue" readonly class="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-400 cursor-not-allowed">
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-3 pt-2">
+        <button @click="showAddForm = false" class="px-4 py-2 text-sm text-gray-400 hover:text-white transition">Cancel</button>
+        <button @click="submitTransaction(true)" class="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 rounded-lg transition">Save & New</button>
+        <button @click="submitTransaction(false)" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 rounded-lg transition">Save</button>
+      </div>
+
+      <div v-if="formMessage" class="text-sm" :class="formError ? 'text-red-400' : 'text-green-400'">
+        {{ formMessage }}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const { createApp, ref, computed, onMounted, watch } = Vue;
+
+createApp({
+  setup() {
+    const transactions = ref([]);
+    const availableInstruments = ref([]);
+    const showAddForm = ref(false);
+    const customSecurity = ref(false);
+    const formMessage = ref('');
+    const formError = ref(false);
+
+    // Filters
+    const filterSecurity = ref('');
+    const filterType = ref('');
+    const filterDateFrom = ref('');
+    const filterDateTo = ref('');
+
+    const form = ref({
+      date: new Date().toISOString().split('T')[0],
+      type: 'Buy',
+      security: '',
+      shares: '', quote: '', fees: '', taxes: '', net_transaction_value: '',
+    });
+
+    const securities = computed(() => {
+      return [...new Set(transactions.value.map(t => t.security))].sort();
+    });
+
+    const hasFilters = computed(() => {
+      return filterSecurity.value || filterType.value || filterDateFrom.value || filterDateTo.value;
+    });
+
+    const filteredTransactions = computed(() => {
+      return transactions.value.filter(tx => {
+        if (filterSecurity.value && tx.security !== filterSecurity.value) return false;
+        if (filterType.value && tx.type !== filterType.value) return false;
+        if (filterDateFrom.value && tx.date < filterDateFrom.value) return false;
+        if (filterDateTo.value && tx.date > filterDateTo.value) return false;
+        return true;
+      });
+    });
+
+    const computedNetValue = computed(() => {
+      const shares = parseFloat(form.value.shares) || 0;
+      const quote = parseFloat(form.value.quote) || 0;
+      const fees = parseFloat(form.value.fees) || 0;
+      const taxes = parseFloat(form.value.taxes) || 0;
+      const amount = shares * quote;
+      if (form.value.type === 'Buy') return (amount + fees).toFixed(2);
+      if (form.value.type === 'Sell') return (amount - fees - taxes).toFixed(2);
+      return form.value.net_transaction_value || '0.00';
+    });
+
+    function clearFilters() {
+      filterSecurity.value = '';
+      filterType.value = '';
+      filterDateFrom.value = '';
+      filterDateTo.value = '';
+    }
+
+    async function fetchData() {
+      const [txRes, instRes] = await Promise.all([
+        fetch('/api/transactions/list'),
+        fetch('/api/instruments'),
+      ]);
+      transactions.value = (await txRes.json()).transactions;
+      availableInstruments.value = (await instRes.json()).instruments;
+      if (!form.value.security && availableInstruments.value.length) {
+        form.value.security = availableInstruments.value[0];
+      }
+    }
+
+    async function submitTransaction(keepOpen) {
+      formMessage.value = '';
+      formError.value = false;
+      try {
+        const res = await fetch('/api/transactions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...form.value, net_transaction_value: computedNetValue.value }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          formMessage.value = 'Transaction added';
+          formError.value = false;
+          await fetchData();
+          if (keepOpen) {
+            form.value.shares = '';
+            form.value.quote = '';
+            form.value.fees = '';
+            form.value.taxes = '';
+            form.value.net_transaction_value = '';
+          } else {
+            showAddForm.value = false;
+          }
+        } else {
+          formMessage.value = data.error || 'Failed';
+          formError.value = true;
+        }
+      } catch (err) {
+        formMessage.value = 'Network error';
+        formError.value = true;
+      }
+    }
+
+    watch(() => form.value.security, (val) => {
+      if (val === '__custom__') {
+        customSecurity.value = true;
+        form.value.security = '';
+      }
+    });
+
+    onMounted(fetchData);
+
+    return {
+      transactions, availableInstruments, securities,
+      filterSecurity, filterType, filterDateFrom, filterDateTo,
+      hasFilters, filteredTransactions, clearFilters,
+      showAddForm, customSecurity, form, formMessage, formError,
+      computedNetValue, submitTransaction,
+    };
+  },
+}).mount('#app');
+</script>
+</body>
+</html>

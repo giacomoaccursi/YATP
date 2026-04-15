@@ -57,6 +57,23 @@ def register_api_routes(app):
         config = load_config(app.config["CONFIG_PATH"])
         return jsonify({"instruments": list(config["instruments"].keys())})
 
+    @app.route("/api/transactions/list")
+    def api_transactions_list():
+        """Return all transactions from the CSV."""
+        df = load_transactions(app.config["TRANSACTIONS_PATH"])
+        df = df.sort_values("Date", ascending=False)
+        transactions = []
+        for _, row in df.iterrows():
+            transactions.append({
+                "date": row["Date"].strftime("%Y-%m-%d"),
+                "type": row["Type"].strip(),
+                "security": row["Security"].strip(),
+                "shares": round(row["Shares"], 6) if row["Shares"] else 0,
+                "quote": round(row["Quote"], 2) if row["Quote"] else 0,
+                "net_transaction_value": round(row["Net Transaction Value"], 2) if row["Net Transaction Value"] else 0,
+            })
+        return jsonify({"transactions": transactions})
+
     @app.route("/api/transactions", methods=["POST"])
     def api_add_transaction():
         """Append a new transaction to the CSV file."""
