@@ -324,6 +324,6 @@ def register_api_routes(app):
                 "market_gain": round(p.market_gain, 2) if p.available else None,
                 "simple_return": round(p.simple_return, 2) if p.available else None,
                 "twr": round(p.twr * 100, 2) if p.available and p.twr is not None else None,
-                "mwrr": round(p.mwrr * 100, 2) if p.available and p.mwrr is not None else None,
+                "mwrr": round(p.mwrr, 2) if p.available and p.mwrr is not None else None,
             })
         return jsonify({"periods": periods})
