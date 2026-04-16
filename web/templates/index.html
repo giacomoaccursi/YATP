@@ -55,6 +55,15 @@
       </div>
     </section>
 
+    <!-- Portfolio Value Over Time -->
+    <section v-if="summary" class="bg-gray-900 rounded-xl border border-gray-800 p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-medium text-gray-400">Portfolio Value Over Time</h3>
+        <div v-if="historyLoading" class="text-xs text-gray-500">Loading history...</div>
+      </div>
+      <canvas ref="valueChart" height="80"></canvas>
+    </section>
+
     <!-- Allocation Charts -->
     <section v-if="summary" class="grid md:grid-cols-2 gap-4">
       <div class="bg-gray-900 rounded-xl border border-gray-800 p-5">
