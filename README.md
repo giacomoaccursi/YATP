@@ -15,6 +15,7 @@ python run.py                            # terminal output
 python run.py --export report.json       # also export to JSON
 python run.py --rebalance                # show rebalancing suggestions
 python run.py --summary                  # transaction summary (no market data needed)
+python run.py --ui                       # launch web dashboard
 python run.py --transactions my.csv --config my.json
 ```
 
@@ -94,6 +95,19 @@ Asset classes are defined by the `type` field of each instrument. Run with `--re
 ## Transaction Summary
 
 Run with `--summary` for a quick offline overview of your transactions. No market data is fetched. Shows per instrument: number of transactions, total invested/sold/income, shares held, average cost, and date range.
+
+## Web Dashboard
+
+Run with `--ui` to launch a local web dashboard at `http://127.0.0.1:5050`. The browser opens automatically.
+
+Features:
+- Portfolio overview: market value, P&L, returns, XIRR
+- Instruments table with all metrics
+- Allocation charts (by instrument and asset class)
+- Rebalancing suggestions
+- Transactions page with filters (by instrument, type, date range)
+- Add/delete transactions directly from the browser
+- Prices are cached in memory — click "Refresh Prices" to re-fetch
 
 ## Market Data
 
