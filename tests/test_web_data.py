@@ -636,3 +636,50 @@ class TestSerializerEdgeCases:
         )
         d = summary_to_dict(s)
         assert d["xirr"] == 12.0  # 0.12 * 100
+
+
+# ── simulate_rebalance and compute_net_transaction_value ──
+
+from web.data import simulate_rebalance, compute_net_transaction_value
+
+
+class TestComputeNetTransactionValue:
+    def test_buy(self):
+        assert compute_net_transaction_value("Buy", 10, 100, 5, 0) == 1005.0
+
+    def test_sell(self):
+        assert compute_net_transaction_value("Sell", 10, 110, 5, 26) == 1069.0
+
+    def test_zero_shares(self):
+        assert compute_net_transaction_value("Buy", 0, 100, 5, 0) == 5.0
+
+    def test_dividend_returns_zero(self):
+        assert compute_net_transaction_value("Dividend", 0, 0, 0, 0) == 0.0
+
+
+class TestSimulateRebalance:
+    @patch("web.data.load_portfolio_data")
+    def test_with_new_investment(self, mock_load):
+        from portfolio.models import InstrumentResult, InstrumentData, InstrumentAnalysis
+        data = InstrumentData(shares_held=10, avg_cost_per_share=100, cost_basis=1000, realized_pnl=0)
+        analysis = InstrumentAnalysis(
+            market_value=1000, unrealized_pnl=0, total_pnl=0,
+            simple_return=0, twr=None, xirr=None, estimated_tax=0, net_after_tax=1000,
+        )
+        r = InstrumentResult(security="ETF_A", ticker="ETF.A", isin=None, capital_gains_rate=0.26, data=data, analysis=analysis)
+        mock_load.return_value = ([r], {}, None, {"instruments": {"ETF_A": {"type": "ETF"}}})
+
+        actions = simulate_rebalance("c.json", "t.csv", 500, {"ETF": 100})
+
+        assert len(actions) == 1
+        assert actions[0]["asset_class"] == "ETF"
+        assert actions[0]["current_value"] == 1000.0
+        # Total = 1000 + 500 = 1500, target 100% = 1500
+        assert actions[0]["target_value"] == 1500.0
+        assert actions[0]["difference"] == 500.0
+
+    @patch("web.data.load_portfolio_data")
+    def test_empty_portfolio(self, mock_load):
+        mock_load.return_value = ([], {}, None, {"instruments": {}})
+        actions = simulate_rebalance("c.json", "t.csv", 0, {"ETF": 100})
+        assert actions == []

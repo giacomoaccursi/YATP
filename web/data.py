@@ -97,6 +97,61 @@ def load_rebalance_data(config_path, transactions_path):
     return calc_rebalance(results, target, config["instruments"])
 
 
+def simulate_rebalance(config_path, transactions_path, new_investment, custom_targets):
+    """Simulate rebalance with optional new investment and custom targets.
+
+    Returns list of dicts with asset_class, current_value, current_weight,
+    target_weight, target_value, difference.
+    """
+    results, _, _, config = load_portfolio_data(config_path, transactions_path)
+    instruments = config["instruments"]
+
+    total_market = sum(r.analysis.market_value for r in results)
+    total_value = total_market + new_investment
+
+    if total_value <= 0:
+        return []
+
+    # Group current values by asset class
+    current_by_class = {}
+    for r in results:
+        inst = instruments.get(r.security.strip(), {})
+        asset_class = inst.get("type", "Other")
+        current_by_class[asset_class] = current_by_class.get(asset_class, 0) + r.analysis.market_value
+
+    all_classes = sorted(set(current_by_class.keys()) | set(custom_targets.keys()))
+
+    actions = []
+    for cls in all_classes:
+        current_value = current_by_class.get(cls, 0)
+        current_weight = (current_value / total_value) * 100 if total_value > 0 else 0
+        target_weight = custom_targets.get(cls, 0)
+        target_value = total_value * (target_weight / 100)
+        actions.append({
+            "asset_class": cls,
+            "current_value": round(current_value, 2),
+            "current_weight": round(current_weight, 2),
+            "target_weight": round(target_weight, 2),
+            "target_value": round(target_value, 2),
+            "difference": round(target_value - current_value, 2),
+        })
+
+    return actions
+
+
+def compute_net_transaction_value(tx_type, shares, quote, fees, taxes):
+    """Compute net transaction value from form fields.
+
+    Returns rounded float.
+    """
+    amount = shares * quote
+    if tx_type == "Buy":
+        return round(amount + fees, 2)
+    if tx_type == "Sell":
+        return round(amount - fees - taxes, 2)
+    return 0.0
+
+
 def load_summary_data(transactions_path):
     """Load transaction summary. Returns Summary object."""
     df = load_transactions(transactions_path)

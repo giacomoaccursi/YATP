@@ -7,7 +7,8 @@ from flask import jsonify, request
 from web.data import (
     load_portfolio_data, load_rebalance_data, load_summary_data,
     load_instrument_names, load_portfolio_history, load_instrument_history,
-    load_performance_periods, load_portfolio_daily_change, clear_price_cache,
+    load_performance_periods, load_portfolio_daily_change,
+    simulate_rebalance, compute_net_transaction_value, clear_price_cache,
 )
 from web.serializers import (
     instrument_to_dict, summary_to_dict, transaction_row_to_dict,
@@ -62,6 +63,31 @@ def register_api_routes(app):
             app.config["CONFIG_PATH"], app.config["TRANSACTIONS_PATH"]
         )
         return jsonify({"actions": [rebalance_to_dict(a) for a in actions]})
+
+    @app.route("/api/rebalance/simulate", methods=["POST"])
+    def api_rebalance_simulate():
+        """Simulate rebalance with custom investment and targets."""
+        data = request.get_json()
+        new_investment = data.get("new_investment", 0)
+        custom_targets = data.get("targets", {})
+        actions = simulate_rebalance(
+            app.config["CONFIG_PATH"], app.config["TRANSACTIONS_PATH"],
+            new_investment, custom_targets,
+        )
+        return jsonify({"actions": actions})
+
+    @app.route("/api/transactions/net-value", methods=["POST"])
+    def api_net_value():
+        """Compute net transaction value from form fields."""
+        data = request.get_json()
+        net = compute_net_transaction_value(
+            data.get("type", ""),
+            float(data.get("shares", 0) or 0),
+            float(data.get("quote", 0) or 0),
+            float(data.get("fees", 0) or 0),
+            float(data.get("taxes", 0) or 0),
+        )
+        return jsonify({"net_transaction_value": net})
 
     @app.route("/api/instruments")
     def api_instruments():

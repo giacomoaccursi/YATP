@@ -1,5 +1,6 @@
 /**
  * Vue app for the transactions page.
+ * No business logic — net value computed by /api/transactions/net-value.
  */
 
 const { createApp, ref, computed, onMounted, watch } = Vue;
@@ -20,18 +21,19 @@ createApp({
     const formError = ref(false);
     const form = ref(createEmptyForm());
     const editIndex = ref(null);
+    const computedNetValue = ref('0.00');
+    let netValueTimer = null;
 
     // Delete state
     const deleteIndex = ref(null);
 
     // Computed
-    const securities = computed(() => [...new Set(transactions.value.map(t => t.security))].sort());
-    const hasFilters = computed(() => Object.values(filters.value).some(v => v));
-    const computedNetValue = computed(() => computeNetValue(form.value));
-    const isEditing = computed(() => editIndex.value !== null);
+    const securities = computed(function () { return [...new Set(transactions.value.map(function (t) { return t.security; }))].sort(); });
+    const hasFilters = computed(function () { return Object.values(filters.value).some(function (v) { return v; }); });
+    const isEditing = computed(function () { return editIndex.value !== null; });
 
-    const filteredTransactions = computed(() => {
-      return transactions.value.filter(tx => {
+    const filteredTransactions = computed(function () {
+      return transactions.value.filter(function (tx) {
         if (filters.value.security && tx.security !== filters.value.security) return false;
         if (filters.value.type && tx.type !== filters.value.type) return false;
         if (filters.value.dateFrom && tx.date < filters.value.dateFrom) return false;
@@ -40,9 +42,23 @@ createApp({
       });
     });
 
+    // Fetch net value from backend (debounced)
+    function updateNetValue() {
+      clearTimeout(netValueTimer);
+      netValueTimer = setTimeout(async function () {
+        var val = await fetchNetValue(form.value);
+        computedNetValue.value = val;
+      }, 150);
+    }
+
+    // Watch form fields that affect net value
+    watch(function () {
+      return [form.value.type, form.value.shares, form.value.quote, form.value.fees, form.value.taxes];
+    }, updateNetValue, { deep: true });
+
     // Methods
     function typeBadge(type) {
-      const map = {
+      var map = {
         Buy: 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400',
         Sell: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400',
         Dividend: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400',
@@ -58,6 +74,7 @@ createApp({
     function openAddForm() {
       editIndex.value = null;
       form.value = createEmptyForm();
+      computedNetValue.value = '0.00';
       if (availableInstruments.value.length) {
         form.value.security = availableInstruments.value[0];
       }
@@ -79,6 +96,7 @@ createApp({
         taxes: tx.taxes > 0 ? String(tx.taxes) : '',
         net_transaction_value: String(tx.net_transaction_value),
       };
+      computedNetValue.value = String(tx.net_transaction_value);
       customSecurity.value = !availableInstruments.value.includes(tx.security);
       formMessage.value = '';
       formError.value = false;
@@ -91,7 +109,7 @@ createApp({
 
     async function executeDelete() {
       try {
-        const res = await fetch('/api/transactions/' + deleteIndex.value, { method: 'DELETE' });
+        var res = await fetch('/api/transactions/' + deleteIndex.value, { method: 'DELETE' });
         if (res.ok) await fetchData();
       } catch (err) {
         console.error('Delete failed:', err);
@@ -100,12 +118,12 @@ createApp({
     }
 
     async function fetchData() {
-      const [txRes, instRes] = await Promise.all([
+      var responses = await Promise.all([
         fetch('/api/transactions/list'),
         fetch('/api/instruments'),
       ]);
-      transactions.value = (await txRes.json()).transactions;
-      availableInstruments.value = (await instRes.json()).instruments;
+      transactions.value = (await responses[0].json()).transactions;
+      availableInstruments.value = (await responses[1].json()).instruments;
       if (!form.value.security && availableInstruments.value.length) {
         form.value.security = availableInstruments.value[0];
       }
@@ -115,7 +133,7 @@ createApp({
       formMessage.value = '';
       formError.value = false;
       try {
-        let result;
+        var result;
         if (isEditing.value) {
           result = await updateTransactionApi(editIndex.value, form.value, computedNetValue.value);
         } else {
@@ -134,6 +152,7 @@ createApp({
             form.value.fees = '';
             form.value.taxes = '';
             form.value.net_transaction_value = '';
+            computedNetValue.value = '0.00';
           } else {
             showAddForm.value = false;
           }
@@ -144,7 +163,7 @@ createApp({
       }
     }
 
-    watch(() => form.value.security, (val) => {
+    watch(function () { return form.value.security; }, function (val) {
       if (val === '__custom__') {
         customSecurity.value = true;
         form.value.security = '';

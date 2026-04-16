@@ -64,17 +64,25 @@ function chartScales(opts) {
   };
 }
 
-/** Compute net transaction value from form fields. */
-function computeNetValue(form) {
-  const shares = parseFloat(form.shares) || 0;
-  const quote = parseFloat(form.quote) || 0;
-  const fees = parseFloat(form.fees) || 0;
-  const taxes = parseFloat(form.taxes) || 0;
-  const amount = shares * quote;
-
-  if (form.type === 'Buy') return (amount + fees).toFixed(2);
-  if (form.type === 'Sell') return (amount - fees - taxes).toFixed(2);
-  return form.net_transaction_value || '0.00';
+/** Fetch net transaction value from backend. Returns string. */
+async function fetchNetValue(form) {
+  try {
+    var res = await fetch('/api/transactions/net-value', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: form.type,
+        shares: form.shares,
+        quote: form.quote,
+        fees: form.fees,
+        taxes: form.taxes,
+      }),
+    });
+    var data = await res.json();
+    return String(data.net_transaction_value);
+  } catch (err) {
+    return '0.00';
+  }
 }
 
 /** Create a default empty transaction form. */

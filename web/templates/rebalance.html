@@ -89,7 +89,7 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
-            <tr v-for="row in computedActions" :key="row.asset_class">
+            <tr v-for="row in simulatedActions" :key="row.asset_class">
               <td class="px-5 py-3 font-medium">{{ row.asset_class }}</td>
               <td class="px-5 py-3 text-right">{{ fmt(row.current_value) }} &euro;</td>
               <td class="px-5 py-3 text-right">{{ row.current_weight.toFixed(1) }}%</td>
