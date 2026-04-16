@@ -15,6 +15,7 @@ createApp({
     const loading = ref(true);
     const historyLoading = ref(true);
     const summary = ref(null);
+    const dailyChange = ref(null);
     const rebalance = ref([]);
     const allocChart = ref(null);
     const classChart = ref(null);
@@ -116,6 +117,7 @@ createApp({
         var responses = await Promise.all([fetch('/api/portfolio'), fetch('/api/rebalance')]);
         var portfolioData = await responses[0].json();
         summary.value = portfolioData.summary;
+        dailyChange.value = portfolioData.daily_change;
         rebalance.value = (await responses[1].json()).actions;
         loading.value = false;
         await nextTick();
@@ -155,7 +157,7 @@ createApp({
     onUnmounted(function () { window.removeEventListener('themechange', onThemeChange); });
 
     return {
-      loading, historyLoading, summary, rebalance,
+      loading, historyLoading, summary, dailyChange, rebalance,
       allocChart, classChart, valueChart,
       fmt, fmtSigned, pnlColor, refreshPrices,
     };

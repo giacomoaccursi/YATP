@@ -7,7 +7,7 @@ from flask import jsonify, request
 from web.data import (
     load_portfolio_data, load_rebalance_data, load_summary_data,
     load_instrument_names, load_portfolio_history, load_instrument_history,
-    load_performance_periods, clear_price_cache,
+    load_performance_periods, load_portfolio_daily_change, clear_price_cache,
 )
 from web.serializers import (
     instrument_to_dict, summary_to_dict, transaction_row_to_dict,
@@ -25,9 +25,13 @@ def register_api_routes(app):
         results, daily_changes, summary, _ = load_portfolio_data(
             app.config["CONFIG_PATH"], app.config["TRANSACTIONS_PATH"]
         )
+        daily_change = load_portfolio_daily_change(
+            app.config["CONFIG_PATH"], app.config["TRANSACTIONS_PATH"]
+        )
         return jsonify({
             "instruments": [instrument_to_dict(r, daily_changes.get(r.security)) for r in results],
             "summary": summary_to_dict(summary) if summary else None,
+            "daily_change": daily_change,
         })
 
     @app.route("/api/portfolio/history")

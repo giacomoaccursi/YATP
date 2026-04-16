@@ -103,6 +103,57 @@ def load_summary_data(transactions_path):
     return build_summary(df)
 
 
+def load_portfolio_daily_change(config_path, transactions_path):
+    """Calculate portfolio value change from previous trading day.
+
+    Returns dict with 'amount' (float) and 'pct' (float), or None if unavailable.
+    """
+    df = load_transactions(transactions_path)
+    config = load_config(config_path)
+    instruments = config["instruments"]
+
+    df = df.sort_values("Date")
+    if df.empty:
+        return None
+
+    today = pd.Timestamp.now().normalize()
+    start = today - pd.Timedelta(days=10)
+
+    price_histories = _fetch_all_price_histories(df, instruments, start, today)
+    if not price_histories:
+        return None
+
+    all_dates = _build_date_index(price_histories, df["Date"].min().normalize(), today)
+    recent = [d for d in all_dates if d <= today]
+    if len(recent) < 2:
+        return None
+
+    date_today = recent[-1]
+    date_prev = recent[-2]
+
+    tx_events = _build_tx_events(df)
+
+    # Holdings at previous close
+    holdings_prev = {}
+    tx_idx = 0
+    for d in [d for d in all_dates if d <= date_prev]:
+        tx_idx = _apply_transactions(tx_events, tx_idx, d, holdings_prev)
+    val_prev = _value_holdings_at(holdings_prev, price_histories, date_prev)
+
+    # Holdings at today's close
+    holdings_today = dict(holdings_prev)
+    for d in [d for d in all_dates if date_prev < d <= date_today]:
+        tx_idx = _apply_transactions(tx_events, tx_idx, d, holdings_today)
+    val_today = _value_holdings_at(holdings_today, price_histories, date_today)
+
+    if val_prev <= 0:
+        return None
+
+    amount = val_today - val_prev
+    pct = (amount / val_prev) * 100
+    return {"amount": round(amount, 2), "pct": round(pct, 2)}
+
+
 def load_instrument_names(config_path):
     """Load list of configured instrument names."""
     config = load_config(config_path)
