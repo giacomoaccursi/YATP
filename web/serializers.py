@@ -89,3 +89,24 @@ def rebalance_to_dict(action):
         "target_weight": round(action.target_weight, 2),
         "difference": round(action.difference, 2),
     }
+
+
+def period_to_dict(period):
+    """Convert PeriodPerformance to API response dict."""
+    if not period.available:
+        return {
+            "period": period.period,
+            "available": False,
+            "market_gain": None,
+            "simple_return": None,
+            "twr": None,
+            "mwrr": None,
+        }
+    return {
+        "period": period.period,
+        "available": True,
+        "market_gain": round(period.market_gain, 2),
+        "simple_return": round(period.simple_return, 2),
+        "twr": round(period.twr * 100, 2) if period.twr is not None else None,
+        "mwrr": round(period.mwrr, 2) if period.mwrr is not None else None,
+    }
