@@ -17,6 +17,52 @@ from portfolio.rebalance import calc_rebalance
 def register_api_routes(app):
     """Register all API routes on the Flask app."""
 
+    @app.route("/api/portfolio/history")
+    def api_portfolio_history():
+        """Return daily portfolio value from first transaction to today."""
+        df = load_transactions(app.config["TRANSACTIONS_PATH"])
+        config = load_config(app.config["CONFIG_PATH"])
+        instruments = config["instruments"]
+
+        df = df.sort_values("Date")
+        first_date = df["Date"].min().normalize()
+        today = pd.Timestamp.now().normalize()
+
+        # Fetch price histories for all instruments
+        from portfolio.market import fetch_price_history
+        from portfolio.portfolio import get_holdings_at, value_holdings
+
+        price_histories = {}
+        for security in df["Security"].unique():
+            inst = instruments.get(security.strip())
+            if not inst:
+                continue
+            prices = fetch_price_history(inst["ticker"], first_date, today)
+            if prices is not None:
+                price_histories[security] = prices
+
+        if not price_histories:
+            return jsonify({"dates": [], "values": []})
+
+        # Build a common date index from all price histories
+        all_dates = set()
+        for prices in price_histories.values():
+            all_dates.update(prices.index.normalize())
+        all_dates = sorted(d for d in all_dates if first_date <= d <= today)
+
+        dates = []
+        values = []
+        for date in all_dates:
+            holdings = get_holdings_at(date, df)
+            if not holdings:
+                continue
+            total = value_holdings(holdings, price_histories, date)
+            if total > 0:
+                dates.append(date.strftime("%Y-%m-%d"))
+                values.append(round(total, 2))
+
+        return jsonify({"dates": dates, "values": values})
+
     @app.route("/api/portfolio")
     def api_portfolio():
         """Return full portfolio data: instruments, summary, allocations."""

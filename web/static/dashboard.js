@@ -9,13 +9,16 @@ const { createApp, ref, onMounted, nextTick } = Vue;
 createApp({
   setup() {
     const loading = ref(true);
+    const historyLoading = ref(true);
     const instruments = ref([]);
     const summary = ref(null);
     const rebalance = ref([]);
     const allocChart = ref(null);
     const classChart = ref(null);
+    const valueChart = ref(null);
     let allocChartInstance = null;
     let classChartInstance = null;
+    let valueChartInstance = null;
 
     function renderDoughnut(canvas, labels, data, existing) {
       if (existing) existing.destroy();
@@ -52,6 +55,50 @@ createApp({
       }
     }
 
+    function renderValueChart(dates, values) {
+      if (!valueChart.value || !dates.length) return;
+      if (valueChartInstance) valueChartInstance.destroy();
+      valueChartInstance = new Chart(valueChart.value, {
+        type: 'line',
+        data: {
+          labels: dates,
+          datasets: [{
+            label: 'Portfolio Value (€)',
+            data: values,
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 0,
+            pointHitRadius: 10,
+            borderWidth: 2,
+          }],
+        },
+        options: {
+          responsive: true,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => fmt(ctx.parsed.y) + ' €',
+              },
+            },
+          },
+          scales: {
+            x: {
+              ticks: { color: '#6b7280', maxTicksLimit: 12 },
+              grid: { color: 'rgba(75, 85, 99, 0.3)' },
+            },
+            y: {
+              ticks: { color: '#6b7280', callback: (v) => fmt(v) + ' €' },
+              grid: { color: 'rgba(75, 85, 99, 0.3)' },
+            },
+          },
+        },
+      });
+    }
+
     async function fetchData() {
       try {
         const [portfolioRes, rebalanceRes] = await Promise.all([
@@ -65,9 +112,24 @@ createApp({
         loading.value = false;
         await nextTick();
         renderCharts();
+        fetchHistory();
       } catch (err) {
         console.error('Failed to fetch data:', err);
         loading.value = false;
+      }
+    }
+
+    async function fetchHistory() {
+      try {
+        historyLoading.value = true;
+        const res = await fetch('/api/portfolio/history');
+        const data = await res.json();
+        historyLoading.value = false;
+        await nextTick();
+        renderValueChart(data.dates, data.values);
+      } catch (err) {
+        console.error('Failed to fetch history:', err);
+        historyLoading.value = false;
       }
     }
 
@@ -80,8 +142,8 @@ createApp({
     onMounted(fetchData);
 
     return {
-      loading, instruments, summary, rebalance,
-      allocChart, classChart,
+      loading, historyLoading, instruments, summary, rebalance,
+      allocChart, classChart, valueChart,
       fmt, fmtSigned, pnlColor, refreshPrices,
     };
   },

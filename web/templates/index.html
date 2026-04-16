@@ -53,6 +53,15 @@
       </div>
     </section>
 
+    <!-- Portfolio Value Chart -->
+    <section class="bg-gray-900 rounded-xl border border-gray-800 p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-medium text-gray-400">Portfolio Value Over Time</h3>
+        <div v-if="historyLoading" class="text-xs text-gray-500">Loading history...</div>
+      </div>
+      <canvas ref="valueChart" height="80"></canvas>
+    </section>
+
     <!-- Instruments Table -->
     <section class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
       <div class="px-5 py-4 border-b border-gray-800">
