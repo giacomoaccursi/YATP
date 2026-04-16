@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Performance &mdash; Simple Portfolio Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <script src="/static/utils.js"></script>
+  <style>
+    [v-cloak] { display: none; }
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+  </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+
+<div id="app" v-cloak>
+
+  <!-- Header -->
+  <header class="border-b border-gray-800 px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-6">
+      <h1 class="text-xl font-semibold tracking-tight">Performance</h1>
+      <nav class="flex gap-3">
+        <a href="/" class="text-sm text-gray-400 hover:text-white transition">&larr; Dashboard</a>
+        <a href="/instruments" class="text-sm text-gray-400 hover:text-white transition">Instruments</a>
+        <a href="/transactions" class="text-sm text-gray-400 hover:text-white transition">Transactions</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-6 py-8 space-y-8">
+
+    <!-- Portfolio Value Over Time -->
+    <section class="bg-gray-900 rounded-xl border border-gray-800 p-5">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-medium text-gray-400">Portfolio Value Over Time</h3>
+        <div v-if="historyLoading" class="text-xs text-gray-500">Loading history...</div>
+      </div>
+      <canvas ref="valueChart" height="80"></canvas>
+    </section>
+
+    <!-- Period Returns -->
+    <section class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-800 flex items-center justify-between">
+        <h2 class="text-lg font-medium">Returns by Period</h2>
+        <div v-if="periodsLoading" class="text-xs text-gray-500">Loading...</div>
+      </div>
+
+      <div v-if="periods.length" class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="text-xs text-gray-500 uppercase bg-gray-900/50">
+            <tr>
+              <th class="px-5 py-3 text-left">Period</th>
+              <th class="px-5 py-3 text-right">Market Gain</th>
+              <th class="px-5 py-3 text-right">Simple Return</th>
+              <th class="px-5 py-3 text-right">TWR</th>
+              <th class="px-5 py-3 text-right">MWRR</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-800">
+            <tr v-for="p in periods" :key="p.period">
+              <td class="px-5 py-3 font-medium">{{ p.period }}</td>
+              <template v-if="p.available">
+                <td class="px-5 py-3 text-right" :class="pnlColor(p.market_gain)">{{ fmtSigned(p.market_gain) }} &euro;</td>
+                <td class="px-5 py-3 text-right" :class="pnlColor(p.simple_return)">{{ fmtSigned(p.simple_return) }}%</td>
+                <td class="px-5 py-3 text-right" :class="pnlColor(p.twr)">{{ p.twr != null ? fmtSigned(p.twr) + '%' : 'N/A' }}</td>
+                <td class="px-5 py-3 text-right" :class="pnlColor(p.mwrr)">{{ p.mwrr != null ? fmtSigned(p.mwrr) + '%' : 'N/A' }}</td>
+              </template>
+              <template v-else>
+                <td colspan="4" class="px-5 py-3 text-gray-500">Not enough data</td>
+              </template>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div v-else-if="!periodsLoading" class="px-5 py-8 text-center text-gray-500">No period data available</div>
+    </section>
+
+    <!-- Period Returns Bar Chart -->
+    <section v-if="periods.some(p => p.available)" class="bg-gray-900 rounded-xl border border-gray-800 p-5">
+      <h3 class="text-sm font-medium text-gray-400 mb-4">TWR by Period</h3>
+      <canvas ref="periodChart" height="60"></canvas>
+    </section>
+
+  </main>
+</div>
+
+<script src="/static/performance.js"></script>
+</body>
+</html>

@@ -22,6 +22,14 @@ def create_app(config_path, transactions_path):
     def index():
         return send_from_directory(templates_dir, "index.html")
 
+    @app.route("/instruments")
+    def instruments_page():
+        return send_from_directory(templates_dir, "instruments.html")
+
+    @app.route("/performance")
+    def performance_page():
+        return send_from_directory(templates_dir, "performance.html")
+
     @app.route("/transactions")
     def transactions_page():
         return send_from_directory(templates_dir, "transactions.html")

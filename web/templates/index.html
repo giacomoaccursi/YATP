@@ -20,10 +20,12 @@
   <!-- Header -->
   <header class="border-b border-gray-800 px-6 py-4 flex items-center justify-between">
     <h1 class="text-xl font-semibold tracking-tight">Simple Portfolio Tracker</h1>
-    <div class="flex gap-3">
+    <nav class="flex gap-3">
+      <a href="/instruments" class="px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg transition">Instruments</a>
+      <a href="/performance" class="px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg transition">Performance</a>
       <a href="/transactions" class="px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg transition">Transactions</a>
-      <button @click="refreshPrices" class="px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg transition">&#8635; Refresh Prices</button>
-    </div>
+      <button @click="refreshPrices" class="px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg transition">&#8635; Refresh</button>
+    </nav>
   </header>
 
   <!-- Loading -->
@@ -50,53 +52,6 @@
       <div class="bg-gray-900 rounded-xl p-5 border border-gray-800">
         <div class="text-xs text-gray-500 uppercase tracking-wide">XIRR (p.a.)</div>
         <div class="text-2xl font-semibold mt-1" :class="pnlColor(summary.xirr)">{{ summary.xirr != null ? fmtSigned(summary.xirr) + '%' : 'N/A' }}</div>
-      </div>
-    </section>
-
-    <!-- Portfolio Value Chart -->
-    <section class="bg-gray-900 rounded-xl border border-gray-800 p-5">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-sm font-medium text-gray-400">Portfolio Value Over Time</h3>
-        <div v-if="historyLoading" class="text-xs text-gray-500">Loading history...</div>
-      </div>
-      <canvas ref="valueChart" height="80"></canvas>
-    </section>
-
-    <!-- Instruments Table -->
-    <section class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
-      <div class="px-5 py-4 border-b border-gray-800">
-        <h2 class="text-lg font-medium">Instruments</h2>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <thead class="text-xs text-gray-500 uppercase bg-gray-900/50">
-            <tr>
-              <th class="px-5 py-3 text-left">Security</th>
-              <th class="px-5 py-3 text-right">Shares</th>
-              <th class="px-5 py-3 text-right">Avg Cost</th>
-              <th class="px-5 py-3 text-right">Market Value</th>
-              <th class="px-5 py-3 text-right">P&amp;L</th>
-              <th class="px-5 py-3 text-right">Return</th>
-              <th class="px-5 py-3 text-right">XIRR</th>
-              <th class="px-5 py-3 text-right">Est. Tax</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-gray-800">
-            <tr v-for="inst in instruments" :key="inst.security" class="hover:bg-gray-800/50 transition">
-              <td class="px-5 py-3">
-                <div class="font-medium">{{ inst.security }}</div>
-                <div class="text-xs text-gray-500">{{ inst.ticker }}</div>
-              </td>
-              <td class="px-5 py-3 text-right">{{ inst.shares_held }}</td>
-              <td class="px-5 py-3 text-right">{{ fmt(inst.avg_cost_per_share) }} &euro;</td>
-              <td class="px-5 py-3 text-right">{{ fmt(inst.market_value) }} &euro;</td>
-              <td class="px-5 py-3 text-right" :class="pnlColor(inst.total_pnl)">{{ fmtSigned(inst.total_pnl) }} &euro;</td>
-              <td class="px-5 py-3 text-right" :class="pnlColor(inst.simple_return)">{{ fmtSigned(inst.simple_return) }}%</td>
-              <td class="px-5 py-3 text-right" :class="pnlColor(inst.xirr)">{{ inst.xirr != null ? fmtSigned(inst.xirr) + '% p.a.' : 'N/A' }}</td>
-              <td class="px-5 py-3 text-right">{{ fmt(inst.estimated_tax) }} &euro;</td>
-            </tr>
-          </tbody>
-        </table>
       </div>
     </section>
 

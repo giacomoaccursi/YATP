@@ -135,6 +135,93 @@ def register_api_routes(app):
         config = load_config(app.config["CONFIG_PATH"])
         return jsonify({"instruments": list(config["instruments"].keys())})
 
+    @app.route("/api/instruments/<path:security>/history")
+    def api_instrument_history(security):
+        """Return price history and cost basis evolution for a single instrument."""
+        df = load_transactions(app.config["TRANSACTIONS_PATH"])
+        config = load_config(app.config["CONFIG_PATH"])
+        inst = config["instruments"].get(security)
+        if not inst:
+            return jsonify({"error": "Instrument not found"}), 404
+
+        from portfolio.market import fetch_price_history
+
+        df = df.sort_values("Date")
+        inst_df = df[df["Security"].str.strip() == security.strip()]
+        if inst_df.empty:
+            return jsonify({"dates": [], "prices": [], "cost_avg": [], "pnl": []})
+
+        first_date = inst_df["Date"].min().normalize()
+        today = pd.Timestamp.now().normalize()
+
+        prices = fetch_price_history(inst["ticker"], first_date, today)
+        if prices is None:
+            return jsonify({"dates": [], "prices": [], "cost_avg": [], "pnl": []})
+
+        # Build transaction events for this instrument
+        tx_events = []
+        for _, row in inst_df.iterrows():
+            tx_events.append((
+                row["Date"].normalize(),
+                row["Type"].strip().lower(),
+                row["Shares"],
+                row["Net Transaction Value"],
+            ))
+        tx_events.sort(key=lambda e: e[0])
+
+        # Walk through price dates, track holdings and cost incrementally
+        all_dates = sorted(prices.index.normalize().unique())
+        all_dates = [d for d in all_dates if first_date <= d <= today]
+
+        tx_idx = 0
+        shares = 0.0
+        total_cost = 0.0
+
+        dates = []
+        price_values = []
+        cost_avg_values = []
+        pnl_values = []
+
+        for date in all_dates:
+            while tx_idx < len(tx_events) and tx_events[tx_idx][0] <= date:
+                _, tx_type, tx_shares, net_value = tx_events[tx_idx]
+                if tx_type == "buy":
+                    shares += tx_shares
+                    total_cost += net_value
+                elif tx_type == "sell":
+                    if shares > 0:
+                        avg = total_cost / shares
+                        total_cost -= avg * tx_shares
+                    shares -= tx_shares
+                    if shares <= 1e-9:
+                        shares = 0.0
+                        total_cost = 0.0
+                tx_idx += 1
+
+            if shares <= 1e-9:
+                continue
+
+            available = prices[prices.index <= date]
+            if available.empty:
+                continue
+
+            price = available.iloc[-1]
+            avg_cost = total_cost / shares if shares > 0 else 0
+            market_val = shares * price
+            unrealized = market_val - total_cost
+
+            dates.append(date.strftime("%Y-%m-%d"))
+            price_values.append(round(price, 4))
+            cost_avg_values.append(round(avg_cost, 4))
+            pnl_values.append(round(unrealized, 2))
+
+        return jsonify({
+            "dates": dates,
+            "prices": price_values,
+            "cost_avg": cost_avg_values,
+            "pnl": pnl_values,
+        })
+
     @app.route("/api/transactions/list")
     def api_transactions_list():
         """Return all transactions from the CSV with row index."""
@@ -219,3 +306,24 @@ def register_api_routes(app):
         """Clear price cache and force re-fetch."""
         clear_price_cache()
         return jsonify({"success": True})
+
+    @app.route("/api/performance/periods")
+    def api_performance_periods():
+        """Return performance metrics for standard periods (1m, 6m, 1y, since start)."""
+        from portfolio.history import build_history
+        df = load_transactions(app.config["TRANSACTIONS_PATH"])
+        config = load_config(app.config["CONFIG_PATH"])
+        history = build_history(df, config["instruments"])
+        if not history:
+            return jsonify({"periods": []})
+        periods = []
+        for p in history:
+            periods.append({
+                "period": p.period,
+                "available": p.available,
+                "market_gain": round(p.market_gain, 2) if p.available else None,
+                "simple_return": round(p.simple_return, 2) if p.available else None,
+                "twr": round(p.twr * 100, 2) if p.available and p.twr is not None else None,
+                "mwrr": round(p.mwrr * 100, 2) if p.available and p.mwrr is not None else None,
+            })
+        return jsonify({"periods": periods})

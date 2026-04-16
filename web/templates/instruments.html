@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instruments &mdash; Simple Portfolio Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <script src="/static/utils.js"></script>
+  <style>
+    [v-cloak] { display: none; }
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+  </style>
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen">
+
+<div id="app" v-cloak>
+
+  <!-- Header -->
+  <header class="border-b border-gray-800 px-6 py-4 flex items-center justify-between">
+    <div class="flex items-center gap-6">
+      <h1 class="text-xl font-semibold tracking-tight">Instruments</h1>
+      <nav class="flex gap-3">
+        <a href="/" class="text-sm text-gray-400 hover:text-white transition">&larr; Dashboard</a>
+        <a href="/performance" class="text-sm text-gray-400 hover:text-white transition">Performance</a>
+        <a href="/transactions" class="text-sm text-gray-400 hover:text-white transition">Transactions</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Loading -->
+  <div v-if="loading" class="flex items-center justify-center h-96">
+    <div class="text-gray-400">Loading instruments...</div>
+  </div>
+
+  <main v-else class="max-w-7xl mx-auto px-6 py-8 space-y-8">
+
+    <!-- Instruments Table -->
+    <section class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="text-xs text-gray-500 uppercase bg-gray-900/50">
+            <tr>
+              <th class="px-5 py-3 text-left">Security</th>
+              <th class="px-5 py-3 text-right">Shares</th>
+              <th class="px-5 py-3 text-right">Avg Cost</th>
+              <th class="px-5 py-3 text-right">Market Value</th>
+              <th class="px-5 py-3 text-right">P&amp;L</th>
+              <th class="px-5 py-3 text-right">Return</th>
+              <th class="px-5 py-3 text-right">XIRR</th>
+              <th class="px-5 py-3 text-right">Est. Tax</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-800">
+            <tr v-for="inst in instruments" :key="inst.security"
+                class="hover:bg-gray-800/50 transition cursor-pointer"
+                :class="{ 'bg-gray-800/30': selected === inst.security }"
+                @click="selectInstrument(inst.security)">
+              <td class="px-5 py-3">
+                <div class="font-medium">{{ inst.security }}</div>
+                <div class="text-xs text-gray-500">{{ inst.ticker }}</div>
+              </td>
+              <td class="px-5 py-3 text-right">{{ inst.shares_held }}</td>
+              <td class="px-5 py-3 text-right">{{ fmt(inst.avg_cost_per_share) }} &euro;</td>
+              <td class="px-5 py-3 text-right">{{ fmt(inst.market_value) }} &euro;</td>
+              <td class="px-5 py-3 text-right" :class="pnlColor(inst.total_pnl)">{{ fmtSigned(inst.total_pnl) }} &euro;</td>
+              <td class="px-5 py-3 text-right" :class="pnlColor(inst.simple_return)">{{ fmtSigned(inst.simple_return) }}%</td>
+              <td class="px-5 py-3 text-right" :class="pnlColor(inst.xirr)">{{ inst.xirr != null ? fmtSigned(inst.xirr) + '% p.a.' : 'N/A' }}</td>
+              <td class="px-5 py-3 text-right">{{ fmt(inst.estimated_tax) }} &euro;</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Instrument Detail -->
+    <section v-if="selected" class="space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-lg font-medium">{{ selected }}</h2>
+        <div v-if="detailLoading" class="text-xs text-gray-500">Loading chart data...</div>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-4">
+        <!-- Price vs Avg Cost -->
+        <div class="bg-gray-900 rounded-xl border border-gray-800 p-5">
+          <h3 class="text-sm font-medium text-gray-400 mb-4">Price vs Avg Cost</h3>
+          <canvas ref="priceChart" height="200"></canvas>
+        </div>
+        <!-- Unrealized P&L -->
+        <div class="bg-gray-900 rounded-xl border border-gray-800 p-5">
+          <h3 class="text-sm font-medium text-gray-400 mb-4">Unrealized P&amp;L</h3>
+          <canvas ref="pnlChart" height="200"></canvas>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="/static/instruments.js"></script>
+</body>
+</html>
