@@ -2,8 +2,13 @@
 
 import csv
 import os
+import pandas as pd
 from flask import jsonify, request
 from web.data import load_portfolio_data, clear_price_cache
+from web.serializers import (
+    instrument_to_dict, summary_to_dict, transaction_row_to_dict,
+    instrument_summary_to_dict, rebalance_to_dict,
+)
 from portfolio.summary import build_summary
 from portfolio.loader import load_config, load_transactions
 from portfolio.rebalance import calc_rebalance
@@ -19,8 +24,8 @@ def register_api_routes(app):
             app.config["CONFIG_PATH"], app.config["TRANSACTIONS_PATH"]
         )
         return jsonify({
-            "instruments": [_instrument_to_dict(r) for r in results],
-            "summary": _summary_to_dict(summary) if summary else None,
+            "instruments": [instrument_to_dict(r) for r in results],
+            "summary": summary_to_dict(summary) if summary else None,
         })
 
     @app.route("/api/summary")
@@ -34,7 +39,7 @@ def register_api_routes(app):
             "total_sold": summary.total_sold,
             "total_income": summary.total_income,
             "net_invested": summary.net_invested,
-            "instruments": [_instrument_summary_to_dict(i) for i in summary.instruments],
+            "instruments": [instrument_summary_to_dict(i) for i in summary.instruments],
         })
 
     @app.route("/api/rebalance")
@@ -47,9 +52,7 @@ def register_api_routes(app):
         if not target or not results:
             return jsonify({"actions": []})
         actions = calc_rebalance(results, target, config["instruments"])
-        return jsonify({
-            "actions": [_rebalance_to_dict(a) for a in actions],
-        })
+        return jsonify({"actions": [rebalance_to_dict(a) for a in actions]})
 
     @app.route("/api/instruments")
     def api_instruments():
@@ -60,30 +63,11 @@ def register_api_routes(app):
     @app.route("/api/transactions/list")
     def api_transactions_list():
         """Return all transactions from the CSV with row index."""
-        import math
         df = load_transactions(app.config["TRANSACTIONS_PATH"])
         df = df.sort_values("Date", ascending=False)
-        transactions = []
-        for idx, row in df.iterrows():
-            def safe_float(col, decimals=2):
-                try:
-                    val = float(row.get(col, 0))
-                    return round(val, decimals) if not math.isnan(val) else 0
-                except (ValueError, TypeError):
-                    return 0
-
-            transactions.append({
-                "index": int(idx),
-                "date": row["Date"].strftime("%Y-%m-%d"),
-                "type": row["Type"].strip(),
-                "security": row["Security"].strip(),
-                "shares": safe_float("Shares", 6),
-                "quote": safe_float("Quote"),
-                "fees": safe_float("Fees"),
-                "taxes": safe_float("Taxes"),
-                "net_transaction_value": safe_float("Net Transaction Value"),
-            })
-        return jsonify({"transactions": transactions})
+        return jsonify({
+            "transactions": [transaction_row_to_dict(idx, row) for idx, row in df.iterrows()],
+        })
 
     @app.route("/api/transactions", methods=["POST"])
     def api_add_transaction():
@@ -120,7 +104,6 @@ def register_api_routes(app):
     @app.route("/api/transactions/<int:row_index>", methods=["DELETE"])
     def api_delete_transaction(row_index):
         """Delete a transaction by its row index."""
-        import pandas as pd
         csv_path = app.config["TRANSACTIONS_PATH"]
         df = pd.read_csv(csv_path)
         if row_index < 0 or row_index >= len(df):
@@ -134,69 +117,3 @@ def register_api_routes(app):
         """Clear price cache and force re-fetch."""
         clear_price_cache()
         return jsonify({"success": True})
-
-
-# ── Serialization helpers ──
-
-def _instrument_to_dict(result):
-    """Convert InstrumentResult to API response dict."""
-    return {
-        "security": result.security,
-        "ticker": result.ticker,
-        "isin": result.isin,
-        "shares_held": round(result.data.shares_held, 4),
-        "avg_cost_per_share": round(result.data.avg_cost_per_share, 2),
-        "cost_basis": round(result.data.cost_basis, 2),
-        "market_value": round(result.analysis.market_value, 2),
-        "unrealized_pnl": round(result.analysis.unrealized_pnl, 2),
-        "realized_pnl": round(result.data.realized_pnl, 2),
-        "total_pnl": round(result.analysis.total_pnl, 2),
-        "simple_return": round(result.analysis.simple_return, 2),
-        "twr": round(result.analysis.twr * 100, 2) if result.analysis.twr is not None else None,
-        "xirr": round(result.analysis.xirr * 100, 2) if result.analysis.xirr is not None else None,
-        "estimated_tax": round(result.analysis.estimated_tax, 2),
-        "net_after_tax": round(result.analysis.net_after_tax, 2),
-        "total_income": round(result.analysis.total_income, 2),
-        "capital_gains_rate": result.capital_gains_rate,
-    }
-
-
-def _summary_to_dict(summary):
-    """Convert PortfolioSummary to API response dict."""
-    return {
-        "cost": round(summary.cost, 2),
-        "market_value": round(summary.market_value, 2),
-        "unrealized": round(summary.unrealized, 2),
-        "realized": round(summary.realized, 2),
-        "total_pnl": round(summary.total_pnl, 2),
-        "simple_return": round(summary.simple_return, 2),
-        "xirr": round(summary.xirr * 100, 2) if summary.xirr is not None else None,
-        "tax": round(summary.tax, 2),
-        "net_after_tax": round(summary.net_after_tax, 2),
-        "allocations": {k: round(v, 1) for k, v in summary.allocations.items()},
-        "allocations_by_class": {k: round(v, 1) for k, v in summary.allocations_by_asset_class.items()},
-    }
-
-
-def _instrument_summary_to_dict(inst):
-    """Convert InstrumentSummary to API response dict."""
-    return {
-        "security": inst.security,
-        "total_buys": inst.total_buys,
-        "total_sells": inst.total_sells,
-        "total_invested": round(inst.total_invested, 2),
-        "total_sold": round(inst.total_sold, 2),
-        "total_income": round(inst.total_income, 2),
-        "shares_held": round(inst.shares_held, 4),
-        "avg_cost_per_share": round(inst.avg_cost_per_share, 2),
-    }
-
-
-def _rebalance_to_dict(action):
-    """Convert RebalanceAction to API response dict."""
-    return {
-        "asset_class": action.asset_class,
-        "current_weight": round(action.current_weight, 2),
-        "target_weight": round(action.target_weight, 2),
-        "difference": round(action.difference, 2),
-    }

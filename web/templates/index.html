@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <script src="/static/utils.js"></script>
   <style>
     [v-cloak] { display: none; }
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
@@ -251,18 +252,7 @@ createApp({
 
     // Chart refs
     const allocChart = ref(null);
-
-    const computedNetValue = computed(() => {
-      const shares = parseFloat(form.value.shares) || 0;
-      const quote = parseFloat(form.value.quote) || 0;
-      const fees = parseFloat(form.value.fees) || 0;
-      const taxes = parseFloat(form.value.taxes) || 0;
-      const amount = shares * quote;
-
-      if (form.value.type === 'Buy') return (amount + fees).toFixed(2);
-      if (form.value.type === 'Sell') return (amount - fees - taxes).toFixed(2);
-      return form.value.net_transaction_value || '0.00';
-    });
+    const computedNetValue = computed(() => computeNetValue(form.value));
     const classChart = ref(null);
     let allocChartInstance = null;
     let classChartInstance = null;
