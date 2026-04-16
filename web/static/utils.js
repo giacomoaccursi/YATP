@@ -62,3 +62,17 @@ async function submitTransactionToApi(form, computedNetValue) {
   }
   return { ok: false, message: data.error || 'Failed to add transaction' };
 }
+
+/** Update an existing transaction by row index. Returns {ok, message}. */
+async function updateTransactionApi(rowIndex, form, computedNetValue) {
+  const res = await fetch('/api/transactions/' + rowIndex, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ ...form, net_transaction_value: computedNetValue }),
+  });
+  const data = await res.json();
+  if (res.ok) {
+    return { ok: true, message: 'Transaction updated successfully' };
+  }
+  return { ok: false, message: data.error || 'Failed to update transaction' };
+}

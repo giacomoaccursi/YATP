@@ -19,6 +19,7 @@ createApp({
     const formMessage = ref('');
     const formError = ref(false);
     const form = ref(createEmptyForm());
+    const editIndex = ref(null);
 
     // Delete state
     const deleteIndex = ref(null);
@@ -27,6 +28,7 @@ createApp({
     const securities = computed(() => [...new Set(transactions.value.map(t => t.security))].sort());
     const hasFilters = computed(() => Object.values(filters.value).some(v => v));
     const computedNetValue = computed(() => computeNetValue(form.value));
+    const isEditing = computed(() => editIndex.value !== null);
 
     const filteredTransactions = computed(() => {
       return transactions.value.filter(tx => {
@@ -51,6 +53,36 @@ createApp({
 
     function clearFilters() {
       filters.value = { security: '', type: '', dateFrom: '', dateTo: '' };
+    }
+
+    function openAddForm() {
+      editIndex.value = null;
+      form.value = createEmptyForm();
+      if (availableInstruments.value.length) {
+        form.value.security = availableInstruments.value[0];
+      }
+      customSecurity.value = false;
+      formMessage.value = '';
+      formError.value = false;
+      showAddForm.value = true;
+    }
+
+    function openEditForm(tx) {
+      editIndex.value = tx.index;
+      form.value = {
+        date: tx.date,
+        type: tx.type,
+        security: tx.security,
+        shares: tx.shares > 0 ? String(tx.shares) : '',
+        quote: tx.quote > 0 ? String(tx.quote) : '',
+        fees: tx.fees > 0 ? String(tx.fees) : '',
+        taxes: tx.taxes > 0 ? String(tx.taxes) : '',
+        net_transaction_value: String(tx.net_transaction_value),
+      };
+      customSecurity.value = !availableInstruments.value.includes(tx.security);
+      formMessage.value = '';
+      formError.value = false;
+      showAddForm.value = true;
     }
 
     function confirmDelete(index) {
@@ -83,12 +115,20 @@ createApp({
       formMessage.value = '';
       formError.value = false;
       try {
-        const result = await submitTransactionToApi(form.value, computedNetValue.value);
+        let result;
+        if (isEditing.value) {
+          result = await updateTransactionApi(editIndex.value, form.value, computedNetValue.value);
+        } else {
+          result = await submitTransactionToApi(form.value, computedNetValue.value);
+        }
         formMessage.value = result.message;
         formError.value = !result.ok;
         if (result.ok) {
           await fetchData();
-          if (keepOpen) {
+          if (isEditing.value) {
+            showAddForm.value = false;
+            editIndex.value = null;
+          } else if (keepOpen) {
             form.value.shares = '';
             form.value.quote = '';
             form.value.fees = '';
@@ -117,7 +157,8 @@ createApp({
       transactions, availableInstruments, filters, securities,
       hasFilters, filteredTransactions, clearFilters, typeBadge,
       showAddForm, customSecurity, form, formMessage, formError,
-      computedNetValue, saveTransaction,
+      computedNetValue, saveTransaction, isEditing,
+      openAddForm, openEditForm,
       deleteIndex, confirmDelete, executeDelete,
       fmt, fmtSigned, pnlColor,
     };

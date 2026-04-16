@@ -101,6 +101,33 @@ def register_api_routes(app):
 
         return jsonify({"success": True})
 
+    @app.route("/api/transactions/<int:row_index>", methods=["PUT"])
+    def api_update_transaction(row_index):
+        """Update a transaction by its row index."""
+        csv_path = app.config["TRANSACTIONS_PATH"]
+        df = pd.read_csv(csv_path)
+        if row_index < 0 or row_index >= len(df):
+            return jsonify({"error": "Invalid row index"}), 400
+
+        data = request.get_json()
+        required = ["date", "type", "security"]
+        missing = [f for f in required if not data.get(f)]
+        if missing:
+            return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
+
+        df.at[row_index, "Date"] = data["date"] + " 00:00:00"
+        df.at[row_index, "Type"] = data["type"]
+        df.at[row_index, "Security"] = data["security"]
+        df.at[row_index, "Shares"] = data.get("shares", "")
+        df.at[row_index, "Quote"] = data.get("quote", "")
+        df.at[row_index, "Amount"] = data.get("amount", "")
+        df.at[row_index, "Fees"] = data.get("fees", "")
+        df.at[row_index, "Taxes"] = data.get("taxes", "")
+        df.at[row_index, "Net Transaction Value"] = data.get("net_transaction_value", "")
+
+        df.to_csv(csv_path, index=False)
+        return jsonify({"success": True})
+
     @app.route("/api/transactions/<int:row_index>", methods=["DELETE"])
     def api_delete_transaction(row_index):
         """Delete a transaction by its row index."""

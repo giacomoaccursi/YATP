@@ -22,7 +22,7 @@
       <h1 class="text-xl font-semibold tracking-tight">Transactions</h1>
       <a href="/" class="text-sm text-gray-400 hover:text-white transition">&larr; Dashboard</a>
     </div>
-    <button @click="showAddForm = true" class="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-500 rounded-lg transition">+ Add Transaction</button>
+    <button @click="openAddForm" class="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-500 rounded-lg transition">+ Add Transaction</button>
   </header>
 
   <main class="max-w-7xl mx-auto px-6 py-8 space-y-6">
@@ -60,7 +60,7 @@
               <th class="px-5 py-3 text-right">Fees</th>
               <th class="px-5 py-3 text-right">Taxes</th>
               <th class="px-5 py-3 text-right">Net Value</th>
-              <th class="px-5 py-3 w-12"></th>
+              <th class="px-5 py-3 w-20"></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-800">
@@ -75,8 +75,13 @@
               <td class="px-5 py-3 text-right text-gray-500">{{ tx.fees > 0 ? tx.fees.toFixed(2) + ' &euro;' : '&mdash;' }}</td>
               <td class="px-5 py-3 text-right text-gray-500">{{ tx.taxes > 0 ? tx.taxes.toFixed(2) + ' &euro;' : '&mdash;' }}</td>
               <td class="px-5 py-3 text-right font-medium">{{ tx.net_transaction_value.toFixed(2) }} &euro;</td>
-              <td class="px-5 py-3 text-right">
-                <button @click="confirmDelete(tx.index)" class="p-1.5 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-400/10 transition">
+              <td class="px-5 py-3 text-right flex justify-end gap-1">
+                <button @click="openEditForm(tx)" class="p-1.5 rounded-lg text-gray-600 hover:text-blue-400 hover:bg-blue-400/10 transition" title="Edit">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
+                  </svg>
+                </button>
+                <button @click="confirmDelete(tx.index)" class="p-1.5 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-400/10 transition" title="Delete">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
                   </svg>
@@ -114,7 +119,7 @@
   <!-- Add Transaction Modal -->
   <div v-if="showAddForm" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50" @click.self="showAddForm = false">
     <div class="bg-gray-900 rounded-2xl border border-gray-700 p-6 w-full max-w-md space-y-4">
-      <h2 class="text-lg font-semibold">Add Transaction</h2>
+      <h2 class="text-lg font-semibold">{{ isEditing ? 'Edit Transaction' : 'Add Transaction' }}</h2>
 
       <div class="grid grid-cols-2 gap-3">
         <div>
@@ -173,8 +178,8 @@
 
       <div class="flex justify-end gap-3 pt-2">
         <button @click="showAddForm = false" class="px-4 py-2 text-sm text-gray-400 hover:text-white transition">Cancel</button>
-        <button @click="saveTransaction(true)" class="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 rounded-lg transition">Save &amp; New</button>
-        <button @click="saveTransaction(false)" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 rounded-lg transition">Save</button>
+        <button v-if="!isEditing" @click="saveTransaction(true)" class="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 rounded-lg transition">Save &amp; New</button>
+        <button @click="saveTransaction(false)" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 rounded-lg transition">{{ isEditing ? 'Update' : 'Save' }}</button>
       </div>
 
       <div v-if="formMessage" class="text-sm" :class="formError ? 'text-red-400' : 'text-green-400'">{{ formMessage }}</div>
