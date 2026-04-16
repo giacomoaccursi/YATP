@@ -113,12 +113,12 @@
           <div class="text-lg font-semibold">{{ fmt(periodSummary.endValue) }} &euro;</div>
         </div>
         <div>
-          <div class="text-xs text-gray-500 dark:text-gray-400">Unrealized P&amp;L</div>
-          <div class="text-lg font-semibold" :class="pnlColor(periodSummary.gain)">{{ fmtSigned(periodSummary.gain) }} &euro;</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">Cost Basis</div>
+          <div class="text-lg font-semibold">{{ fmt(periodSummary.costBasis) }} &euro;</div>
         </div>
         <div>
-          <div class="text-xs text-gray-500 dark:text-gray-400">Start Value</div>
-          <div class="text-lg font-semibold">{{ fmt(periodSummary.startValue) }} &euro;</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">Unrealized P&amp;L</div>
+          <div class="text-lg font-semibold" :class="pnlColor(periodSummary.unrealizedPnl)">{{ fmtSigned(periodSummary.unrealizedPnl) }} &euro;</div>
         </div>
       </div>
     </section>

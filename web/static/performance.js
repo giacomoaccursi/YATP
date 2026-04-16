@@ -19,6 +19,7 @@ createApp({
     // Pre-computed data from API (fetched once)
     let allDates = [];
     let allValues = [];
+    let allCosts = [];
     let allReturnPcts = [];
 
     // Period filter state (UI only)
@@ -72,18 +73,24 @@ createApp({
       var dates = allDates.slice(idx.start, idx.end);
       var returnPcts = allReturnPcts.slice(idx.start, idx.end);
       var values = allValues.slice(idx.start, idx.end);
+      var costs = allCosts.slice(idx.start, idx.end);
 
       if (!dates.length) {
         periodSummary.value = null;
         return;
       }
 
-      // Summary from pre-computed API data (no calculations, just reading endpoints)
+      // Read pre-computed values from API — no calculations here
+      var endValue = values[values.length - 1];
+      var endCost = costs[costs.length - 1];
+      var endReturnPct = returnPcts[returnPcts.length - 1];
+      var unrealizedPnl = Math.round((endValue - endCost) * 100) / 100;
+
       periodSummary.value = {
-        startValue: values[0],
-        endValue: values[values.length - 1],
-        returnPct: returnPcts[returnPcts.length - 1],
-        gain: Math.round((values[values.length - 1] - values[0]) * 100) / 100,
+        endValue: endValue,
+        costBasis: endCost,
+        returnPct: endReturnPct,
+        unrealizedPnl: unrealizedPnl,
       };
 
       renderReturnChart(dates, returnPcts);
@@ -172,6 +179,7 @@ createApp({
         var data = await res.json();
         allDates = data.dates;
         allValues = data.values;
+        allCosts = data.costs || [];
         allReturnPcts = data.return_pcts || [];
         historyLoading.value = false;
         await nextTick();
