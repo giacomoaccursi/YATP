@@ -17,13 +17,16 @@
 
 <div id="app" v-cloak>
 
-  <!-- Page Header -->
-  <div class="border-b border-gray-800 px-6 py-4 flex items-center justify-between">
-    <h1 class="text-xl font-semibold tracking-tight">Transactions</h1>
-    <button @click="openAddForm" class="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-500 rounded-lg transition">+ Add Transaction</button>
-  </div>
-
   <main class="max-w-7xl mx-auto px-6 py-8 space-y-6">
+
+    <!-- Page Header -->
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-xl font-semibold">Transactions</h2>
+        <p class="text-sm text-gray-500 mt-0.5">View, add, edit and delete transactions</p>
+      </div>
+      <button @click="openAddForm" class="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-500 rounded-lg transition">+ Add Transaction</button>
+    </div>
 
     <!-- Filters -->
     <section class="flex flex-wrap gap-3 items-center">

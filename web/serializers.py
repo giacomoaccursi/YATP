@@ -12,7 +12,7 @@ def safe_float(value, decimals=2):
         return 0
 
 
-def instrument_to_dict(result):
+def instrument_to_dict(result, daily_change=None):
     """Convert InstrumentResult to API response dict."""
     return {
         "security": result.security,
@@ -32,6 +32,7 @@ def instrument_to_dict(result):
         "net_after_tax": round(result.analysis.net_after_tax, 2),
         "total_income": round(result.analysis.total_income, 2),
         "capital_gains_rate": result.capital_gains_rate,
+        "daily_change": round(daily_change, 2) if daily_change is not None else None,
     }
 
 

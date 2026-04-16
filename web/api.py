@@ -22,11 +22,11 @@ def register_api_routes(app):
     @app.route("/api/portfolio")
     def api_portfolio():
         """Return full portfolio data: instruments, summary, allocations."""
-        results, summary, _ = load_portfolio_data(
+        results, daily_changes, summary, _ = load_portfolio_data(
             app.config["CONFIG_PATH"], app.config["TRANSACTIONS_PATH"]
         )
         return jsonify({
-            "instruments": [instrument_to_dict(r) for r in results],
+            "instruments": [instrument_to_dict(r, daily_changes.get(r.security)) for r in results],
             "summary": summary_to_dict(summary) if summary else None,
         })
 

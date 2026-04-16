@@ -23,7 +23,13 @@
     <div class="text-gray-400">Loading instruments...</div>
   </div>
 
-  <main v-else class="max-w-7xl mx-auto px-6 py-8 space-y-8">
+  <main v-else class="max-w-7xl mx-auto px-6 py-8 space-y-6">
+
+    <!-- Page Header -->
+    <div>
+      <h2 class="text-xl font-semibold">Instruments</h2>
+      <p class="text-sm text-gray-500 mt-0.5">Click on an instrument to see detailed charts</p>
+    </div>
 
     <!-- Instruments Table -->
     <section class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
@@ -44,11 +50,19 @@
           <tbody class="divide-y divide-gray-800">
             <tr v-for="inst in instruments" :key="inst.security"
                 class="hover:bg-gray-800/50 transition cursor-pointer"
-                :class="{ 'bg-gray-800/30': selected === inst.security }"
+                :class="{ 'bg-gray-800/30 ring-1 ring-indigo-500/30': selected === inst.security }"
                 @click="selectInstrument(inst.security)">
               <td class="px-5 py-3">
-                <div class="font-medium">{{ inst.security }}</div>
-                <div class="text-xs text-gray-500">{{ inst.ticker }}</div>
+                <div class="flex items-center gap-2">
+                  <div>
+                    <div class="font-medium">{{ inst.security }}</div>
+                    <div class="text-xs text-gray-500">{{ inst.ticker }}</div>
+                  </div>
+                  <span v-if="inst.daily_change != null" class="text-xs font-medium ml-auto md:ml-2"
+                        :class="inst.daily_change >= 0 ? 'text-green-400' : 'text-red-400'">
+                    {{ inst.daily_change >= 0 ? '▲' : '▼' }} {{ Math.abs(inst.daily_change).toFixed(2) }}%
+                  </span>
+                </div>
               </td>
               <td class="px-5 py-3 text-right">{{ inst.shares_held }}</td>
               <td class="px-5 py-3 text-right">{{ fmt(inst.avg_cost_per_share) }} &euro;</td>
@@ -66,17 +80,20 @@
     <!-- Instrument Detail -->
     <section v-if="selected" class="space-y-4">
       <div class="flex items-center justify-between">
-        <h2 class="text-lg font-medium">{{ selected }}</h2>
-        <div v-if="detailLoading" class="text-xs text-gray-500">Loading chart data...</div>
+        <div>
+          <h2 class="text-lg font-medium">{{ selected }}</h2>
+          <p class="text-sm text-gray-500">Price history and unrealized P&amp;L</p>
+        </div>
+        <button @click="selected = null" class="text-sm text-gray-400 hover:text-white transition">&times; Close</button>
       </div>
 
-      <div class="grid md:grid-cols-2 gap-4">
-        <!-- Price vs Avg Cost -->
+      <div v-if="detailLoading" class="text-center py-8 text-gray-500">Loading chart data...</div>
+
+      <div v-else class="grid md:grid-cols-2 gap-4">
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-5">
           <h3 class="text-sm font-medium text-gray-400 mb-4">Price vs Avg Cost</h3>
           <canvas ref="priceChart" height="200"></canvas>
         </div>
-        <!-- Unrealized P&L -->
         <div class="bg-gray-900 rounded-xl border border-gray-800 p-5">
           <h3 class="text-sm font-medium text-gray-400 mb-4">Unrealized P&amp;L</h3>
           <canvas ref="pnlChart" height="200"></canvas>

@@ -13,6 +13,7 @@ from portfolio.history import build_history
 
 # In-memory price cache (persists while server is running)
 _price_cache = {}
+_daily_change_cache = {}
 
 
 def get_cached_price(ticker):
@@ -22,25 +23,52 @@ def get_cached_price(ticker):
     return _price_cache[ticker]
 
 
+def get_cached_daily_change(ticker):
+    """Fetch daily price change percentage with caching. Returns float or None."""
+    if ticker not in _daily_change_cache:
+        _daily_change_cache[ticker] = _calc_daily_change(ticker)
+    return _daily_change_cache[ticker]
+
+
+def _calc_daily_change(ticker):
+    """Calculate daily price change percentage from Yahoo Finance."""
+    try:
+        import yfinance as yf
+        hist = yf.Ticker(ticker).history(period="5d")
+        if hist is None or len(hist) < 2:
+            return None
+        closes = hist["Close"].dropna()
+        if len(closes) < 2:
+            return None
+        prev = closes.iloc[-2]
+        curr = closes.iloc[-1]
+        return ((curr - prev) / prev) * 100 if prev > 0 else None
+    except Exception:
+        return None
+
+
 def clear_price_cache():
     """Clear the price cache to force re-fetch."""
     _price_cache.clear()
+    _daily_change_cache.clear()
 
 
 def load_portfolio_data(config_path, transactions_path):
-    """Load and analyze the full portfolio. Returns (results, summary, config)."""
+    """Load and analyze the full portfolio. Returns (results, daily_changes, summary, config)."""
     config = load_config(config_path)
     instruments = config["instruments"]
     df = load_transactions(transactions_path)
     portfolio = build_portfolio(df)
 
     results = []
+    daily_changes = {}
     for security, data in portfolio.items():
         instrument = instruments.get(security.strip())
         if not instrument:
             continue
 
-        current_price = get_cached_price(instrument["ticker"])
+        ticker = instrument["ticker"]
+        current_price = get_cached_price(ticker)
         if current_price is None:
             continue
 
@@ -48,20 +76,21 @@ def load_portfolio_data(config_path, transactions_path):
         analysis = analyze_instrument(data, current_price, capital_gains_rate)
         results.append(InstrumentResult(
             security=security,
-            ticker=instrument["ticker"],
+            ticker=ticker,
             isin=instrument.get("isin"),
             capital_gains_rate=capital_gains_rate,
             data=data,
             analysis=analysis,
         ))
+        daily_changes[security] = get_cached_daily_change(ticker)
 
     summary = analyze_portfolio(results, instruments) if results else None
-    return results, summary, config
+    return results, daily_changes, summary, config
 
 
 def load_rebalance_data(config_path, transactions_path):
     """Load rebalancing suggestions. Returns list of RebalanceAction."""
-    results, _, config = load_portfolio_data(config_path, transactions_path)
+    results, _, _, config = load_portfolio_data(config_path, transactions_path)
     target = config.get("target_allocation")
     if not target or not results:
         return []
