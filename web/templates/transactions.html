@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Transactions — Simple Portfolio Tracker</title>
+  <title>Transactions &mdash; Simple Portfolio Tracker</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="/static/utils.js"></script>
   <style>
     [v-cloak] { display: none; }
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
@@ -14,40 +15,35 @@
 <body class="bg-gray-950 text-gray-100 min-h-screen">
 
 <div id="app" v-cloak>
+
   <!-- Header -->
   <header class="border-b border-gray-800 px-6 py-4 flex items-center justify-between">
     <div class="flex items-center gap-6">
       <h1 class="text-xl font-semibold tracking-tight">Transactions</h1>
-      <a href="/" class="text-sm text-gray-400 hover:text-white transition">← Dashboard</a>
+      <a href="/" class="text-sm text-gray-400 hover:text-white transition">&larr; Dashboard</a>
     </div>
-    <button @click="showAddForm = true" class="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-500 rounded-lg transition">
-      + Add Transaction
-    </button>
+    <button @click="showAddForm = true" class="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-500 rounded-lg transition">+ Add Transaction</button>
   </header>
 
   <main class="max-w-7xl mx-auto px-6 py-8 space-y-6">
 
     <!-- Filters -->
-    <section class="flex flex-wrap gap-3">
-      <select v-model="filterSecurity" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+    <section class="flex flex-wrap gap-3 items-center">
+      <select v-model="filters.security" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
         <option value="">All instruments</option>
         <option v-for="sec in securities" :key="sec" :value="sec">{{ sec }}</option>
       </select>
-      <select v-model="filterType" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+      <select v-model="filters.type" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
         <option value="">All types</option>
         <option value="Buy">Buy</option>
         <option value="Sell">Sell</option>
         <option value="Dividend">Dividend</option>
         <option value="Coupon">Coupon</option>
       </select>
-      <input v-model="filterDateFrom" type="date" placeholder="From" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
-      <input v-model="filterDateTo" type="date" placeholder="To" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
-      <button v-if="hasFilters" @click="clearFilters" class="px-3 py-2 text-sm text-gray-400 hover:text-white transition">
-        Clear filters
-      </button>
-      <div class="ml-auto text-sm text-gray-500">
-        {{ filteredTransactions.length }} transactions
-      </div>
+      <input v-model="filters.dateFrom" type="date" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+      <input v-model="filters.dateTo" type="date" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+      <button v-if="hasFilters" @click="clearFilters" class="px-3 py-2 text-sm text-gray-400 hover:text-white transition">Clear</button>
+      <div class="ml-auto text-sm text-gray-500">{{ filteredTransactions.length }} transactions</div>
     </section>
 
     <!-- Transactions Table -->
@@ -64,29 +60,21 @@
               <th class="px-5 py-3 text-right">Fees</th>
               <th class="px-5 py-3 text-right">Taxes</th>
               <th class="px-5 py-3 text-right">Net Value</th>
-              <th class="px-5 py-3 text-right w-16"></th>
+              <th class="px-5 py-3 w-12"></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-800">
-            <tr v-for="(tx, i) in filteredTransactions" :key="i" class="hover:bg-gray-800/50 transition">
+            <tr v-for="tx in filteredTransactions" :key="tx.index" class="hover:bg-gray-800/50 transition">
               <td class="px-5 py-3">{{ tx.date }}</td>
               <td class="px-5 py-3">
-                <span class="px-2 py-0.5 rounded text-xs font-medium"
-                  :class="{
-                    'bg-green-900/50 text-green-400': tx.type === 'Buy',
-                    'bg-red-900/50 text-red-400': tx.type === 'Sell',
-                    'bg-blue-900/50 text-blue-400': tx.type === 'Dividend',
-                    'bg-yellow-900/50 text-yellow-400': tx.type === 'Coupon',
-                  }">
-                  {{ tx.type }}
-                </span>
+                <span class="px-2 py-0.5 rounded text-xs font-medium" :class="typeBadge(tx.type)">{{ tx.type }}</span>
               </td>
               <td class="px-5 py-3">{{ tx.security }}</td>
-              <td class="px-5 py-3 text-right">{{ tx.shares > 0 ? tx.shares : '—' }}</td>
-              <td class="px-5 py-3 text-right">{{ tx.quote > 0 ? tx.quote.toFixed(2) + ' €' : '—' }}</td>
-              <td class="px-5 py-3 text-right text-gray-500">{{ tx.fees > 0 ? tx.fees.toFixed(2) + ' €' : '—' }}</td>
-              <td class="px-5 py-3 text-right text-gray-500">{{ tx.taxes > 0 ? tx.taxes.toFixed(2) + ' €' : '—' }}</td>
-              <td class="px-5 py-3 text-right font-medium">{{ tx.net_transaction_value.toFixed(2) }} €</td>
+              <td class="px-5 py-3 text-right">{{ tx.shares > 0 ? tx.shares : '&mdash;' }}</td>
+              <td class="px-5 py-3 text-right">{{ tx.quote > 0 ? tx.quote.toFixed(2) + ' &euro;' : '&mdash;' }}</td>
+              <td class="px-5 py-3 text-right text-gray-500">{{ tx.fees > 0 ? tx.fees.toFixed(2) + ' &euro;' : '&mdash;' }}</td>
+              <td class="px-5 py-3 text-right text-gray-500">{{ tx.taxes > 0 ? tx.taxes.toFixed(2) + ' &euro;' : '&mdash;' }}</td>
+              <td class="px-5 py-3 text-right font-medium">{{ tx.net_transaction_value.toFixed(2) }} &euro;</td>
               <td class="px-5 py-3 text-right">
                 <button @click="confirmDelete(tx.index)" class="p-1.5 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-400/10 transition">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -102,8 +90,26 @@
         </table>
       </div>
     </section>
-
   </main>
+
+  <!-- Delete Confirmation Modal -->
+  <div v-if="deleteIndex !== null" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50" @click.self="deleteIndex = null">
+    <div class="bg-gray-900 rounded-2xl border border-gray-700 p-6 w-full max-w-sm space-y-4">
+      <div class="flex items-center gap-3">
+        <div class="p-2 bg-red-500/10 rounded-full">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+        <h3 class="text-lg font-semibold">Delete Transaction</h3>
+      </div>
+      <p class="text-sm text-gray-400">Are you sure? This action cannot be undone.</p>
+      <div class="flex justify-end gap-3 pt-2">
+        <button @click="deleteIndex = null" class="px-4 py-2 text-sm text-gray-400 hover:text-white transition">Cancel</button>
+        <button @click="executeDelete" class="px-4 py-2 text-sm bg-red-600 hover:bg-red-500 rounded-lg transition">Delete</button>
+      </div>
+    </div>
+  </div>
 
   <!-- Add Transaction Modal -->
   <div v-if="showAddForm" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50" @click.self="showAddForm = false">
@@ -133,7 +139,7 @@
           <option value="__custom__">+ New instrument...</option>
         </select>
         <div v-else class="flex gap-2">
-          <input v-model="form.security" type="text" placeholder="e.g. ISHARES CORE S&P 500" class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+          <input v-model="form.security" type="text" placeholder="e.g. ISHARES CORE S&amp;P 500" class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
           <button @click="customSecurity = false; form.security = availableInstruments[0] || ''" class="px-3 py-2 text-xs text-gray-400 hover:text-white bg-gray-800 border border-gray-700 rounded-lg">Cancel</button>
         </div>
       </div>
@@ -167,34 +173,14 @@
 
       <div class="flex justify-end gap-3 pt-2">
         <button @click="showAddForm = false" class="px-4 py-2 text-sm text-gray-400 hover:text-white transition">Cancel</button>
-        <button @click="submitTransaction(true)" class="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 rounded-lg transition">Save & New</button>
-        <button @click="submitTransaction(false)" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 rounded-lg transition">Save</button>
+        <button @click="saveTransaction(true)" class="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 rounded-lg transition">Save &amp; New</button>
+        <button @click="saveTransaction(false)" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 rounded-lg transition">Save</button>
       </div>
 
-      <div v-if="formMessage" class="text-sm" :class="formError ? 'text-red-400' : 'text-green-400'">
-        {{ formMessage }}
-      </div>
+      <div v-if="formMessage" class="text-sm" :class="formError ? 'text-red-400' : 'text-green-400'">{{ formMessage }}</div>
     </div>
   </div>
 
-  <!-- Delete Confirmation Modal -->
-  <div v-if="deleteIndex !== null" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50" @click.self="deleteIndex = null">
-    <div class="bg-gray-900 rounded-2xl border border-gray-700 p-6 w-full max-w-sm space-y-4">
-      <div class="flex items-center gap-3">
-        <div class="p-2 bg-red-500/10 rounded-full">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-          </svg>
-        </div>
-        <h3 class="text-lg font-semibold">Delete Transaction</h3>
-      </div>
-      <p class="text-sm text-gray-400">Are you sure you want to delete this transaction? This action cannot be undone.</p>
-      <div class="flex justify-end gap-3 pt-2">
-        <button @click="deleteIndex = null" class="px-4 py-2 text-sm text-gray-400 hover:text-white transition">Cancel</button>
-        <button @click="executeDelete" class="px-4 py-2 text-sm bg-red-600 hover:bg-red-500 rounded-lg transition">Delete</button>
-      </div>
-    </div>
-  </div>
 </div>
 
 <script>
@@ -202,60 +188,65 @@ const { createApp, ref, computed, onMounted, watch } = Vue;
 
 createApp({
   setup() {
+    // Data
     const transactions = ref([]);
     const availableInstruments = ref([]);
+
+    // Filters
+    const filters = ref({ security: '', type: '', dateFrom: '', dateTo: '' });
+
+    // Form state
     const showAddForm = ref(false);
     const customSecurity = ref(false);
     const formMessage = ref('');
     const formError = ref(false);
+    const form = ref(createEmptyForm());
 
-    // Filters
-    const filterSecurity = ref('');
-    const filterType = ref('');
-    const filterDateFrom = ref('');
-    const filterDateTo = ref('');
+    // Delete state
+    const deleteIndex = ref(null);
 
-    const form = ref({
-      date: new Date().toISOString().split('T')[0],
-      type: 'Buy',
-      security: '',
-      shares: '', quote: '', fees: '', taxes: '', net_transaction_value: '',
-    });
-
-    const securities = computed(() => {
-      return [...new Set(transactions.value.map(t => t.security))].sort();
-    });
-
-    const hasFilters = computed(() => {
-      return filterSecurity.value || filterType.value || filterDateFrom.value || filterDateTo.value;
-    });
+    // Computed
+    const securities = computed(() => [...new Set(transactions.value.map(t => t.security))].sort());
+    const hasFilters = computed(() => Object.values(filters.value).some(v => v));
+    const computedNetValue = computed(() => computeNetValue(form.value));
 
     const filteredTransactions = computed(() => {
       return transactions.value.filter(tx => {
-        if (filterSecurity.value && tx.security !== filterSecurity.value) return false;
-        if (filterType.value && tx.type !== filterType.value) return false;
-        if (filterDateFrom.value && tx.date < filterDateFrom.value) return false;
-        if (filterDateTo.value && tx.date > filterDateTo.value) return false;
+        if (filters.value.security && tx.security !== filters.value.security) return false;
+        if (filters.value.type && tx.type !== filters.value.type) return false;
+        if (filters.value.dateFrom && tx.date < filters.value.dateFrom) return false;
+        if (filters.value.dateTo && tx.date > filters.value.dateTo) return false;
         return true;
       });
     });
 
-    const computedNetValue = computed(() => {
-      const shares = parseFloat(form.value.shares) || 0;
-      const quote = parseFloat(form.value.quote) || 0;
-      const fees = parseFloat(form.value.fees) || 0;
-      const taxes = parseFloat(form.value.taxes) || 0;
-      const amount = shares * quote;
-      if (form.value.type === 'Buy') return (amount + fees).toFixed(2);
-      if (form.value.type === 'Sell') return (amount - fees - taxes).toFixed(2);
-      return form.value.net_transaction_value || '0.00';
-    });
+    // Methods
+    function typeBadge(type) {
+      const map = {
+        Buy: 'bg-green-900/50 text-green-400',
+        Sell: 'bg-red-900/50 text-red-400',
+        Dividend: 'bg-blue-900/50 text-blue-400',
+        Coupon: 'bg-yellow-900/50 text-yellow-400',
+      };
+      return map[type] || 'bg-gray-800 text-gray-400';
+    }
 
     function clearFilters() {
-      filterSecurity.value = '';
-      filterType.value = '';
-      filterDateFrom.value = '';
-      filterDateTo.value = '';
+      filters.value = { security: '', type: '', dateFrom: '', dateTo: '' };
+    }
+
+    function confirmDelete(index) {
+      deleteIndex.value = index;
+    }
+
+    async function executeDelete() {
+      try {
+        const res = await fetch('/api/transactions/' + deleteIndex.value, { method: 'DELETE' });
+        if (res.ok) await fetchData();
+      } catch (err) {
+        console.error('Delete failed:', err);
+      }
+      deleteIndex.value = null;
     }
 
     async function fetchData() {
@@ -270,35 +261,14 @@ createApp({
       }
     }
 
-    const deleteIndex = ref(null);
-
-    function confirmDelete(index) {
-      deleteIndex.value = index;
-    }
-
-    async function executeDelete() {
-      try {
-        const res = await fetch(`/api/transactions/${deleteIndex.value}`, { method: 'DELETE' });
-        if (res.ok) await fetchData();
-      } catch (err) {
-        console.error('Failed to delete:', err);
-      }
-      deleteIndex.value = null;
-    }
-
-    async function submitTransaction(keepOpen) {
+    async function saveTransaction(keepOpen) {
       formMessage.value = '';
       formError.value = false;
       try {
-        const res = await fetch('/api/transactions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...form.value, net_transaction_value: computedNetValue.value }),
-        });
-        const data = await res.json();
-        if (res.ok) {
-          formMessage.value = 'Transaction added';
-          formError.value = false;
+        const result = await submitTransactionToApi(form.value, computedNetValue.value);
+        formMessage.value = result.message;
+        formError.value = !result.ok;
+        if (result.ok) {
           await fetchData();
           if (keepOpen) {
             form.value.shares = '';
@@ -309,9 +279,6 @@ createApp({
           } else {
             showAddForm.value = false;
           }
-        } else {
-          formMessage.value = data.error || 'Failed';
-          formError.value = true;
         }
       } catch (err) {
         formMessage.value = 'Network error';
@@ -329,11 +296,12 @@ createApp({
     onMounted(fetchData);
 
     return {
-      transactions, availableInstruments, securities,
-      filterSecurity, filterType, filterDateFrom, filterDateTo,
-      hasFilters, filteredTransactions, clearFilters,
+      transactions, availableInstruments, filters, securities,
+      hasFilters, filteredTransactions, clearFilters, typeBadge,
       showAddForm, customSecurity, form, formMessage, formError,
-      computedNetValue, submitTransaction, deleteIndex, confirmDelete, executeDelete,
+      computedNetValue, saveTransaction,
+      deleteIndex, confirmDelete, executeDelete,
+      fmt, fmtSigned, pnlColor,
     };
   },
 }).mount('#app');

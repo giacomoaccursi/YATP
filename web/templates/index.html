@@ -16,19 +16,13 @@
 <body class="bg-gray-950 text-gray-100 min-h-screen">
 
 <div id="app" v-cloak>
+
   <!-- Header -->
   <header class="border-b border-gray-800 px-6 py-4 flex items-center justify-between">
     <h1 class="text-xl font-semibold tracking-tight">Simple Portfolio Tracker</h1>
     <div class="flex gap-3">
-      <a href="/transactions" class="px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg transition">
-        Transactions
-      </a>
-      <button @click="refreshPrices" class="px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg transition">
-        ↻ Refresh Prices
-      </button>
-      <button @click="showAddForm = true" class="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-500 rounded-lg transition">
-        + Add Transaction
-      </button>
+      <a href="/transactions" class="px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg transition">Transactions</a>
+      <button @click="refreshPrices" class="px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg transition">&#8635; Refresh Prices</button>
     </div>
   </header>
 
@@ -43,25 +37,19 @@
     <section v-if="summary" class="grid grid-cols-2 md:grid-cols-4 gap-4">
       <div class="bg-gray-900 rounded-xl p-5 border border-gray-800">
         <div class="text-xs text-gray-500 uppercase tracking-wide">Market Value</div>
-        <div class="text-2xl font-semibold mt-1">{{ fmt(summary.market_value) }} €</div>
+        <div class="text-2xl font-semibold mt-1">{{ fmt(summary.market_value) }} &euro;</div>
       </div>
       <div class="bg-gray-900 rounded-xl p-5 border border-gray-800">
-        <div class="text-xs text-gray-500 uppercase tracking-wide">Total P&L</div>
-        <div class="text-2xl font-semibold mt-1" :class="pnlColor(summary.total_pnl)">
-          {{ fmtSigned(summary.total_pnl) }} €
-        </div>
+        <div class="text-xs text-gray-500 uppercase tracking-wide">Total P&amp;L</div>
+        <div class="text-2xl font-semibold mt-1" :class="pnlColor(summary.total_pnl)">{{ fmtSigned(summary.total_pnl) }} &euro;</div>
       </div>
       <div class="bg-gray-900 rounded-xl p-5 border border-gray-800">
         <div class="text-xs text-gray-500 uppercase tracking-wide">Simple Return</div>
-        <div class="text-2xl font-semibold mt-1" :class="pnlColor(summary.simple_return)">
-          {{ fmtSigned(summary.simple_return) }}%
-        </div>
+        <div class="text-2xl font-semibold mt-1" :class="pnlColor(summary.simple_return)">{{ fmtSigned(summary.simple_return) }}%</div>
       </div>
       <div class="bg-gray-900 rounded-xl p-5 border border-gray-800">
         <div class="text-xs text-gray-500 uppercase tracking-wide">XIRR (p.a.)</div>
-        <div class="text-2xl font-semibold mt-1" :class="pnlColor(summary.xirr)">
-          {{ summary.xirr != null ? fmtSigned(summary.xirr) + '%' : 'N/A' }}
-        </div>
+        <div class="text-2xl font-semibold mt-1" :class="pnlColor(summary.xirr)">{{ summary.xirr != null ? fmtSigned(summary.xirr) + '%' : 'N/A' }}</div>
       </div>
     </section>
 
@@ -78,7 +66,7 @@
               <th class="px-5 py-3 text-right">Shares</th>
               <th class="px-5 py-3 text-right">Avg Cost</th>
               <th class="px-5 py-3 text-right">Market Value</th>
-              <th class="px-5 py-3 text-right">P&L</th>
+              <th class="px-5 py-3 text-right">P&amp;L</th>
               <th class="px-5 py-3 text-right">Return</th>
               <th class="px-5 py-3 text-right">XIRR</th>
               <th class="px-5 py-3 text-right">Est. Tax</th>
@@ -91,18 +79,12 @@
                 <div class="text-xs text-gray-500">{{ inst.ticker }}</div>
               </td>
               <td class="px-5 py-3 text-right">{{ inst.shares_held }}</td>
-              <td class="px-5 py-3 text-right">{{ fmt(inst.avg_cost_per_share) }} €</td>
-              <td class="px-5 py-3 text-right">{{ fmt(inst.market_value) }} €</td>
-              <td class="px-5 py-3 text-right" :class="pnlColor(inst.total_pnl)">
-                {{ fmtSigned(inst.total_pnl) }} €
-              </td>
-              <td class="px-5 py-3 text-right" :class="pnlColor(inst.simple_return)">
-                {{ fmtSigned(inst.simple_return) }}%
-              </td>
-              <td class="px-5 py-3 text-right" :class="pnlColor(inst.xirr)">
-                {{ inst.xirr != null ? fmtSigned(inst.xirr) + '% p.a.' : 'N/A' }}
-              </td>
-              <td class="px-5 py-3 text-right">{{ fmt(inst.estimated_tax) }} €</td>
+              <td class="px-5 py-3 text-right">{{ fmt(inst.avg_cost_per_share) }} &euro;</td>
+              <td class="px-5 py-3 text-right">{{ fmt(inst.market_value) }} &euro;</td>
+              <td class="px-5 py-3 text-right" :class="pnlColor(inst.total_pnl)">{{ fmtSigned(inst.total_pnl) }} &euro;</td>
+              <td class="px-5 py-3 text-right" :class="pnlColor(inst.simple_return)">{{ fmtSigned(inst.simple_return) }}%</td>
+              <td class="px-5 py-3 text-right" :class="pnlColor(inst.xirr)">{{ inst.xirr != null ? fmtSigned(inst.xirr) + '% p.a.' : 'N/A' }}</td>
+              <td class="px-5 py-3 text-right">{{ fmt(inst.estimated_tax) }} &euro;</td>
             </tr>
           </tbody>
         </table>
@@ -142,7 +124,7 @@
             <td class="px-5 py-3 text-right">{{ action.target_weight.toFixed(1) }}%</td>
             <td class="px-5 py-3 text-right" :class="action.difference > 0 ? 'text-green-400' : action.difference < 0 ? 'text-red-400' : 'text-gray-400'">
               {{ action.difference > 0 ? 'Buy' : action.difference < 0 ? 'Sell' : 'On target' }}
-              {{ action.difference !== 0 ? Math.abs(action.difference).toFixed(0) + ' €' : '' }}
+              {{ action.difference !== 0 ? Math.abs(action.difference).toFixed(0) + ' &euro;' : '' }}
             </td>
           </tr>
         </tbody>
@@ -150,82 +132,12 @@
     </section>
 
   </main>
-
-  <!-- Add Transaction Modal -->
-  <div v-if="showAddForm" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50" @click.self="showAddForm = false">
-    <div class="bg-gray-900 rounded-2xl border border-gray-700 p-6 w-full max-w-md space-y-4">
-      <h2 class="text-lg font-semibold">Add Transaction</h2>
-
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="block text-xs text-gray-500 mb-1">Date</label>
-          <input v-model="form.date" type="date" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
-        </div>
-        <div>
-          <label class="block text-xs text-gray-500 mb-1">Type</label>
-          <select v-model="form.type" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
-            <option value="Buy">Buy</option>
-            <option value="Sell">Sell</option>
-            <option value="Dividend">Dividend</option>
-            <option value="Coupon">Coupon</option>
-          </select>
-        </div>
-      </div>
-
-      <div>
-        <label class="block text-xs text-gray-500 mb-1">Security</label>
-        <select v-if="!customSecurity" v-model="form.security" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
-          <option v-for="name in availableInstruments" :key="name" :value="name">{{ name }}</option>
-          <option value="__custom__">+ New instrument...</option>
-        </select>
-        <div v-else class="flex gap-2">
-          <input v-model="form.security" type="text" placeholder="e.g. ISHARES CORE S&P 500" class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
-          <button @click="customSecurity = false; form.security = availableInstruments[0] || ''" class="px-3 py-2 text-xs text-gray-400 hover:text-white bg-gray-800 border border-gray-700 rounded-lg">Cancel</button>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-2 gap-3" v-if="form.type === 'Buy' || form.type === 'Sell'">
-        <div>
-          <label class="block text-xs text-gray-500 mb-1">Shares</label>
-          <input v-model="form.shares" type="number" step="any" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
-        </div>
-        <div>
-          <label class="block text-xs text-gray-500 mb-1">Quote</label>
-          <input v-model="form.quote" type="number" step="any" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
-        </div>
-      </div>
-
-      <div class="grid grid-cols-3 gap-3">
-        <div>
-          <label class="block text-xs text-gray-500 mb-1">Fees</label>
-          <input v-model="form.fees" type="number" step="any" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
-        </div>
-        <div v-if="form.type !== 'Buy'">
-          <label class="block text-xs text-gray-500 mb-1">Taxes</label>
-          <input v-model="form.taxes" type="number" step="any" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
-        </div>
-        <div>
-          <label class="block text-xs text-gray-500 mb-1">Net Value</label>
-          <input v-if="form.type === 'Dividend' || form.type === 'Coupon'" v-model="form.net_transaction_value" type="number" step="any" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
-          <input v-else :value="computedNetValue" readonly class="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-400 cursor-not-allowed">
-        </div>
-      </div>
-
-      <div class="flex justify-end gap-3 pt-2">
-        <button @click="showAddForm = false" class="px-4 py-2 text-sm text-gray-400 hover:text-white transition">Cancel</button>
-        <button @click="submitTransaction(true)" class="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 rounded-lg transition">Save & New</button>
-        <button @click="submitTransaction(false)" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 rounded-lg transition">Save</button>
-      </div>
-
-      <div v-if="formMessage" class="text-sm" :class="formError ? 'text-red-400' : 'text-green-400'">
-        {{ formMessage }}
-      </div>
-    </div>
-  </div>
 </div>
 
 <script>
-const { createApp, ref, computed, onMounted, nextTick, watch } = Vue;
+const { createApp, ref, onMounted, nextTick } = Vue;
+
+const CHART_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
 
 createApp({
   setup() {
@@ -233,114 +145,62 @@ createApp({
     const instruments = ref([]);
     const summary = ref(null);
     const rebalance = ref([]);
-    const availableInstruments = ref([]);
-    const showAddForm = ref(false);
-    const customSecurity = ref(false);
-    const formMessage = ref('');
-    const formError = ref(false);
-
-    const form = ref({
-      date: new Date().toISOString().split('T')[0],
-      type: 'Buy',
-      security: '',
-      shares: '',
-      quote: '',
-      fees: '',
-      taxes: '',
-      net_transaction_value: '',
-    });
-
-    // Chart refs
     const allocChart = ref(null);
-    const computedNetValue = computed(() => computeNetValue(form.value));
     const classChart = ref(null);
     let allocChartInstance = null;
     let classChartInstance = null;
 
-    const chartColors = [
-      '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
-      '#ec4899', '#06b6d4', '#84cc16',
-    ];
-
-    function fmt(n) {
-      return n != null ? n.toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : 'N/A';
-    }
-
-    function fmtSigned(n) {
-      if (n == null) return 'N/A';
-      const sign = n >= 0 ? '+' : '';
-      return sign + n.toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
-
-    function pnlColor(val) {
-      if (val == null) return 'text-gray-400';
-      return val >= 0 ? 'text-green-400' : 'text-red-400';
-    }
-
-    function renderChart(canvas, labels, data, existingInstance) {
-      if (existingInstance) existingInstance.destroy();
+    function renderDoughnut(canvas, labels, data, existing) {
+      if (existing) existing.destroy();
       return new Chart(canvas, {
         type: 'doughnut',
         data: {
           labels,
-          datasets: [{
-            data,
-            backgroundColor: chartColors.slice(0, data.length),
-            borderWidth: 0,
-          }],
+          datasets: [{ data, backgroundColor: CHART_COLORS.slice(0, data.length), borderWidth: 0 }],
         },
         options: {
           responsive: true,
-          plugins: {
-            legend: { position: 'bottom', labels: { color: '#9ca3af', padding: 16 } },
-          },
+          plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af', padding: 16 } } },
         },
       });
     }
 
+    function renderCharts() {
+      if (!summary.value) return;
+      if (allocChart.value) {
+        allocChartInstance = renderDoughnut(
+          allocChart.value,
+          Object.keys(summary.value.allocations),
+          Object.values(summary.value.allocations),
+          allocChartInstance,
+        );
+      }
+      if (classChart.value) {
+        classChartInstance = renderDoughnut(
+          classChart.value,
+          Object.keys(summary.value.allocations_by_class),
+          Object.values(summary.value.allocations_by_class),
+          classChartInstance,
+        );
+      }
+    }
+
     async function fetchData() {
       try {
-        const [portfolioRes, rebalanceRes, instrumentsRes] = await Promise.all([
+        const [portfolioRes, rebalanceRes] = await Promise.all([
           fetch('/api/portfolio'),
           fetch('/api/rebalance'),
-          fetch('/api/instruments'),
         ]);
         const portfolioData = await portfolioRes.json();
-        const rebalanceData = await rebalanceRes.json();
-        const instrumentsData = await instrumentsRes.json();
-
         instruments.value = portfolioData.instruments;
         summary.value = portfolioData.summary;
-        rebalance.value = rebalanceData.actions;
-        availableInstruments.value = instrumentsData.instruments;
-
-        if (!form.value.security && instrumentsData.instruments.length) {
-          form.value.security = instrumentsData.instruments[0];
-        }
-
+        rebalance.value = (await rebalanceRes.json()).actions;
         loading.value = false;
-
         await nextTick();
         renderCharts();
       } catch (err) {
         console.error('Failed to fetch data:', err);
         loading.value = false;
-      }
-    }
-
-    function renderCharts() {
-      if (!summary.value) return;
-
-      if (allocChart.value) {
-        const labels = Object.keys(summary.value.allocations);
-        const data = Object.values(summary.value.allocations);
-        allocChartInstance = renderChart(allocChart.value, labels, data, allocChartInstance);
-      }
-
-      if (classChart.value) {
-        const labels = Object.keys(summary.value.allocations_by_class);
-        const data = Object.values(summary.value.allocations_by_class);
-        classChartInstance = renderChart(classChart.value, labels, data, classChartInstance);
       }
     }
 
@@ -350,58 +210,12 @@ createApp({
       await fetchData();
     }
 
-    async function submitTransaction(keepOpen) {
-      formMessage.value = '';
-      formError.value = false;
-
-      try {
-        const res = await fetch('/api/transactions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ ...form.value, net_transaction_value: computedNetValue.value }),
-        });
-        const data = await res.json();
-
-        if (res.ok) {
-          formMessage.value = 'Transaction added successfully';
-          formError.value = false;
-          await fetchData();
-
-          if (keepOpen) {
-            // Reset form but keep date, type and security
-            form.value.shares = '';
-            form.value.quote = '';
-            form.value.fees = '';
-            form.value.taxes = '';
-            form.value.net_transaction_value = '';
-          } else {
-            showAddForm.value = false;
-          }
-        } else {
-          formMessage.value = data.error || 'Failed to add transaction';
-          formError.value = true;
-        }
-      } catch (err) {
-        formMessage.value = 'Network error';
-        formError.value = true;
-      }
-    }
-
     onMounted(fetchData);
 
-    watch(() => form.value.security, (val) => {
-      if (val === '__custom__') {
-        customSecurity.value = true;
-        form.value.security = '';
-      }
-    });
-
     return {
-      loading, instruments, summary, rebalance, availableInstruments,
-      showAddForm, customSecurity, form, formMessage, formError, computedNetValue,
+      loading, instruments, summary, rebalance,
       allocChart, classChart,
-      fmt, fmtSigned, pnlColor,
-      refreshPrices, submitTransaction,
+      fmt, fmtSigned, pnlColor, refreshPrices,
     };
   },
 }).mount('#app');
