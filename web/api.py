@@ -28,9 +28,7 @@ def register_api_routes(app):
         first_date = df["Date"].min().normalize()
         today = pd.Timestamp.now().normalize()
 
-        # Fetch price histories for all instruments
         from portfolio.market import fetch_price_history
-        from portfolio.portfolio import get_holdings_at, value_holdings
 
         price_histories = {}
         for security in df["Security"].unique():
@@ -44,17 +42,51 @@ def register_api_routes(app):
         if not price_histories:
             return jsonify({"dates": [], "values": []})
 
-        # Build a common date index from all price histories
+        # Build sorted date index from all price histories
         all_dates = set()
         for prices in price_histories.values():
             all_dates.update(prices.index.normalize())
         all_dates = sorted(d for d in all_dates if first_date <= d <= today)
 
+        # Build transaction events sorted by date: list of (date, security, type, shares)
+        tx_events = []
+        for _, row in df.iterrows():
+            tx_events.append((
+                row["Date"].normalize(),
+                row["Security"],
+                row["Type"].strip().lower(),
+                row["Shares"],
+            ))
+        tx_events.sort(key=lambda e: e[0])
+
+        # Single-pass: walk through market days, apply transactions incrementally
+        holdings = {}  # security -> shares
+        tx_idx = 0
         dates = []
         values = []
+
         for date in all_dates:
-            holdings = get_holdings_at(date, df)
-            total = value_holdings(holdings, price_histories, date) if holdings else 0.0
+            # Apply all transactions up to and including this date
+            while tx_idx < len(tx_events) and tx_events[tx_idx][0] <= date:
+                _, security, tx_type, shares = tx_events[tx_idx]
+                if tx_type == "buy":
+                    holdings[security] = holdings.get(security, 0.0) + shares
+                elif tx_type == "sell":
+                    holdings[security] = holdings.get(security, 0.0) - shares
+                    if holdings[security] <= 1e-9:
+                        holdings.pop(security, None)
+                tx_idx += 1
+
+            # Value current holdings at today's prices
+            total = 0.0
+            for security, shares in holdings.items():
+                if security not in price_histories:
+                    continue
+                prices = price_histories[security]
+                available = prices[prices.index <= date]
+                if not available.empty:
+                    total += shares * available.iloc[-1]
+
             dates.append(date.strftime("%Y-%m-%d"))
             values.append(round(total, 2))
 
