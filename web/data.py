@@ -175,7 +175,7 @@ def load_portfolio_history(config_path, transactions_path):
 
     price_histories = _fetch_all_price_histories(df, instruments, first_date, today)
     if not price_histories:
-        return {"dates": [], "values": [], "costs": []}
+        return {"dates": [], "values": [], "costs": [], "return_pcts": []}
 
     all_dates = _build_date_index(price_histories, first_date, today)
 
