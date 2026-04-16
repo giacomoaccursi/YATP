@@ -99,20 +99,20 @@
       <!-- Period Summary -->
       <div v-if="periodSummary" class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
         <div>
-          <div class="text-xs text-gray-500 dark:text-gray-400">Period Return</div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">P&amp;L %</div>
           <div class="text-lg font-semibold" :class="pnlColor(periodSummary.returnPct)">{{ fmtSigned(periodSummary.returnPct) }}%</div>
+        </div>
+        <div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">Market Value</div>
+          <div class="text-lg font-semibold">{{ fmt(periodSummary.endValue) }} &euro;</div>
+        </div>
+        <div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">Unrealized P&amp;L</div>
+          <div class="text-lg font-semibold" :class="pnlColor(periodSummary.gain)">{{ fmtSigned(periodSummary.gain) }} &euro;</div>
         </div>
         <div>
           <div class="text-xs text-gray-500 dark:text-gray-400">Start Value</div>
           <div class="text-lg font-semibold">{{ fmt(periodSummary.startValue) }} &euro;</div>
-        </div>
-        <div>
-          <div class="text-xs text-gray-500 dark:text-gray-400">End Value</div>
-          <div class="text-lg font-semibold">{{ fmt(periodSummary.endValue) }} &euro;</div>
-        </div>
-        <div>
-          <div class="text-xs text-gray-500 dark:text-gray-400">Gain</div>
-          <div class="text-lg font-semibold" :class="pnlColor(periodSummary.gain)">{{ fmtSigned(periodSummary.gain) }} &euro;</div>
         </div>
       </div>
     </section>

@@ -1,8 +1,10 @@
 /**
  * Vue app for the performance page.
+ * No business logic — all return calculations come from the API.
+ * Date filtering is pure UI slicing on pre-computed data.
  */
 
-const { createApp, ref, computed, onMounted, onUnmounted, nextTick } = Vue;
+const { createApp, ref, onMounted, onUnmounted, nextTick } = Vue;
 
 createApp({
   setup() {
@@ -14,12 +16,12 @@ createApp({
     let compareChartInstance = null;
     let returnChartInstance = null;
 
-    // Full history data (fetched once)
+    // Pre-computed data from API (fetched once)
     let allDates = [];
     let allValues = [];
-    let allCosts = [];
+    let allReturnPcts = [];
 
-    // Period filter state
+    // Period filter state (UI only)
     const activePreset = ref('all');
     const customFrom = ref('');
     const customTo = ref('');
@@ -34,8 +36,9 @@ createApp({
 
     const periodSummary = ref(null);
 
-    function getFilteredRange() {
-      if (!allDates.length) return { dates: [], values: [], costs: [] };
+    // UI-only: slice arrays by date range
+    function getFilteredIndices() {
+      if (!allDates.length) return { start: 0, end: 0 };
 
       var fromDate = allDates[0];
       var toDate = allDates[allDates.length - 1];
@@ -54,50 +57,39 @@ createApp({
         }
       }
 
-      var dates = [];
-      var values = [];
-      var costs = [];
+      var start = -1;
+      var end = -1;
       for (var i = 0; i < allDates.length; i++) {
-        if (allDates[i] >= fromDate && allDates[i] <= toDate) {
-          dates.push(allDates[i]);
-          values.push(allValues[i]);
-          costs.push(allCosts[i]);
-        }
+        if (allDates[i] >= fromDate && start === -1) start = i;
+        if (allDates[i] <= toDate) end = i;
       }
-      return { dates: dates, values: values, costs: costs };
-    }
-
-    function computeCumulativeReturn(values) {
-      if (!values.length || values[0] === 0) return [];
-      var base = values[0];
-      return values.map(function (v) { return base > 0 ? ((v - base) / base) * 100 : 0; });
+      if (start === -1) return { start: 0, end: 0 };
+      return { start: start, end: end + 1 };
     }
 
     function updateReturnChart() {
-      var range = getFilteredRange();
-      if (!range.dates.length) {
+      var idx = getFilteredIndices();
+      var dates = allDates.slice(idx.start, idx.end);
+      var returnPcts = allReturnPcts.slice(idx.start, idx.end);
+      var values = allValues.slice(idx.start, idx.end);
+
+      if (!dates.length) {
         periodSummary.value = null;
         return;
       }
 
-      var cumReturn = computeCumulativeReturn(range.values);
-
-      // Period summary
-      var startVal = range.values[0];
-      var endVal = range.values[range.values.length - 1];
-      var gain = endVal - startVal;
-      var returnPct = startVal > 0 ? ((endVal - startVal) / startVal) * 100 : 0;
+      // Summary from pre-computed API data (no calculations, just reading endpoints)
       periodSummary.value = {
-        startValue: startVal,
-        endValue: endVal,
-        gain: Math.round(gain * 100) / 100,
-        returnPct: Math.round(returnPct * 100) / 100,
+        startValue: values[0],
+        endValue: values[values.length - 1],
+        returnPct: returnPcts[returnPcts.length - 1],
+        gain: Math.round((values[values.length - 1] - values[0]) * 100) / 100,
       };
 
-      renderReturnChart(range.dates, cumReturn);
+      renderReturnChart(dates, returnPcts);
     }
 
-    function renderReturnChart(dates, cumReturn) {
+    function renderReturnChart(dates, returnPcts) {
       if (!returnChart.value || !dates.length) return;
       if (returnChartInstance) returnChartInstance.destroy();
 
@@ -106,8 +98,8 @@ createApp({
         data: {
           labels: dates,
           datasets: [{
-            label: 'Cumulative Return (%)',
-            data: cumReturn,
+            label: 'P&L %',
+            data: returnPcts,
             borderColor: '#6366f1',
             backgroundColor: function (ctx) {
               if (!ctx.raw && ctx.raw !== 0) return 'transparent';
@@ -144,30 +136,14 @@ createApp({
         data: {
           labels: labels,
           datasets: [
-            {
-              label: 'TWR',
-              data: twrValues,
-              backgroundColor: 'rgba(99, 102, 241, 0.7)',
-              borderColor: '#6366f1',
-              borderWidth: 1,
-              borderRadius: 4,
-            },
-            {
-              label: 'MWRR',
-              data: mwrrValues,
-              backgroundColor: 'rgba(34, 211, 238, 0.7)',
-              borderColor: '#22d3ee',
-              borderWidth: 1,
-              borderRadius: 4,
-            },
+            { label: 'TWR', data: twrValues, backgroundColor: 'rgba(99, 102, 241, 0.7)', borderColor: '#6366f1', borderWidth: 1, borderRadius: 4 },
+            { label: 'MWRR', data: mwrrValues, backgroundColor: 'rgba(34, 211, 238, 0.7)', borderColor: '#22d3ee', borderWidth: 1, borderRadius: 4 },
           ],
         },
         options: {
           responsive: true,
           plugins: {
-            legend: {
-              labels: { color: chartTheme().text, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } },
-            },
+            legend: { labels: { color: chartTheme().text, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } } },
             tooltip: chartTooltip({ label: function (ctx) { return ctx.dataset.label + ': ' + fmtSigned(ctx.parsed.y) + '%'; } }),
           },
           scales: chartScales({ xGrid: false, yFormat: function (v) { return v + '%'; } }),
@@ -196,7 +172,7 @@ createApp({
         var data = await res.json();
         allDates = data.dates;
         allValues = data.values;
-        allCosts = data.costs || [];
+        allReturnPcts = data.return_pcts || [];
         historyLoading.value = false;
         await nextTick();
         updateReturnChart();

@@ -169,11 +169,18 @@ def load_portfolio_history(config_path, transactions_path):
 
         total = _value_holdings_at(holdings, price_histories, date)
         total_cost = sum(s["cost"] for s in cost_state.values())
+        pnl_pct = ((total - total_cost) / total_cost * 100) if total_cost > 0 else 0.0
         dates.append(date.strftime("%Y-%m-%d"))
         values.append(round(total, 2))
         costs.append(round(total_cost, 2))
 
-    return {"dates": dates, "values": values, "costs": costs}
+    # Pre-compute return_pct for each day
+    return_pcts = []
+    for i in range(len(values)):
+        cost = costs[i]
+        return_pcts.append(round(((values[i] - cost) / cost) * 100, 2) if cost > 0 else 0.0)
+
+    return {"dates": dates, "values": values, "costs": costs, "return_pcts": return_pcts}
 
 
 def load_instrument_history(config_path, transactions_path, security):
