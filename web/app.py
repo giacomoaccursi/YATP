@@ -38,4 +38,4 @@ def launch(config_path, transactions_path, port=5050):
         webbrowser.open(f"http://127.0.0.1:{port}")
 
     threading.Timer(1.0, open_browser).start()
-    app.run(host="127.0.0.1", port=port, debug=True)
+    app.run(host="127.0.0.1", port=port, debug=False)
