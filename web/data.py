@@ -110,9 +110,9 @@ def load_instrument_names(config_path):
 
 
 def load_portfolio_history(config_path, transactions_path):
-    """Calculate daily portfolio value from first transaction to today.
+    """Calculate daily portfolio value and cost basis from first transaction to today.
 
-    Returns dict with 'dates' (list of str) and 'values' (list of float).
+    Returns dict with 'dates', 'values', 'costs' (all lists).
     """
     df = load_transactions(transactions_path)
     config = load_config(config_path)
@@ -124,23 +124,56 @@ def load_portfolio_history(config_path, transactions_path):
 
     price_histories = _fetch_all_price_histories(df, instruments, first_date, today)
     if not price_histories:
-        return {"dates": [], "values": []}
+        return {"dates": [], "values": [], "costs": []}
 
     all_dates = _build_date_index(price_histories, first_date, today)
-    tx_events = _build_tx_events(df)
+
+    # Build tx events with net value for cost tracking
+    tx_events = []
+    for _, row in df.iterrows():
+        tx_events.append((
+            row["Date"].normalize(),
+            row["Security"],
+            row["Type"].strip().lower(),
+            row["Shares"],
+            row["Net Transaction Value"],
+        ))
+    tx_events.sort(key=lambda e: e[0])
 
     holdings = {}
+    cost_state = {}  # security -> {"shares": float, "cost": float}
     tx_idx = 0
     dates = []
     values = []
+    costs = []
 
     for date in all_dates:
-        tx_idx = _apply_transactions(tx_events, tx_idx, date, holdings)
+        while tx_idx < len(tx_events) and tx_events[tx_idx][0] <= date:
+            _, security, tx_type, shares, net_value = tx_events[tx_idx]
+            if security not in cost_state:
+                cost_state[security] = {"shares": 0.0, "cost": 0.0}
+            if tx_type == "buy":
+                holdings[security] = holdings.get(security, 0.0) + shares
+                cost_state[security]["shares"] += shares
+                cost_state[security]["cost"] += net_value
+            elif tx_type == "sell":
+                holdings[security] = holdings.get(security, 0.0) - shares
+                if cost_state[security]["shares"] > 0:
+                    avg = cost_state[security]["cost"] / cost_state[security]["shares"]
+                    cost_state[security]["cost"] -= avg * shares
+                cost_state[security]["shares"] -= shares
+                if holdings.get(security, 0) <= 1e-9:
+                    holdings.pop(security, None)
+                    cost_state[security] = {"shares": 0.0, "cost": 0.0}
+            tx_idx += 1
+
         total = _value_holdings_at(holdings, price_histories, date)
+        total_cost = sum(s["cost"] for s in cost_state.values())
         dates.append(date.strftime("%Y-%m-%d"))
         values.append(round(total, 2))
+        costs.append(round(total_cost, 2))
 
-    return {"dates": dates, "values": values}
+    return {"dates": dates, "values": values, "costs": costs}
 
 
 def load_instrument_history(config_path, transactions_path, security):

@@ -24,17 +24,10 @@
 
     <div>
       <h2 class="text-xl font-semibold">Performance</h2>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Historical returns and portfolio value over time</p>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Returns analysis with period filters</p>
     </div>
 
-    <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Portfolio Value Over Time</h3>
-        <div v-if="historyLoading" class="text-xs text-gray-500 dark:text-gray-400">Loading history...</div>
-      </div>
-      <canvas ref="valueChart" height="80"></canvas>
-    </section>
-
+    <!-- Period Returns Table -->
     <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
       <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
         <h2 class="text-lg font-medium">Returns by Period</h2>
@@ -70,9 +63,58 @@
       <div v-else-if="!periodsLoading" class="px-5 py-8 text-center text-gray-500 dark:text-gray-400">No period data available</div>
     </section>
 
+    <!-- TWR vs MWRR Bar Chart -->
     <section v-if="periods.some(p => p.available)" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
-      <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">TWR by Period</h3>
-      <canvas ref="periodChart" height="60"></canvas>
+      <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">TWR vs MWRR by Period</h3>
+      <canvas ref="compareChart" height="60"></canvas>
+    </section>
+
+    <!-- Cumulative Return Chart with Filters -->
+    <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 space-y-4">
+      <div class="flex items-center justify-between">
+        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Cumulative Return</h3>
+        <div v-if="historyLoading" class="text-xs text-gray-500 dark:text-gray-400">Loading...</div>
+      </div>
+
+      <!-- Period Filters -->
+      <div class="flex flex-wrap items-center gap-2">
+        <button v-for="preset in presets" :key="preset.key"
+                @click="selectPreset(preset.key)"
+                class="px-3 py-1.5 text-xs rounded-lg transition"
+                :class="activePreset === preset.key
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'">
+          {{ preset.label }}
+        </button>
+        <div class="flex items-center gap-2 ml-2">
+          <input v-model="customFrom" type="date" class="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-2 py-1.5 text-xs">
+          <span class="text-xs text-gray-500 dark:text-gray-400">to</span>
+          <input v-model="customTo" type="date" class="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-2 py-1.5 text-xs">
+          <button @click="applyCustomRange" class="px-3 py-1.5 text-xs bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition">Apply</button>
+        </div>
+      </div>
+
+      <canvas ref="returnChart" height="80"></canvas>
+
+      <!-- Period Summary -->
+      <div v-if="periodSummary" class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-2">
+        <div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">Period Return</div>
+          <div class="text-lg font-semibold" :class="pnlColor(periodSummary.returnPct)">{{ fmtSigned(periodSummary.returnPct) }}%</div>
+        </div>
+        <div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">Start Value</div>
+          <div class="text-lg font-semibold">{{ fmt(periodSummary.startValue) }} &euro;</div>
+        </div>
+        <div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">End Value</div>
+          <div class="text-lg font-semibold">{{ fmt(periodSummary.endValue) }} &euro;</div>
+        </div>
+        <div>
+          <div class="text-xs text-gray-500 dark:text-gray-400">Gain</div>
+          <div class="text-lg font-semibold" :class="pnlColor(periodSummary.gain)">{{ fmtSigned(periodSummary.gain) }} &euro;</div>
+        </div>
+      </div>
     </section>
 
   </main>
