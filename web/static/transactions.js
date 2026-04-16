@@ -43,12 +43,12 @@ createApp({
     // Methods
     function typeBadge(type) {
       const map = {
-        Buy: 'bg-green-900/50 text-green-400',
-        Sell: 'bg-red-900/50 text-red-400',
-        Dividend: 'bg-blue-900/50 text-blue-400',
-        Coupon: 'bg-yellow-900/50 text-yellow-400',
+        Buy: 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400',
+        Sell: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-400',
+        Dividend: 'bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-400',
+        Coupon: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-400',
       };
-      return map[type] || 'bg-gray-800 text-gray-400';
+      return map[type] || 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
     }
 
     function clearFilters() {
