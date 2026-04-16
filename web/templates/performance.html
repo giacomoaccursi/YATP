@@ -8,6 +8,7 @@
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
   <script src="/static/utils.js"></script>
+  <script src="/static/navbar.js" defer></script>
   <style>
     [v-cloak] { display: none; }
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
@@ -16,19 +17,6 @@
 <body class="bg-gray-950 text-gray-100 min-h-screen">
 
 <div id="app" v-cloak>
-
-  <!-- Header -->
-  <header class="border-b border-gray-800 px-6 py-4 flex items-center justify-between">
-    <div class="flex items-center gap-6">
-      <h1 class="text-xl font-semibold tracking-tight">Performance</h1>
-      <nav class="flex gap-3">
-        <a href="/" class="text-sm text-gray-400 hover:text-white transition">&larr; Dashboard</a>
-        <a href="/instruments" class="text-sm text-gray-400 hover:text-white transition">Instruments</a>
-        <a href="/rebalance" class="text-sm text-gray-400 hover:text-white transition">Rebalance</a>
-        <a href="/transactions" class="text-sm text-gray-400 hover:text-white transition">Transactions</a>
-      </nav>
-    </div>
-  </header>
 
   <main class="max-w-7xl mx-auto px-6 py-8 space-y-8">
 

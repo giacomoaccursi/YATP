@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="/static/utils.js"></script>
+  <script src="/static/navbar.js" defer></script>
   <style>
     [v-cloak] { display: none; }
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
@@ -16,19 +17,11 @@
 
 <div id="app" v-cloak>
 
-  <!-- Header -->
-  <header class="border-b border-gray-800 px-6 py-4 flex items-center justify-between">
-    <div class="flex items-center gap-6">
-      <h1 class="text-xl font-semibold tracking-tight">Transactions</h1>
-      <nav class="flex gap-3">
-        <a href="/" class="text-sm text-gray-400 hover:text-white transition">&larr; Dashboard</a>
-        <a href="/instruments" class="text-sm text-gray-400 hover:text-white transition">Instruments</a>
-        <a href="/performance" class="text-sm text-gray-400 hover:text-white transition">Performance</a>
-        <a href="/rebalance" class="text-sm text-gray-400 hover:text-white transition">Rebalance</a>
-      </nav>
-    </div>
+  <!-- Page Header -->
+  <div class="border-b border-gray-800 px-6 py-4 flex items-center justify-between">
+    <h1 class="text-xl font-semibold tracking-tight">Transactions</h1>
     <button @click="openAddForm" class="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-500 rounded-lg transition">+ Add Transaction</button>
-  </header>
+  </div>
 
   <main class="max-w-7xl mx-auto px-6 py-8 space-y-6">
 

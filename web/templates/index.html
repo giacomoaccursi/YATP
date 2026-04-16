@@ -8,6 +8,7 @@
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
   <script src="/static/utils.js"></script>
+  <script src="/static/navbar.js" defer></script>
   <style>
     [v-cloak] { display: none; }
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
@@ -17,24 +18,18 @@
 
 <div id="app" v-cloak>
 
-  <!-- Header -->
-  <header class="border-b border-gray-800 px-6 py-4 flex items-center justify-between">
-    <h1 class="text-xl font-semibold tracking-tight">Simple Portfolio Tracker</h1>
-    <nav class="flex gap-3">
-      <a href="/instruments" class="px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg transition">Instruments</a>
-      <a href="/performance" class="px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg transition">Performance</a>
-      <a href="/rebalance" class="px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg transition">Rebalance</a>
-      <a href="/transactions" class="px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg transition">Transactions</a>
-      <button @click="refreshPrices" class="px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg transition">&#8635; Refresh</button>
-    </nav>
-  </header>
-
   <!-- Loading -->
   <div v-if="loading" class="flex items-center justify-center h-96">
     <div class="text-gray-400">Loading portfolio data...</div>
   </div>
 
   <main v-else class="max-w-7xl mx-auto px-6 py-8 space-y-8">
+
+    <!-- Page Header -->
+    <div class="flex items-center justify-between">
+      <h2 class="text-lg font-medium">Overview</h2>
+      <button @click="refreshPrices" class="px-3 py-1.5 text-sm bg-gray-800 hover:bg-gray-700 rounded-lg transition">&#8635; Refresh Prices</button>
+    </div>
 
     <!-- Overview Cards -->
     <section v-if="summary" class="grid grid-cols-2 md:grid-cols-4 gap-4">
