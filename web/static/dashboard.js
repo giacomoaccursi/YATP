@@ -2,7 +2,11 @@
  * Vue app for the dashboard page.
  */
 
-const CHART_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+const CHART_COLORS = [
+  '#6366f1', '#22d3ee', '#f59e0b', '#ef4444',
+  '#a78bfa', '#34d399', '#fb923c', '#f472b6',
+  '#38bdf8', '#a3e635',
+];
 
 const { createApp, ref, onMounted, nextTick } = Vue;
 
@@ -22,15 +26,49 @@ createApp({
 
     function renderDoughnut(canvas, labels, data, existing) {
       if (existing) existing.destroy();
+      const total = data.reduce((a, b) => a + b, 0);
       return new Chart(canvas, {
         type: 'doughnut',
         data: {
           labels,
-          datasets: [{ data, backgroundColor: CHART_COLORS.slice(0, data.length), borderWidth: 0 }],
+          datasets: [{
+            data,
+            backgroundColor: CHART_COLORS.slice(0, data.length),
+            borderColor: '#111827',
+            borderWidth: 2,
+            hoverOffset: 8,
+          }],
         },
         options: {
           responsive: true,
-          plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af', padding: 16 } } },
+          cutout: '68%',
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: {
+                color: '#d1d5db',
+                padding: 16,
+                usePointStyle: true,
+                pointStyle: 'circle',
+                font: { size: 12 },
+              },
+            },
+            tooltip: {
+              backgroundColor: '#1f2937',
+              titleColor: '#f3f4f6',
+              bodyColor: '#d1d5db',
+              borderColor: '#374151',
+              borderWidth: 1,
+              padding: 12,
+              cornerRadius: 8,
+              callbacks: {
+                label: (ctx) => {
+                  const pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
+                  return ' ' + ctx.label + ': ' + pct + '%';
+                },
+              },
+            },
+          },
         },
       });
     }

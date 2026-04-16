@@ -104,11 +104,19 @@
     <section v-if="summary" class="grid md:grid-cols-2 gap-4">
       <div class="bg-gray-900 rounded-xl border border-gray-800 p-5">
         <h3 class="text-sm font-medium text-gray-400 mb-4">Allocation by Instrument</h3>
-        <canvas ref="allocChart" height="200"></canvas>
+        <div class="flex justify-center">
+          <div class="w-full max-w-xs">
+            <canvas ref="allocChart"></canvas>
+          </div>
+        </div>
       </div>
       <div class="bg-gray-900 rounded-xl border border-gray-800 p-5">
         <h3 class="text-sm font-medium text-gray-400 mb-4">Allocation by Asset Class</h3>
-        <canvas ref="classChart" height="200"></canvas>
+        <div class="flex justify-center">
+          <div class="w-full max-w-xs">
+            <canvas ref="classChart"></canvas>
+          </div>
+        </div>
       </div>
     </section>
 
