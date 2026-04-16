@@ -11,9 +11,15 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
   <script src="/static/utils.js"></script>
   <script src="/static/navbar.js" defer></script>
+  <script src="/static/tooltip.js" defer></script>
   <style>
     [v-cloak] { display: none; }
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    .tip { position: relative; cursor: help; }
+    .tip::after { content: attr(data-tip); display: none; position: absolute; bottom: calc(100% + 8px); right: 0; padding: 8px 12px; border-radius: 8px; font-size: 12px; font-weight: 400; line-height: 1.5; width: 220px; text-transform: none; letter-spacing: normal; z-index: 100; white-space: normal; text-align: left; }
+    .tip:hover::after { display: block; }
+    .dark .tip::after { background: #1f2937; color: #d1d5db; border: 1px solid #374151; }
+    html:not(.dark) .tip::after { background: #fff; color: #374151; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
   </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 min-h-screen">
@@ -28,20 +34,20 @@
     </div>
 
     <!-- Period Returns Table -->
-    <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+    <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-visible">
       <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
         <h2 class="text-lg font-medium">Returns by Period</h2>
         <div v-if="periodsLoading" class="text-xs text-gray-500 dark:text-gray-400">Loading...</div>
       </div>
-      <div v-if="periods.length" class="overflow-x-auto">
+      <div v-if="periods.length" class="overflow-visible">
         <table class="w-full text-sm">
           <thead class="text-xs text-gray-500 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-900/50">
             <tr>
               <th class="px-5 py-3 text-left">Period</th>
-              <th class="px-5 py-3 text-right">Market Gain</th>
-              <th class="px-5 py-3 text-right">Simple Return</th>
-              <th class="px-5 py-3 text-right">TWR</th>
-              <th class="px-5 py-3 text-right">MWRR</th>
+              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Change in portfolio value due to market price movements.">Market Gain</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Percentage gain or loss relative to cost basis.">Simple Return</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Time-Weighted Return. Measures performance independent of cash flow timing.">TWR</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Money-Weighted Return for the period. Reflects actual investor experience.">MWRR</span></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-gray-800">

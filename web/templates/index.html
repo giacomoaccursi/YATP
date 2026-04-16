@@ -11,6 +11,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
   <script src="/static/utils.js"></script>
   <script src="/static/navbar.js" defer></script>
+  <script src="/static/tooltip.js" defer></script>
   <style>
     [v-cloak] { display: none; }
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
@@ -38,7 +39,7 @@
     </div>
 
     <section v-if="summary" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div class="bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-200 dark:border-gray-800">
+      <div class="bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-200 dark:border-gray-800" data-info="market-value">
         <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Market Value</div>
         <div class="text-2xl font-semibold mt-1">{{ fmt(summary.market_value) }} &euro;</div>
         <div v-if="dailyChange" class="text-xs mt-1 font-medium" :class="pnlColor(dailyChange.amount)">
@@ -46,17 +47,17 @@
         </div>
         <div v-else class="text-xs text-gray-500 dark:text-gray-400 mt-1">Cost: {{ fmt(summary.cost) }} &euro;</div>
       </div>
-      <div class="bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-200 dark:border-gray-800">
+      <div class="bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-200 dark:border-gray-800" data-info="total-pnl">
         <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total P&amp;L</div>
         <div class="text-2xl font-semibold mt-1" :class="pnlColor(summary.total_pnl)">{{ fmtSigned(summary.total_pnl) }} &euro;</div>
         <div class="text-xs mt-1" :class="pnlColor(summary.unrealized)">Unrealized: {{ fmtSigned(summary.unrealized) }} &euro;</div>
       </div>
-      <div class="bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-200 dark:border-gray-800">
+      <div class="bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-200 dark:border-gray-800" data-info="simple-return">
         <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Simple Return</div>
         <div class="text-2xl font-semibold mt-1" :class="pnlColor(summary.simple_return)">{{ fmtSigned(summary.simple_return) }}%</div>
         <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Net after tax: {{ fmt(summary.net_after_tax) }} &euro;</div>
       </div>
-      <div class="bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-200 dark:border-gray-800">
+      <div class="bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-200 dark:border-gray-800" data-info="xirr">
         <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">XIRR (p.a.)</div>
         <div class="text-2xl font-semibold mt-1" :class="pnlColor(summary.xirr)">{{ summary.xirr != null ? fmtSigned(summary.xirr) + '%' : 'N/A' }}</div>
         <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Est. tax: {{ fmt(summary.tax) }} &euro;</div>
