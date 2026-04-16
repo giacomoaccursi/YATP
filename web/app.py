@@ -30,6 +30,10 @@ def create_app(config_path, transactions_path):
     def performance_page():
         return send_from_directory(templates_dir, "performance.html")
 
+    @app.route("/rebalance")
+    def rebalance_page():
+        return send_from_directory(templates_dir, "rebalance.html")
+
     @app.route("/transactions")
     def transactions_page():
         return send_from_directory(templates_dir, "transactions.html")

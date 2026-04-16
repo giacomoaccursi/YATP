@@ -87,6 +87,8 @@ def rebalance_to_dict(action):
         "asset_class": action.asset_class,
         "current_weight": round(action.current_weight, 2),
         "target_weight": round(action.target_weight, 2),
+        "current_value": round(action.current_value, 2),
+        "target_value": round(action.target_value, 2),
         "difference": round(action.difference, 2),
     }
 
