@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Transactions &mdash; Simple Portfolio Tracker</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
+  <script src="/static/theme.js"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="/static/utils.js"></script>
   <script src="/static/navbar.js" defer></script>
@@ -13,45 +15,42 @@
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
   </style>
 </head>
-<body class="bg-gray-950 text-gray-100 min-h-screen">
+<body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 min-h-screen">
 
 <div id="app" v-cloak>
 
   <main class="max-w-7xl mx-auto px-6 py-8 space-y-6">
 
-    <!-- Page Header -->
     <div class="flex items-center justify-between">
       <div>
         <h2 class="text-xl font-semibold">Transactions</h2>
         <p class="text-sm text-gray-500 mt-0.5">View, add, edit and delete transactions</p>
       </div>
-      <button @click="openAddForm" class="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-500 rounded-lg transition">+ Add Transaction</button>
+      <button @click="openAddForm" class="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition">+ Add Transaction</button>
     </div>
 
-    <!-- Filters -->
     <section class="flex flex-wrap gap-3 items-center">
-      <select v-model="filters.security" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+      <select v-model="filters.security" class="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
         <option value="">All instruments</option>
         <option v-for="sec in securities" :key="sec" :value="sec">{{ sec }}</option>
       </select>
-      <select v-model="filters.type" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+      <select v-model="filters.type" class="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
         <option value="">All types</option>
         <option value="Buy">Buy</option>
         <option value="Sell">Sell</option>
         <option value="Dividend">Dividend</option>
         <option value="Coupon">Coupon</option>
       </select>
-      <input v-model="filters.dateFrom" type="date" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
-      <input v-model="filters.dateTo" type="date" class="bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
-      <button v-if="hasFilters" @click="clearFilters" class="px-3 py-2 text-sm text-gray-400 hover:text-white transition">Clear</button>
+      <input v-model="filters.dateFrom" type="date" class="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
+      <input v-model="filters.dateTo" type="date" class="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
+      <button v-if="hasFilters" @click="clearFilters" class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">Clear</button>
       <div class="ml-auto text-sm text-gray-500">{{ filteredTransactions.length }} transactions</div>
     </section>
 
-    <!-- Transactions Table -->
-    <section class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
+    <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
-          <thead class="text-xs text-gray-500 uppercase bg-gray-900/50">
+          <thead class="text-xs text-gray-500 uppercase bg-gray-50 dark:bg-gray-900/50">
             <tr>
               <th class="px-5 py-3 text-left">Date</th>
               <th class="px-5 py-3 text-left">Type</th>
@@ -64,8 +63,8 @@
               <th class="px-5 py-3 w-20"></th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-800">
-            <tr v-for="tx in filteredTransactions" :key="tx.index" class="hover:bg-gray-800/50 transition">
+          <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
+            <tr v-for="tx in filteredTransactions" :key="tx.index" class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
               <td class="px-5 py-3">{{ tx.date }}</td>
               <td class="px-5 py-3">
                 <span class="px-2 py-0.5 rounded text-xs font-medium" :class="typeBadge(tx.type)">{{ tx.type }}</span>
@@ -77,12 +76,12 @@
               <td class="px-5 py-3 text-right text-gray-500">{{ tx.taxes > 0 ? tx.taxes.toFixed(2) + ' &euro;' : '&mdash;' }}</td>
               <td class="px-5 py-3 text-right font-medium">{{ tx.net_transaction_value.toFixed(2) }} &euro;</td>
               <td class="px-5 py-3 text-right flex justify-end gap-1">
-                <button @click="openEditForm(tx)" class="p-1.5 rounded-lg text-gray-600 hover:text-blue-400 hover:bg-blue-400/10 transition" title="Edit">
+                <button @click="openEditForm(tx)" class="p-1.5 rounded-lg text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-blue-500/10 transition" title="Edit">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"/>
                   </svg>
                 </button>
-                <button @click="confirmDelete(tx.index)" class="p-1.5 rounded-lg text-gray-600 hover:text-red-400 hover:bg-red-400/10 transition" title="Delete">
+                <button @click="confirmDelete(tx.index)" class="p-1.5 rounded-lg text-gray-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-500/10 transition" title="Delete">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
                   </svg>
@@ -98,38 +97,38 @@
     </section>
   </main>
 
-  <!-- Delete Confirmation Modal -->
+  <!-- Delete Modal -->
   <div v-if="deleteIndex !== null" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50" @click.self="deleteIndex = null">
-    <div class="bg-gray-900 rounded-2xl border border-gray-700 p-6 w-full max-w-sm space-y-4">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 w-full max-w-sm space-y-4">
       <div class="flex items-center gap-3">
-        <div class="p-2 bg-red-500/10 rounded-full">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+        <div class="p-2 bg-red-100 dark:bg-red-500/10 rounded-full">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500 dark:text-red-400" viewBox="0 0 20 20" fill="currentColor">
             <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
           </svg>
         </div>
         <h3 class="text-lg font-semibold">Delete Transaction</h3>
       </div>
-      <p class="text-sm text-gray-400">Are you sure? This action cannot be undone.</p>
+      <p class="text-sm text-gray-500 dark:text-gray-400">Are you sure? This action cannot be undone.</p>
       <div class="flex justify-end gap-3 pt-2">
-        <button @click="deleteIndex = null" class="px-4 py-2 text-sm text-gray-400 hover:text-white transition">Cancel</button>
-        <button @click="executeDelete" class="px-4 py-2 text-sm bg-red-600 hover:bg-red-500 rounded-lg transition">Delete</button>
+        <button @click="deleteIndex = null" class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">Cancel</button>
+        <button @click="executeDelete" class="px-4 py-2 text-sm bg-red-600 hover:bg-red-500 text-white rounded-lg transition">Delete</button>
       </div>
     </div>
   </div>
 
-  <!-- Add Transaction Modal -->
+  <!-- Add/Edit Modal -->
   <div v-if="showAddForm" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50" @click.self="showAddForm = false">
-    <div class="bg-gray-900 rounded-2xl border border-gray-700 p-6 w-full max-w-md space-y-4">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 w-full max-w-md space-y-4">
       <h2 class="text-lg font-semibold">{{ isEditing ? 'Edit Transaction' : 'Add Transaction' }}</h2>
 
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="block text-xs text-gray-500 mb-1">Date</label>
-          <input v-model="form.date" type="date" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+          <input v-model="form.date" type="date" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
         </div>
         <div>
           <label class="block text-xs text-gray-500 mb-1">Type</label>
-          <select v-model="form.type" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+          <select v-model="form.type" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
             <option value="Buy">Buy</option>
             <option value="Sell">Sell</option>
             <option value="Dividend">Dividend</option>
@@ -140,50 +139,50 @@
 
       <div>
         <label class="block text-xs text-gray-500 mb-1">Security</label>
-        <select v-if="!customSecurity" v-model="form.security" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+        <select v-if="!customSecurity" v-model="form.security" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
           <option v-for="name in availableInstruments" :key="name" :value="name">{{ name }}</option>
           <option value="__custom__">+ New instrument...</option>
         </select>
         <div v-else class="flex gap-2">
-          <input v-model="form.security" type="text" placeholder="e.g. ISHARES CORE S&amp;P 500" class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
-          <button @click="customSecurity = false; form.security = availableInstruments[0] || ''" class="px-3 py-2 text-xs text-gray-400 hover:text-white bg-gray-800 border border-gray-700 rounded-lg">Cancel</button>
+          <input v-model="form.security" type="text" placeholder="e.g. ISHARES CORE S&amp;P 500" class="flex-1 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
+          <button @click="customSecurity = false; form.security = availableInstruments[0] || ''" class="px-3 py-2 text-xs text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg">Cancel</button>
         </div>
       </div>
 
       <div class="grid grid-cols-2 gap-3" v-if="form.type === 'Buy' || form.type === 'Sell'">
         <div>
           <label class="block text-xs text-gray-500 mb-1">Shares</label>
-          <input v-model="form.shares" type="number" step="any" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+          <input v-model="form.shares" type="number" step="any" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
         </div>
         <div>
           <label class="block text-xs text-gray-500 mb-1">Quote</label>
-          <input v-model="form.quote" type="number" step="any" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+          <input v-model="form.quote" type="number" step="any" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
         </div>
       </div>
 
       <div class="grid grid-cols-3 gap-3">
         <div>
           <label class="block text-xs text-gray-500 mb-1">Fees</label>
-          <input v-model="form.fees" type="number" step="any" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+          <input v-model="form.fees" type="number" step="any" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
         </div>
         <div v-if="form.type !== 'Buy'">
           <label class="block text-xs text-gray-500 mb-1">Taxes</label>
-          <input v-model="form.taxes" type="number" step="any" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+          <input v-model="form.taxes" type="number" step="any" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
         </div>
         <div>
           <label class="block text-xs text-gray-500 mb-1">Net Value</label>
-          <input v-if="form.type === 'Dividend' || form.type === 'Coupon'" v-model="form.net_transaction_value" type="number" step="any" class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
-          <input v-else :value="computedNetValue" readonly class="w-full bg-gray-800/50 border border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-400 cursor-not-allowed">
+          <input v-if="form.type === 'Dividend' || form.type === 'Coupon'" v-model="form.net_transaction_value" type="number" step="any" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
+          <input v-else :value="computedNetValue" readonly class="w-full bg-gray-200/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-400 cursor-not-allowed">
         </div>
       </div>
 
       <div class="flex justify-end gap-3 pt-2">
-        <button @click="showAddForm = false" class="px-4 py-2 text-sm text-gray-400 hover:text-white transition">Cancel</button>
-        <button v-if="!isEditing" @click="saveTransaction(true)" class="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 rounded-lg transition">Save &amp; New</button>
-        <button @click="saveTransaction(false)" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 rounded-lg transition">{{ isEditing ? 'Update' : 'Save' }}</button>
+        <button @click="showAddForm = false" class="px-4 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">Cancel</button>
+        <button v-if="!isEditing" @click="saveTransaction(true)" class="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition">Save &amp; New</button>
+        <button @click="saveTransaction(false)" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition">{{ isEditing ? 'Update' : 'Save' }}</button>
       </div>
 
-      <div v-if="formMessage" class="text-sm" :class="formError ? 'text-red-400' : 'text-green-400'">{{ formMessage }}</div>
+      <div v-if="formMessage" class="text-sm" :class="formError ? 'text-red-500 dark:text-red-400' : 'text-green-600 dark:text-green-400'">{{ formMessage }}</div>
     </div>
   </div>
 

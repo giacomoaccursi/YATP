@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Rebalance &mdash; Simple Portfolio Tracker</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
+  <script src="/static/theme.js"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
   <script src="/static/utils.js"></script>
@@ -12,44 +14,42 @@
   <style>
     [v-cloak] { display: none; }
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-    input[type=range] { -webkit-appearance: none; height: 6px; border-radius: 3px; background: #374151; outline: none; }
-    input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #6366f1; cursor: pointer; }
+    .dark input[type=range] { -webkit-appearance: none; height: 6px; border-radius: 3px; background: #374151; outline: none; }
+    .dark input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #6366f1; cursor: pointer; }
+    html:not(.dark) input[type=range] { -webkit-appearance: none; height: 6px; border-radius: 3px; background: #d1d5db; outline: none; }
+    html:not(.dark) input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #6366f1; cursor: pointer; }
   </style>
 </head>
-<body class="bg-gray-950 text-gray-100 min-h-screen">
+<body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 min-h-screen">
 
 <div id="app" v-cloak>
 
-  <!-- Loading -->
   <div v-if="loading" class="flex items-center justify-center h-96">
-    <div class="text-gray-400">Loading rebalance data...</div>
+    <div class="text-gray-500 dark:text-gray-400">Loading rebalance data...</div>
   </div>
 
   <main v-else class="max-w-7xl mx-auto px-6 py-8 space-y-6">
 
-    <!-- Page Header -->
     <div>
       <h2 class="text-xl font-semibold">Rebalance</h2>
       <p class="text-sm text-gray-500 mt-0.5">Simulate investments and adjust target allocation</p>
     </div>
 
-    <!-- New Investment Simulator -->
-    <section class="bg-gray-900 rounded-xl border border-gray-800 p-5 space-y-4">
+    <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 space-y-4">
       <h2 class="text-lg font-medium">Simulate New Investment</h2>
       <div class="flex items-center gap-4">
-        <label class="text-sm text-gray-400">Amount to invest</label>
+        <label class="text-sm text-gray-500 dark:text-gray-400">Amount to invest</label>
         <input v-model.number="newInvestment" type="number" step="100" min="0"
-               class="w-40 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm">
+               class="w-40 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
         <span class="text-sm text-gray-500">&euro;</span>
       </div>
       <p class="text-xs text-gray-500">Enter an amount to see how it would be distributed across asset classes to reach your target allocation.</p>
     </section>
 
-    <!-- Target Allocation Sliders -->
-    <section class="bg-gray-900 rounded-xl border border-gray-800 p-5 space-y-4">
+    <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 space-y-4">
       <div class="flex items-center justify-between">
         <h2 class="text-lg font-medium">Target Allocation</h2>
-        <div class="text-sm" :class="totalTarget === 100 ? 'text-green-400' : 'text-red-400'">
+        <div class="text-sm" :class="totalTarget === 100 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
           Total: {{ totalTarget }}%
         </div>
       </div>
@@ -60,34 +60,24 @@
       </div>
     </section>
 
-    <!-- Allocation Comparison -->
     <section class="grid md:grid-cols-2 gap-4">
-      <div class="bg-gray-900 rounded-xl border border-gray-800 p-5">
-        <h3 class="text-sm font-medium text-gray-400 mb-4">Current Allocation</h3>
-        <div class="flex justify-center">
-          <div class="w-full max-w-xs">
-            <canvas ref="currentChart"></canvas>
-          </div>
-        </div>
+      <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">Current Allocation</h3>
+        <div class="flex justify-center"><div class="w-full max-w-xs"><canvas ref="currentChart"></canvas></div></div>
       </div>
-      <div class="bg-gray-900 rounded-xl border border-gray-800 p-5">
-        <h3 class="text-sm font-medium text-gray-400 mb-4">After Rebalance</h3>
-        <div class="flex justify-center">
-          <div class="w-full max-w-xs">
-            <canvas ref="afterChart"></canvas>
-          </div>
-        </div>
+      <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">After Rebalance</h3>
+        <div class="flex justify-center"><div class="w-full max-w-xs"><canvas ref="afterChart"></canvas></div></div>
       </div>
     </section>
 
-    <!-- Actions Table -->
-    <section class="bg-gray-900 rounded-xl border border-gray-800 overflow-hidden">
-      <div class="px-5 py-4 border-b border-gray-800">
+    <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-800">
         <h2 class="text-lg font-medium">Actions</h2>
       </div>
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
-          <thead class="text-xs text-gray-500 uppercase bg-gray-900/50">
+          <thead class="text-xs text-gray-500 uppercase bg-gray-50 dark:bg-gray-900/50">
             <tr>
               <th class="px-5 py-3 text-left">Asset Class</th>
               <th class="px-5 py-3 text-right">Current Value</th>
@@ -97,14 +87,14 @@
               <th class="px-5 py-3 text-right">Action</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-800">
+          <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
             <tr v-for="row in computedActions" :key="row.asset_class">
               <td class="px-5 py-3 font-medium">{{ row.asset_class }}</td>
               <td class="px-5 py-3 text-right">{{ fmt(row.current_value) }} &euro;</td>
               <td class="px-5 py-3 text-right">{{ row.current_weight.toFixed(1) }}%</td>
               <td class="px-5 py-3 text-right">{{ row.target_weight.toFixed(1) }}%</td>
               <td class="px-5 py-3 text-right">{{ fmt(row.target_value) }} &euro;</td>
-              <td class="px-5 py-3 text-right font-medium" :class="row.difference > 0 ? 'text-green-400' : row.difference < 0 ? 'text-red-400' : 'text-gray-400'">
+              <td class="px-5 py-3 text-right font-medium" :class="row.difference > 0 ? 'text-green-600 dark:text-green-400' : row.difference < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'">
                 {{ row.difference > 0 ? 'Buy' : row.difference < 0 ? 'Sell' : 'On target' }}
                 {{ row.difference !== 0 ? fmt(Math.abs(row.difference)) + ' €' : '' }}
               </td>

@@ -8,7 +8,7 @@ const CHART_COLORS = [
   '#38bdf8', '#a3e635',
 ];
 
-const { createApp, ref, onMounted, nextTick } = Vue;
+const { createApp, ref, onMounted, onUnmounted, nextTick } = Vue;
 
 createApp({
   setup() {
@@ -22,18 +22,20 @@ createApp({
     let allocChartInstance = null;
     let classChartInstance = null;
     let valueChartInstance = null;
+    let historyData = null;
 
     function renderDoughnut(canvas, labels, data, existing) {
       if (existing) existing.destroy();
-      const total = data.reduce((a, b) => a + b, 0);
+      var t = chartTheme();
+      var total = data.reduce(function (a, b) { return a + b; }, 0);
       return new Chart(canvas, {
         type: 'doughnut',
         data: {
-          labels,
+          labels: labels,
           datasets: [{
-            data,
+            data: data,
             backgroundColor: CHART_COLORS.slice(0, data.length),
-            borderColor: '#111827',
+            borderColor: t.doughnutBorder,
             borderWidth: 2,
             hoverOffset: 8,
           }],
@@ -44,29 +46,14 @@ createApp({
           plugins: {
             legend: {
               position: 'bottom',
-              labels: {
-                color: '#d1d5db',
-                padding: 16,
-                usePointStyle: true,
-                pointStyle: 'circle',
-                font: { size: 12 },
-              },
+              labels: { color: t.text, padding: 16, usePointStyle: true, pointStyle: 'circle', font: { size: 12 } },
             },
-            tooltip: {
-              backgroundColor: '#1f2937',
-              titleColor: '#f3f4f6',
-              bodyColor: '#d1d5db',
-              borderColor: '#374151',
-              borderWidth: 1,
-              padding: 12,
-              cornerRadius: 8,
-              callbacks: {
-                label: (ctx) => {
-                  const pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
-                  return ' ' + ctx.label + ': ' + pct + '%';
-                },
+            tooltip: chartTooltip({
+              label: function (ctx) {
+                var pct = total > 0 ? ((ctx.parsed / total) * 100).toFixed(1) : 0;
+                return ' ' + ctx.label + ': ' + pct + '%';
               },
-            },
+            }),
           },
         },
       });
@@ -92,38 +79,6 @@ createApp({
       }
     }
 
-    async function fetchData() {
-      try {
-        const [portfolioRes, rebalanceRes] = await Promise.all([
-          fetch('/api/portfolio'),
-          fetch('/api/rebalance'),
-        ]);
-        const portfolioData = await portfolioRes.json();
-        summary.value = portfolioData.summary;
-        rebalance.value = (await rebalanceRes.json()).actions;
-        loading.value = false;
-        await nextTick();
-        renderCharts();
-        fetchHistory();
-      } catch (err) {
-        console.error('Failed to fetch data:', err);
-        loading.value = false;
-      }
-    }
-
-    async function fetchHistory() {
-      try {
-        const res = await fetch('/api/portfolio/history');
-        const data = await res.json();
-        historyLoading.value = false;
-        await nextTick();
-        renderValueChart(data.dates, data.values);
-      } catch (err) {
-        console.error('Failed to fetch history:', err);
-        historyLoading.value = false;
-      }
-    }
-
     function renderValueChart(dates, values) {
       if (!valueChart.value || !dates.length) return;
       if (valueChartInstance) valueChartInstance.destroy();
@@ -136,11 +91,7 @@ createApp({
             data: values,
             borderColor: '#6366f1',
             backgroundColor: 'rgba(99, 102, 241, 0.1)',
-            fill: true,
-            tension: 0.3,
-            pointRadius: 0,
-            pointHitRadius: 10,
-            borderWidth: 2,
+            fill: true, tension: 0.3, pointRadius: 0, pointHitRadius: 10, borderWidth: 2,
           }],
         },
         options: {
@@ -148,30 +99,45 @@ createApp({
           interaction: { mode: 'index', intersect: false },
           plugins: {
             legend: { display: false },
-            tooltip: {
-              backgroundColor: '#1f2937',
-              titleColor: '#f3f4f6',
-              bodyColor: '#d1d5db',
-              borderColor: '#374151',
-              borderWidth: 1,
-              padding: 10,
-              cornerRadius: 8,
-              callbacks: { label: (ctx) => fmt(ctx.parsed.y) + ' €' },
-            },
+            tooltip: chartTooltip({ label: function (ctx) { return fmt(ctx.parsed.y) + ' €'; } }),
           },
-          scales: {
-            x: {
-              ticks: { color: '#6b7280', maxTicksLimit: 12 },
-              grid: { color: 'rgba(75, 85, 99, 0.3)' },
-            },
-            y: {
-              beginAtZero: true,
-              ticks: { color: '#6b7280', callback: (v) => fmt(v) + ' €' },
-              grid: { color: 'rgba(75, 85, 99, 0.3)' },
-            },
-          },
+          scales: chartScales({ beginAtZero: true, yFormat: function (v) { return fmt(v) + ' €'; } }),
         },
       });
+    }
+
+    function reRenderAll() {
+      renderCharts();
+      if (historyData) renderValueChart(historyData.dates, historyData.values);
+    }
+
+    async function fetchData() {
+      try {
+        var responses = await Promise.all([fetch('/api/portfolio'), fetch('/api/rebalance')]);
+        var portfolioData = await responses[0].json();
+        summary.value = portfolioData.summary;
+        rebalance.value = (await responses[1].json()).actions;
+        loading.value = false;
+        await nextTick();
+        renderCharts();
+        fetchHistory();
+      } catch (err) {
+        console.error('Failed to fetch data:', err);
+        loading.value = false;
+      }
+    }
+
+    async function fetchHistory() {
+      try {
+        var res = await fetch('/api/portfolio/history');
+        historyData = await res.json();
+        historyLoading.value = false;
+        await nextTick();
+        renderValueChart(historyData.dates, historyData.values);
+      } catch (err) {
+        console.error('Failed to fetch history:', err);
+        historyLoading.value = false;
+      }
     }
 
     async function refreshPrices() {
@@ -180,7 +146,13 @@ createApp({
       await fetchData();
     }
 
-    onMounted(fetchData);
+    function onThemeChange() { nextTick(reRenderAll); }
+
+    onMounted(function () {
+      fetchData();
+      window.addEventListener('themechange', onThemeChange);
+    });
+    onUnmounted(function () { window.removeEventListener('themechange', onThemeChange); });
 
     return {
       loading, historyLoading, summary, rebalance,
