@@ -54,12 +54,9 @@ def register_api_routes(app):
         values = []
         for date in all_dates:
             holdings = get_holdings_at(date, df)
-            if not holdings:
-                continue
-            total = value_holdings(holdings, price_histories, date)
-            if total > 0:
-                dates.append(date.strftime("%Y-%m-%d"))
-                values.append(round(total, 2))
+            total = value_holdings(holdings, price_histories, date) if holdings else 0.0
+            dates.append(date.strftime("%Y-%m-%d"))
+            values.append(round(total, 2))
 
         return jsonify({"dates": dates, "values": values})
 

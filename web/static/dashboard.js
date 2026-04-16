@@ -129,6 +129,7 @@ createApp({
               grid: { color: 'rgba(75, 85, 99, 0.3)' },
             },
             y: {
+              beginAtZero: true,
               ticks: { color: '#6b7280', callback: (v) => fmt(v) + ' €' },
               grid: { color: 'rgba(75, 85, 99, 0.3)' },
             },
