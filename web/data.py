@@ -175,7 +175,7 @@ def load_portfolio_history(config_path, transactions_path):
 
     price_histories = _fetch_all_price_histories(df, instruments, first_date, today)
     if not price_histories:
-        return {"dates": [], "values": [], "costs": [], "return_pcts": []}
+        return {"dates": [], "values": [], "costs": [], "return_pcts": [], "unrealized_pnls": []}
 
     all_dates = _build_date_index(price_histories, first_date, today)
 
@@ -225,13 +225,18 @@ def load_portfolio_history(config_path, transactions_path):
         values.append(round(total, 2))
         costs.append(round(total_cost, 2))
 
-    # Pre-compute return_pct for each day
+    # Pre-compute return_pct and unrealized_pnl for each day
     return_pcts = []
+    unrealized_pnls = []
     for i in range(len(values)):
         cost = costs[i]
         return_pcts.append(round(((values[i] - cost) / cost) * 100, 2) if cost > 0 else 0.0)
+        unrealized_pnls.append(round(values[i] - cost, 2))
 
-    return {"dates": dates, "values": values, "costs": costs, "return_pcts": return_pcts}
+    return {
+        "dates": dates, "values": values, "costs": costs,
+        "return_pcts": return_pcts, "unrealized_pnls": unrealized_pnls,
+    }
 
 
 def load_instrument_history(config_path, transactions_path, security):
