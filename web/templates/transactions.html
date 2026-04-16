@@ -24,7 +24,7 @@
     <div class="flex items-center justify-between">
       <div>
         <h2 class="text-xl font-semibold">Transactions</h2>
-        <p class="text-sm text-gray-500 mt-0.5">View, add, edit and delete transactions</p>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">View, add, edit and delete transactions</p>
       </div>
       <button @click="openAddForm" class="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition">+ Add Transaction</button>
     </div>
@@ -44,13 +44,13 @@
       <input v-model="filters.dateFrom" type="date" class="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
       <input v-model="filters.dateTo" type="date" class="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
       <button v-if="hasFilters" @click="clearFilters" class="px-3 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">Clear</button>
-      <div class="ml-auto text-sm text-gray-500">{{ filteredTransactions.length }} transactions</div>
+      <div class="ml-auto text-sm text-gray-500 dark:text-gray-400">{{ filteredTransactions.length }} transactions</div>
     </section>
 
     <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
-          <thead class="text-xs text-gray-500 uppercase bg-gray-50 dark:bg-gray-900/50">
+          <thead class="text-xs text-gray-500 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-900/50">
             <tr>
               <th class="px-5 py-3 text-left">Date</th>
               <th class="px-5 py-3 text-left">Type</th>
@@ -72,8 +72,8 @@
               <td class="px-5 py-3">{{ tx.security }}</td>
               <td class="px-5 py-3 text-right">{{ tx.shares > 0 ? tx.shares : '&mdash;' }}</td>
               <td class="px-5 py-3 text-right">{{ tx.quote > 0 ? tx.quote.toFixed(2) + ' &euro;' : '&mdash;' }}</td>
-              <td class="px-5 py-3 text-right text-gray-500">{{ tx.fees > 0 ? tx.fees.toFixed(2) + ' &euro;' : '&mdash;' }}</td>
-              <td class="px-5 py-3 text-right text-gray-500">{{ tx.taxes > 0 ? tx.taxes.toFixed(2) + ' &euro;' : '&mdash;' }}</td>
+              <td class="px-5 py-3 text-right text-gray-500 dark:text-gray-400">{{ tx.fees > 0 ? tx.fees.toFixed(2) + ' &euro;' : '&mdash;' }}</td>
+              <td class="px-5 py-3 text-right text-gray-500 dark:text-gray-400">{{ tx.taxes > 0 ? tx.taxes.toFixed(2) + ' &euro;' : '&mdash;' }}</td>
               <td class="px-5 py-3 text-right font-medium">{{ tx.net_transaction_value.toFixed(2) }} &euro;</td>
               <td class="px-5 py-3 text-right flex justify-end gap-1">
                 <button @click="openEditForm(tx)" class="p-1.5 rounded-lg text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-blue-500/10 transition" title="Edit">
@@ -89,7 +89,7 @@
               </td>
             </tr>
             <tr v-if="!filteredTransactions.length">
-              <td colspan="9" class="px-5 py-8 text-center text-gray-500">No transactions found</td>
+              <td colspan="9" class="px-5 py-8 text-center text-gray-500 dark:text-gray-400">No transactions found</td>
             </tr>
           </tbody>
         </table>
@@ -123,11 +123,11 @@
 
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-xs text-gray-500 mb-1">Date</label>
+          <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Date</label>
           <input v-model="form.date" type="date" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
         </div>
         <div>
-          <label class="block text-xs text-gray-500 mb-1">Type</label>
+          <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Type</label>
           <select v-model="form.type" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
             <option value="Buy">Buy</option>
             <option value="Sell">Sell</option>
@@ -138,7 +138,7 @@
       </div>
 
       <div>
-        <label class="block text-xs text-gray-500 mb-1">Security</label>
+        <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Security</label>
         <select v-if="!customSecurity" v-model="form.security" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
           <option v-for="name in availableInstruments" :key="name" :value="name">{{ name }}</option>
           <option value="__custom__">+ New instrument...</option>
@@ -151,26 +151,26 @@
 
       <div class="grid grid-cols-2 gap-3" v-if="form.type === 'Buy' || form.type === 'Sell'">
         <div>
-          <label class="block text-xs text-gray-500 mb-1">Shares</label>
+          <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Shares</label>
           <input v-model="form.shares" type="number" step="any" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
         </div>
         <div>
-          <label class="block text-xs text-gray-500 mb-1">Quote</label>
+          <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Quote</label>
           <input v-model="form.quote" type="number" step="any" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
         </div>
       </div>
 
       <div class="grid grid-cols-3 gap-3">
         <div>
-          <label class="block text-xs text-gray-500 mb-1">Fees</label>
+          <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Fees</label>
           <input v-model="form.fees" type="number" step="any" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
         </div>
         <div v-if="form.type !== 'Buy'">
-          <label class="block text-xs text-gray-500 mb-1">Taxes</label>
+          <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Taxes</label>
           <input v-model="form.taxes" type="number" step="any" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
         </div>
         <div>
-          <label class="block text-xs text-gray-500 mb-1">Net Value</label>
+          <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Net Value</label>
           <input v-if="form.type === 'Dividend' || form.type === 'Coupon'" v-model="form.net_transaction_value" type="number" step="any" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
           <input v-else :value="computedNetValue" readonly class="w-full bg-gray-200/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-400 cursor-not-allowed">
         </div>

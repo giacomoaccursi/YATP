@@ -24,13 +24,13 @@
 
     <div>
       <h2 class="text-xl font-semibold">Performance</h2>
-      <p class="text-sm text-gray-500 mt-0.5">Historical returns and portfolio value over time</p>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Historical returns and portfolio value over time</p>
     </div>
 
     <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Portfolio Value Over Time</h3>
-        <div v-if="historyLoading" class="text-xs text-gray-500">Loading history...</div>
+        <div v-if="historyLoading" class="text-xs text-gray-500 dark:text-gray-400">Loading history...</div>
       </div>
       <canvas ref="valueChart" height="80"></canvas>
     </section>
@@ -38,11 +38,11 @@
     <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
       <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
         <h2 class="text-lg font-medium">Returns by Period</h2>
-        <div v-if="periodsLoading" class="text-xs text-gray-500">Loading...</div>
+        <div v-if="periodsLoading" class="text-xs text-gray-500 dark:text-gray-400">Loading...</div>
       </div>
       <div v-if="periods.length" class="overflow-x-auto">
         <table class="w-full text-sm">
-          <thead class="text-xs text-gray-500 uppercase bg-gray-50 dark:bg-gray-900/50">
+          <thead class="text-xs text-gray-500 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-900/50">
             <tr>
               <th class="px-5 py-3 text-left">Period</th>
               <th class="px-5 py-3 text-right">Market Gain</th>
@@ -61,13 +61,13 @@
                 <td class="px-5 py-3 text-right" :class="pnlColor(p.mwrr)">{{ p.mwrr != null ? fmtSigned(p.mwrr) + '%' : 'N/A' }}</td>
               </template>
               <template v-else>
-                <td colspan="4" class="px-5 py-3 text-gray-500">Not enough data</td>
+                <td colspan="4" class="px-5 py-3 text-gray-500 dark:text-gray-400">Not enough data</td>
               </template>
             </tr>
           </tbody>
         </table>
       </div>
-      <div v-else-if="!periodsLoading" class="px-5 py-8 text-center text-gray-500">No period data available</div>
+      <div v-else-if="!periodsLoading" class="px-5 py-8 text-center text-gray-500 dark:text-gray-400">No period data available</div>
     </section>
 
     <section v-if="periods.some(p => p.available)" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">

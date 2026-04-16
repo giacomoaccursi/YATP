@@ -28,13 +28,13 @@
 
     <div>
       <h2 class="text-xl font-semibold">Instruments</h2>
-      <p class="text-sm text-gray-500 mt-0.5">Click on an instrument to see detailed charts</p>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Click on an instrument to see detailed charts</p>
     </div>
 
     <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
-          <thead class="text-xs text-gray-500 uppercase bg-gray-50 dark:bg-gray-900/50">
+          <thead class="text-xs text-gray-500 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-900/50">
             <tr>
               <th class="px-5 py-3 text-left">Security</th>
               <th class="px-5 py-3 text-right">Shares</th>
@@ -55,7 +55,7 @@
                 <div class="flex items-center gap-2">
                   <div>
                     <div class="font-medium">{{ inst.security }}</div>
-                    <div class="text-xs text-gray-500">{{ inst.ticker }}</div>
+                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ inst.ticker }}</div>
                   </div>
                   <span v-if="inst.daily_change != null" class="text-xs font-medium ml-auto md:ml-2"
                         :class="inst.daily_change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
@@ -80,12 +80,12 @@
       <div class="flex items-center justify-between">
         <div>
           <h2 class="text-lg font-medium">{{ selected }}</h2>
-          <p class="text-sm text-gray-500">Price history and unrealized P&amp;L</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400">Price history and unrealized P&amp;L</p>
         </div>
         <button @click="selected = null" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">&times; Close</button>
       </div>
 
-      <div v-if="detailLoading" class="text-center py-8 text-gray-500">Loading chart data...</div>
+      <div v-if="detailLoading" class="text-center py-8 text-gray-500 dark:text-gray-400">Loading chart data...</div>
 
       <div v-else class="grid md:grid-cols-2 gap-4">
         <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
