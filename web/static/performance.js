@@ -18,10 +18,7 @@ createApp({
 
     // Pre-computed data from API (fetched once)
     let allDates = [];
-    let allValues = [];
-    let allCosts = [];
     let allReturnPcts = [];
-    let allUnrealizedPnls = [];
 
     // Period filter state (UI only)
     const activePreset = ref('all');
@@ -35,8 +32,6 @@ createApp({
       { key: 'ytd', label: 'YTD', days: 0 },
       { key: 'all', label: 'All', days: null },
     ];
-
-    const periodSummary = ref(null);
 
     // UI-only: slice arrays by date range
     function getFilteredIndices() {
@@ -73,23 +68,6 @@ createApp({
       var idx = getFilteredIndices();
       var dates = allDates.slice(idx.start, idx.end);
       var returnPcts = allReturnPcts.slice(idx.start, idx.end);
-      var values = allValues.slice(idx.start, idx.end);
-      var costs = allCosts.slice(idx.start, idx.end);
-      var unrealizedPnls = allUnrealizedPnls.slice(idx.start, idx.end);
-
-      if (!dates.length) {
-        periodSummary.value = null;
-        return;
-      }
-
-      // All values read directly from API — no calculations
-      periodSummary.value = {
-        endValue: values[values.length - 1],
-        costBasis: costs[costs.length - 1],
-        returnPct: returnPcts[returnPcts.length - 1],
-        unrealizedPnl: unrealizedPnls[unrealizedPnls.length - 1],
-      };
-
       renderReturnChart(dates, returnPcts);
     }
 
@@ -175,10 +153,7 @@ createApp({
         var res = await fetch('/api/portfolio/history');
         var data = await res.json();
         allDates = data.dates;
-        allValues = data.values;
-        allCosts = data.costs || [];
         allReturnPcts = data.return_pcts || [];
-        allUnrealizedPnls = data.unrealized_pnls || [];
         historyLoading.value = false;
         await nextTick();
         updateReturnChart();
@@ -215,7 +190,6 @@ createApp({
       historyLoading, periodsLoading, periods,
       compareChart, returnChart,
       activePreset, customFrom, customTo, presets,
-      periodSummary,
       selectPreset, applyCustomRange,
       fmt, fmtSigned, pnlColor,
     };
