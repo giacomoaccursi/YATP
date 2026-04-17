@@ -29,10 +29,14 @@ def register_api_routes(app):
         daily_change = load_portfolio_daily_change(
             app.config["CONFIG_PATH"], app.config["TRANSACTIONS_PATH"]
         )
+        total_income = round(sum(r.data.total_income for r in results), 2)
+        df = load_transactions(app.config["TRANSACTIONS_PATH"])
         return jsonify({
             "instruments": [instrument_to_dict(r, daily_changes.get(r.security)) for r in results],
             "summary": summary_to_dict(summary) if summary else None,
             "daily_change": daily_change,
+            "total_income": total_income,
+            "transaction_count": len(df),
         })
 
     @app.route("/api/portfolio/history")
