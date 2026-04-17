@@ -8,6 +8,7 @@ from web.data import (
     load_portfolio_data, load_rebalance_data, load_summary_data,
     load_instrument_names, load_portfolio_history, load_instrument_history,
     load_performance_periods, load_portfolio_daily_change,
+    load_offline_summary,
     simulate_rebalance, compute_net_transaction_value, clear_price_cache,
 )
 from web.serializers import (
@@ -22,22 +23,30 @@ def register_api_routes(app):
 
     @app.route("/api/portfolio")
     def api_portfolio():
-        """Return full portfolio data: instruments, summary, allocations."""
-        results, daily_changes, summary, _ = load_portfolio_data(
+        """Return full portfolio data. Always returns offline data; market data when available."""
+        offline = load_offline_summary(
             app.config["CONFIG_PATH"], app.config["TRANSACTIONS_PATH"]
         )
-        daily_change = load_portfolio_daily_change(
-            app.config["CONFIG_PATH"], app.config["TRANSACTIONS_PATH"]
-        )
-        total_income = round(sum(r.data.total_income for r in results), 2)
-        df = load_transactions(app.config["TRANSACTIONS_PATH"])
-        return jsonify({
-            "instruments": [instrument_to_dict(r, daily_changes.get(r.security)) for r in results],
-            "summary": summary_to_dict(summary) if summary else None,
-            "daily_change": daily_change,
-            "total_income": total_income,
-            "transaction_count": len(df),
-        })
+        response = {
+            "offline": offline,
+            "instruments": [],
+            "summary": None,
+            "daily_change": None,
+            "market_error": None,
+        }
+        try:
+            results, daily_changes, summary, _ = load_portfolio_data(
+                app.config["CONFIG_PATH"], app.config["TRANSACTIONS_PATH"]
+            )
+            response["instruments"] = [instrument_to_dict(r, daily_changes.get(r.security)) for r in results]
+            response["summary"] = summary_to_dict(summary) if summary else None
+            response["daily_change"] = load_portfolio_daily_change(
+                app.config["CONFIG_PATH"], app.config["TRANSACTIONS_PATH"]
+            )
+        except Exception as e:
+            response["market_error"] = str(e)
+
+        return jsonify(response)
 
     @app.route("/api/portfolio/history")
     def api_portfolio_history():

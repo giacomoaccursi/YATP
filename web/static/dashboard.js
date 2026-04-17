@@ -1,5 +1,6 @@
 /**
  * Vue app for the dashboard page.
+ * Loads offline data first (always available), then market data (may fail).
  */
 
 const CHART_COLORS = [
@@ -14,10 +15,11 @@ createApp({
   setup() {
     const loading = ref(true);
     const historyLoading = ref(true);
+    const historyError = ref(null);
+    const marketError = ref(null);
     const summary = ref(null);
+    const offline = ref(null);
     const dailyChange = ref(null);
-    const totalIncome = ref(0);
-    const transactionCount = ref(0);
     const allocChart = ref(null);
     const classChart = ref(null);
     const valueChart = ref(null);
@@ -116,18 +118,24 @@ createApp({
 
     async function fetchData() {
       try {
-        var responses = await Promise.all([fetch('/api/portfolio')]);
-        var portfolioData = await responses[0].json();
-        summary.value = portfolioData.summary;
-        dailyChange.value = portfolioData.daily_change;
-        totalIncome.value = portfolioData.total_income || 0;
-        transactionCount.value = portfolioData.transaction_count || 0;
+        var res = await fetch('/api/portfolio');
+        var data = await res.json();
+
+        // Offline data always available
+        offline.value = data.offline;
+
+        // Market data may be null
+        summary.value = data.summary;
+        dailyChange.value = data.daily_change;
+        marketError.value = data.market_error;
+
         loading.value = false;
         await nextTick();
         renderCharts();
         fetchHistory();
       } catch (err) {
         console.error('Failed to fetch data:', err);
+        marketError.value = 'Unable to connect to server';
         loading.value = false;
       }
     }
@@ -135,18 +143,28 @@ createApp({
     async function fetchHistory() {
       try {
         var res = await fetch('/api/portfolio/history');
-        historyData = await res.json();
-        historyLoading.value = false;
-        await nextTick();
-        renderValueChart(historyData.dates, historyData.values);
+        var data = await res.json();
+        if (data.dates && data.dates.length) {
+          historyData = data;
+          historyLoading.value = false;
+          await nextTick();
+          renderValueChart(data.dates, data.values);
+        } else {
+          historyError.value = 'No history data available';
+          historyLoading.value = false;
+        }
       } catch (err) {
         console.error('Failed to fetch history:', err);
+        historyError.value = 'Unable to load market data';
         historyLoading.value = false;
       }
     }
 
     async function refreshPrices() {
       loading.value = true;
+      marketError.value = null;
+      historyError.value = null;
+      historyLoading.value = true;
       await fetch('/api/refresh', { method: 'POST' });
       await fetchData();
     }
@@ -160,7 +178,8 @@ createApp({
     onUnmounted(function () { window.removeEventListener('themechange', onThemeChange); });
 
     return {
-      loading, historyLoading, summary, dailyChange, totalIncome, transactionCount,
+      loading, historyLoading, historyError, marketError,
+      summary, offline, dailyChange,
       allocChart, classChart, valueChart,
       fmt, fmtSigned, pnlColor, refreshPrices,
     };

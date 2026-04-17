@@ -87,6 +87,32 @@ def _load_common(config_path, transactions_path):
     return config, instruments, df, price_histories, first_date, today
 
 
+def load_offline_summary(config_path, transactions_path):
+    """Load portfolio summary from CSV only (no market data needed).
+
+    Returns dict with cost_basis, transaction_count, total_income, instruments_count.
+    Always succeeds if the CSV is readable.
+    """
+    config = load_config(config_path)
+    instruments = config["instruments"]
+    df = load_transactions(transactions_path)
+
+    if df.empty:
+        return {"cost_basis": 0, "transaction_count": 0, "total_income": 0, "instruments_count": 0}
+
+    portfolio = build_portfolio(df)
+    cost_basis = sum(d.cost_basis for d in portfolio.values())
+    total_income = sum(d.total_income for d in portfolio.values())
+    instruments_count = sum(1 for d in portfolio.values() if d.shares_held > 0)
+
+    return {
+        "cost_basis": round(cost_basis, 2),
+        "transaction_count": len(df),
+        "total_income": round(total_income, 2),
+        "instruments_count": instruments_count,
+    }
+
+
 def load_portfolio_data(config_path, transactions_path):
     """Load and analyze the full portfolio. Returns (results, daily_changes, summary, config)."""
     config, instruments, df, _, _, _ = _load_common(config_path, transactions_path)
