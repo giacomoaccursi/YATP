@@ -34,6 +34,10 @@ def create_app(config_path, transactions_path):
     def rebalance_page():
         return send_from_directory(templates_dir, "rebalance.html")
 
+    @app.route("/sell-simulator")
+    def sell_simulator_page():
+        return send_from_directory(templates_dir, "sell-simulator.html")
+
     @app.route("/transactions")
     def transactions_page():
         return send_from_directory(templates_dir, "transactions.html")

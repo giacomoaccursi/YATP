@@ -205,6 +205,51 @@ def compute_net_transaction_value(tx_type, shares, quote, fees, taxes):
     return 0.0
 
 
+def simulate_sell(config_path, transactions_path, security, shares_to_sell):
+    """Simulate selling shares of an instrument.
+
+    Uses the full transaction history to compute correct avg cost,
+    then calculates projected gain, taxes and net proceeds.
+
+    Returns dict or None if instrument not found / not enough shares.
+    """
+    config = load_config(config_path)
+    instrument = config["instruments"].get(security)
+    if not instrument:
+        return None
+
+    df = load_transactions(transactions_path)
+    portfolio = build_portfolio(df)
+    data = portfolio.get(security)
+    if not data or data.shares_held < shares_to_sell or shares_to_sell <= 0:
+        return None
+
+    current_price = get_cached_price(instrument["ticker"])
+    if current_price is None:
+        return None
+
+    capital_gains_rate = instrument.get("capital_gains_rate", 0.26)
+    gross_proceeds = shares_to_sell * current_price
+    cost_of_sold = shares_to_sell * data.avg_cost_per_share
+    gain = gross_proceeds - cost_of_sold
+    tax = max(0, gain) * capital_gains_rate
+    net_proceeds = gross_proceeds - tax
+
+    return {
+        "security": security,
+        "shares_to_sell": round(shares_to_sell, 6),
+        "shares_held": round(data.shares_held, 6),
+        "current_price": round(current_price, 4),
+        "avg_cost_per_share": round(data.avg_cost_per_share, 4),
+        "gross_proceeds": round(gross_proceeds, 2),
+        "cost_of_sold": round(cost_of_sold, 2),
+        "gain": round(gain, 2),
+        "capital_gains_rate": capital_gains_rate,
+        "estimated_tax": round(tax, 2),
+        "net_proceeds": round(net_proceeds, 2),
+    }
+
+
 def load_summary_data(transactions_path):
     """Load transaction summary. Returns Summary object."""
     df = load_transactions(transactions_path)

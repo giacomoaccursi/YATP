@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sell Simulator &mdash; Simple Portfolio Tracker</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' }</script>
+  <script src="/static/theme.js"></script>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="/static/utils.js"></script>
+  <script src="/static/navbar.js" defer></script>
+  <script src="/static/tooltip.js" defer></script>
+  <style>
+    [v-cloak] { display: none; }
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 min-h-screen">
+
+<div id="app" v-cloak>
+
+  <div v-if="loading" class="flex items-center justify-center h-96">
+    <div class="text-gray-500 dark:text-gray-400">Loading instruments...</div>
+  </div>
+
+  <main v-else class="max-w-3xl mx-auto px-6 py-8 space-y-6">
+
+    <div>
+      <h2 class="text-xl font-semibold">Sell Simulator</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Estimate proceeds, taxes and net gain before selling</p>
+    </div>
+
+    <!-- Input -->
+    <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 space-y-4">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Instrument</label>
+          <select v-model="selectedSecurity" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
+            <option value="">Select...</option>
+            <option v-for="inst in instruments" :key="inst.security" :value="inst.security">
+              {{ inst.security }} ({{ inst.shares_held }} shares)
+            </option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Shares to sell</label>
+          <div class="flex gap-2">
+            <input v-model.number="sharesToSell" type="number" step="any" min="0"
+                   :max="selectedInstrument ? selectedInstrument.shares_held : 0"
+                   class="flex-1 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
+            <button v-if="selectedInstrument" @click="sharesToSell = selectedInstrument.shares_held"
+                    class="px-3 py-2 text-xs bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-700 rounded-lg transition">
+              All
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Error -->
+    <div v-if="error" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 text-sm text-red-700 dark:text-red-300">
+      {{ error }}
+    </div>
+
+    <!-- Results -->
+    <section v-if="result" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-800">
+        <h2 class="text-lg font-medium">Simulation Result</h2>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Read-only estimate — no transaction is created</p>
+      </div>
+      <div class="divide-y divide-gray-200 dark:divide-gray-800">
+        <div class="px-5 py-3 flex justify-between text-sm">
+          <span class="text-gray-500 dark:text-gray-400">Shares to sell</span>
+          <span class="font-medium">{{ result.shares_to_sell }} of {{ result.shares_held }}</span>
+        </div>
+        <div class="px-5 py-3 flex justify-between text-sm">
+          <span class="text-gray-500 dark:text-gray-400">Current price</span>
+          <span class="font-medium">{{ fmt(result.current_price) }} &euro;</span>
+        </div>
+        <div class="px-5 py-3 flex justify-between text-sm">
+          <span class="text-gray-500 dark:text-gray-400">Avg cost per share</span>
+          <span class="font-medium">{{ fmt(result.avg_cost_per_share) }} &euro;</span>
+        </div>
+        <div class="px-5 py-3 flex justify-between text-sm">
+          <span class="text-gray-500 dark:text-gray-400">Gross proceeds</span>
+          <span class="font-medium">{{ fmt(result.gross_proceeds) }} &euro;</span>
+        </div>
+        <div class="px-5 py-3 flex justify-between text-sm">
+          <span class="text-gray-500 dark:text-gray-400">Cost of sold shares</span>
+          <span class="font-medium">{{ fmt(result.cost_of_sold) }} &euro;</span>
+        </div>
+        <div class="px-5 py-3 flex justify-between text-sm">
+          <span class="text-gray-500 dark:text-gray-400">Gain / Loss</span>
+          <span class="font-medium" :class="pnlColor(result.gain)">{{ fmtSigned(result.gain) }} &euro;</span>
+        </div>
+        <div class="px-5 py-3 flex justify-between text-sm">
+          <span class="text-gray-500 dark:text-gray-400">Tax rate</span>
+          <span class="font-medium">{{ (result.capital_gains_rate * 100).toFixed(1) }}%</span>
+        </div>
+        <div class="px-5 py-3 flex justify-between text-sm">
+          <span class="text-gray-500 dark:text-gray-400">Estimated tax</span>
+          <span class="font-medium">{{ result.estimated_tax > 0 ? '-' : '' }}{{ fmt(result.estimated_tax) }} &euro;</span>
+        </div>
+        <div class="px-5 py-4 flex justify-between text-base bg-gray-50 dark:bg-gray-800/50">
+          <span class="font-medium">Net proceeds</span>
+          <span class="font-semibold" :class="pnlColor(result.net_proceeds - result.cost_of_sold)">{{ fmt(result.net_proceeds) }} &euro;</span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script src="/static/sell-simulator.js"></script>
+</body>
+</html>

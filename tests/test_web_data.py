@@ -692,3 +692,81 @@ class TestSimulateRebalance:
         mock_load.return_value = ([], {}, None, {"instruments": {}}, [])
         actions = simulate_rebalance("c.json", "t.csv", 0, {"ETF": 100})
         assert actions == []
+
+
+from web.data import simulate_sell
+
+
+class TestSimulateSell:
+    @patch("web.data.get_cached_price")
+    @patch("web.data.load_transactions")
+    @patch("web.data.load_config")
+    def test_sell_with_gain(self, mock_config, mock_txns, mock_price):
+        mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A", "capital_gains_rate": 0.26}}}
+        mock_txns.return_value = _make_df(SIMPLE_BUY)
+        mock_price.return_value = 120.0
+
+        result = simulate_sell("c.json", "t.csv", "ETF_A", 5)
+
+        assert result is not None
+        assert result["shares_to_sell"] == 5
+        assert result["current_price"] == 120.0
+        assert result["avg_cost_per_share"] == 100.0
+        assert result["gross_proceeds"] == 600.0
+        assert result["cost_of_sold"] == 500.0
+        assert result["gain"] == 100.0
+        assert result["estimated_tax"] == 26.0
+        assert result["net_proceeds"] == 574.0
+
+    @patch("web.data.get_cached_price")
+    @patch("web.data.load_transactions")
+    @patch("web.data.load_config")
+    def test_sell_with_loss_no_tax(self, mock_config, mock_txns, mock_price):
+        mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A", "capital_gains_rate": 0.26}}}
+        mock_txns.return_value = _make_df(SIMPLE_BUY)
+        mock_price.return_value = 80.0
+
+        result = simulate_sell("c.json", "t.csv", "ETF_A", 5)
+
+        assert result["gain"] == -100.0
+        assert result["estimated_tax"] == 0.0
+        assert result["net_proceeds"] == 400.0
+
+    @patch("web.data.get_cached_price")
+    @patch("web.data.load_transactions")
+    @patch("web.data.load_config")
+    def test_sell_more_than_held_returns_none(self, mock_config, mock_txns, mock_price):
+        mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A", "capital_gains_rate": 0.26}}}
+        mock_txns.return_value = _make_df(SIMPLE_BUY)
+        mock_price.return_value = 120.0
+
+        result = simulate_sell("c.json", "t.csv", "ETF_A", 999)
+        assert result is None
+
+    @patch("web.data.load_config")
+    def test_unknown_instrument_returns_none(self, mock_config):
+        mock_config.return_value = {"instruments": {}}
+        result = simulate_sell("c.json", "t.csv", "UNKNOWN", 5)
+        assert result is None
+
+    @patch("web.data.get_cached_price")
+    @patch("web.data.load_transactions")
+    @patch("web.data.load_config")
+    def test_no_market_data_returns_none(self, mock_config, mock_txns, mock_price):
+        mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A", "capital_gains_rate": 0.26}}}
+        mock_txns.return_value = _make_df(SIMPLE_BUY)
+        mock_price.return_value = None
+
+        result = simulate_sell("c.json", "t.csv", "ETF_A", 5)
+        assert result is None
+
+    @patch("web.data.get_cached_price")
+    @patch("web.data.load_transactions")
+    @patch("web.data.load_config")
+    def test_sell_zero_returns_none(self, mock_config, mock_txns, mock_price):
+        mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A", "capital_gains_rate": 0.26}}}
+        mock_txns.return_value = _make_df(SIMPLE_BUY)
+        mock_price.return_value = 120.0
+
+        result = simulate_sell("c.json", "t.csv", "ETF_A", 0)
+        assert result is None

@@ -8,7 +8,7 @@ from web.data import (
     load_portfolio_data, load_rebalance_data, load_summary_data,
     load_instrument_names, load_portfolio_history, load_instrument_history,
     load_performance_periods, load_portfolio_daily_change,
-    load_offline_summary,
+    load_offline_summary, simulate_sell,
     simulate_rebalance, compute_net_transaction_value, clear_price_cache,
 )
 from web.serializers import (
@@ -91,6 +91,20 @@ def register_api_routes(app):
             new_investment, custom_targets,
         )
         return jsonify({"actions": actions})
+
+    @app.route("/api/simulate/sell", methods=["POST"])
+    def api_simulate_sell():
+        """Simulate selling shares of an instrument."""
+        data = request.get_json()
+        security = data.get("security", "")
+        shares = float(data.get("shares", 0) or 0)
+        result = simulate_sell(
+            app.config["CONFIG_PATH"], app.config["TRANSACTIONS_PATH"],
+            security, shares,
+        )
+        if result is None:
+            return jsonify({"error": "Invalid instrument, not enough shares, or no market data"}), 400
+        return jsonify(result)
 
     @app.route("/api/transactions/net-value", methods=["POST"])
     def api_net_value():
