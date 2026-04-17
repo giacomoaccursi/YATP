@@ -98,16 +98,32 @@ def _analyze_period(label, period_start, today, days, df, price_histories):
     mwrr = calc_period_mwrr(cashflows, days) if len(cashflows) >= 2 else None
 
     # TWR
-    period_txn_dates = sorted(
+    period_txn_dates = sorted(set(
         df[(df["Date"] > period_start) & (df["Date"] <= today)]["Date"].unique()
-    )
-    eval_dates = [period_start] + list(period_txn_dates) + [today]
+    ))
+    # Remove today from txn dates if present (it's the end point, not a sub-period boundary)
+    eval_dates = [period_start] + [d for d in period_txn_dates if d != today] + [today]
+    # Remove duplicates while preserving order
+    seen = set()
+    unique_eval = []
+    for d in eval_dates:
+        if d not in seen:
+            seen.add(d)
+            unique_eval.append(d)
+    eval_dates = unique_eval
 
     def get_value_before(date):
-        holdings = get_holdings_at(date - timedelta(days=1), df)
+        """Portfolio value just before transactions on this date.
+
+        Uses previous day's holdings (before any transaction on this date)
+        valued at this date's prices (the price doesn't change due to our transaction).
+        """
+        prev_day = date - timedelta(days=1)
+        holdings = get_holdings_at(prev_day, df)
         return value_holdings(holdings, price_histories, date)
 
     def get_value_after(date):
+        """Portfolio value after transactions on this date, at this date's price."""
         holdings = get_holdings_at(date, df)
         return value_holdings(holdings, price_histories, date)
 
