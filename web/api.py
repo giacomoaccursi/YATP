@@ -33,9 +33,10 @@ def register_api_routes(app):
             "summary": None,
             "daily_change": None,
             "market_error": None,
+            "failed_instruments": [],
         }
         try:
-            results, daily_changes, summary, _ = load_portfolio_data(
+            results, daily_changes, summary, _, failed = load_portfolio_data(
                 app.config["CONFIG_PATH"], app.config["TRANSACTIONS_PATH"]
             )
             response["instruments"] = [instrument_to_dict(r, daily_changes.get(r.security)) for r in results]
@@ -43,6 +44,8 @@ def register_api_routes(app):
             response["daily_change"] = load_portfolio_daily_change(
                 app.config["CONFIG_PATH"], app.config["TRANSACTIONS_PATH"]
             )
+            if failed:
+                response["failed_instruments"] = failed
         except Exception as e:
             response["market_error"] = str(e)
 

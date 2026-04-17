@@ -676,7 +676,7 @@ class TestSimulateRebalance:
             simple_return=0, twr=None, xirr=None, estimated_tax=0, net_after_tax=1000,
         )
         r = InstrumentResult(security="ETF_A", ticker="ETF.A", isin=None, capital_gains_rate=0.26, data=data, analysis=analysis)
-        mock_load.return_value = ([r], {}, None, {"instruments": {"ETF_A": {"type": "ETF"}}})
+        mock_load.return_value = ([r], {}, None, {"instruments": {"ETF_A": {"type": "ETF"}}}, [])
 
         actions = simulate_rebalance("c.json", "t.csv", 500, {"ETF": 100})
 
@@ -689,6 +689,6 @@ class TestSimulateRebalance:
 
     @patch("web.data.load_portfolio_data")
     def test_empty_portfolio(self, mock_load):
-        mock_load.return_value = ([], {}, None, {"instruments": {}})
+        mock_load.return_value = ([], {}, None, {"instruments": {}}, [])
         actions = simulate_rebalance("c.json", "t.csv", 0, {"ETF": 100})
         assert actions == []

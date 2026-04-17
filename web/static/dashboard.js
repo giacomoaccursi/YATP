@@ -17,6 +17,7 @@ createApp({
     const historyLoading = ref(true);
     const historyError = ref(null);
     const marketError = ref(null);
+    const failedInstruments = ref([]);
     const summary = ref(null);
     const offline = ref(null);
     const dailyChange = ref(null);
@@ -128,6 +129,7 @@ createApp({
         summary.value = data.summary;
         dailyChange.value = data.daily_change;
         marketError.value = data.market_error;
+        failedInstruments.value = data.failed_instruments || [];
 
         loading.value = false;
         await nextTick();
@@ -178,7 +180,7 @@ createApp({
     onUnmounted(function () { window.removeEventListener('themechange', onThemeChange); });
 
     return {
-      loading, historyLoading, historyError, marketError,
+      loading, historyLoading, historyError, marketError, failedInstruments,
       summary, offline, dailyChange,
       allocChart, classChart, valueChart,
       fmt, fmtSigned, pnlColor, refreshPrices,

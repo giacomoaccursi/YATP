@@ -120,6 +120,7 @@ def load_portfolio_data(config_path, transactions_path):
 
     results = []
     daily_changes = {}
+    failed_instruments = []
     for security, data in portfolio.items():
         instrument = instruments.get(security.strip())
         if not instrument:
@@ -128,6 +129,8 @@ def load_portfolio_data(config_path, transactions_path):
         ticker = instrument["ticker"]
         current_price = get_cached_price(ticker)
         if current_price is None:
+            if data.shares_held > 0:
+                failed_instruments.append(security)
             continue
 
         capital_gains_rate = instrument.get("capital_gains_rate", 0.26)
@@ -143,12 +146,12 @@ def load_portfolio_data(config_path, transactions_path):
         daily_changes[security] = get_cached_daily_change(ticker)
 
     summary = analyze_portfolio(results, instruments) if results else None
-    return results, daily_changes, summary, config
+    return results, daily_changes, summary, config, failed_instruments
 
 
 def load_rebalance_data(config_path, transactions_path):
     """Load rebalancing suggestions. Returns list of RebalanceAction."""
-    results, _, _, config = load_portfolio_data(config_path, transactions_path)
+    results, _, _, config, _ = load_portfolio_data(config_path, transactions_path)
     target = config.get("target_allocation")
     if not target or not results:
         return []
@@ -157,7 +160,7 @@ def load_rebalance_data(config_path, transactions_path):
 
 def simulate_rebalance(config_path, transactions_path, new_investment, custom_targets):
     """Simulate rebalance with optional new investment and custom targets."""
-    results, _, _, config = load_portfolio_data(config_path, transactions_path)
+    results, _, _, config, _ = load_portfolio_data(config_path, transactions_path)
     instruments = config["instruments"]
 
     total_market = sum(r.analysis.market_value for r in results)
