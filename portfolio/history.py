@@ -134,13 +134,22 @@ def _analyze_period(label, period_start, today, days, df, price_histories, holdi
     if end_value <= 0:
         return PeriodPerformance(period=label, available=False)
 
-    # Market gain
+    # Market gain (price appreciation only)
     net_new_money = get_net_new_money_between(period_start, today, df)
     market_gain = (end_value - start_value) - net_new_money
 
-    # Simple return
+    # Income in period (dividends + coupons)
+    period_df = df[(df["Date"] > period_start) & (df["Date"] <= today)]
+    period_income = sum(
+        row["Net Transaction Value"]
+        for _, row in period_df.iterrows()
+        if row["Type"].strip().lower() in ("dividend", "coupon")
+    )
+
+    # Simple return: total gain (market + income) / cost basis
+    total_gain = market_gain + period_income
     cost_basis = get_cost_basis_at(period_start, df) + net_new_money
-    simple_return = calc_simple_return(market_gain, cost_basis)
+    simple_return = calc_simple_return(total_gain, cost_basis)
 
     # MWRR (de-annualized XIRR)
     cashflows = []
