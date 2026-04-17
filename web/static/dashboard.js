@@ -43,11 +43,12 @@ createApp({
         },
         options: {
           responsive: true,
-          cutout: '68%',
+          maintainAspectRatio: false,
+          cutout: '65%',
           plugins: {
             legend: {
-              position: 'bottom',
-              labels: { color: t.text, padding: 16, usePointStyle: true, pointStyle: 'circle', font: { size: 12 } },
+              position: 'right',
+              labels: { color: t.text, padding: 10, usePointStyle: true, pointStyle: 'circle', font: { size: 11 }, boxWidth: 8 },
             },
             tooltip: chartTooltip({
               label: function (ctx) {

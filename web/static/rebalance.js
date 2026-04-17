@@ -37,9 +37,9 @@ createApp({
           datasets: [{ data: data, backgroundColor: CHART_COLORS.slice(0, data.length), borderColor: t.doughnutBorder, borderWidth: 2, hoverOffset: 8 }],
         },
         options: {
-          responsive: true, cutout: '68%',
+          responsive: true, maintainAspectRatio: false, cutout: '65%',
           plugins: {
-            legend: { position: 'bottom', labels: { color: t.text, padding: 16, usePointStyle: true, pointStyle: 'circle', font: { size: 12 } } },
+            legend: { position: 'right', labels: { color: t.text, padding: 10, usePointStyle: true, pointStyle: 'circle', font: { size: 11 }, boxWidth: 8 } },
             tooltip: chartTooltip(),
           },
         },
