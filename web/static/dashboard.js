@@ -135,6 +135,7 @@ createApp({
         await nextTick();
         renderCharts();
         fetchHistory();
+        if (window.__updateNavTimestamp) window.__updateNavTimestamp();
       } catch (err) {
         console.error('Failed to fetch data:', err);
         marketError.value = 'Unable to connect to server';
@@ -162,15 +163,6 @@ createApp({
       }
     }
 
-    async function refreshPrices() {
-      loading.value = true;
-      marketError.value = null;
-      historyError.value = null;
-      historyLoading.value = true;
-      await fetch('/api/refresh', { method: 'POST' });
-      await fetchData();
-    }
-
     function onThemeChange() { nextTick(reRenderAll); }
 
     onMounted(function () {
@@ -183,7 +175,7 @@ createApp({
       loading, historyLoading, historyError, marketError, failedInstruments,
       summary, offline, dailyChange,
       allocChart, classChart, valueChart,
-      fmt, fmtSigned, pnlColor, refreshPrices,
+      fmt, fmtSigned, pnlColor,
     };
   },
 }).mount('#app');

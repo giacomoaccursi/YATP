@@ -16,13 +16,23 @@ from portfolio.history import build_history
 _price_cache = {}
 _daily_change_cache = {}
 _price_history_cache = {}
+_price_fetch_time = None
 
 
 def get_cached_price(ticker):
     """Fetch current price with in-memory caching."""
+    global _price_fetch_time
     if ticker not in _price_cache:
         _price_cache[ticker] = fetch_current_price(ticker)
+        if _price_fetch_time is None:
+            from datetime import datetime
+            _price_fetch_time = datetime.now().strftime("%H:%M")
     return _price_cache[ticker]
+
+
+def get_price_fetch_time():
+    """Return the time when prices were last fetched, or None."""
+    return _price_fetch_time
 
 
 def get_cached_daily_change(ticker):
@@ -58,9 +68,11 @@ def _calc_daily_change(ticker):
 
 def clear_price_cache():
     """Clear all price caches to force re-fetch."""
+    global _price_fetch_time
     _price_cache.clear()
     _daily_change_cache.clear()
     _price_history_cache.clear()
+    _price_fetch_time = None
 
 
 # ── Core data loading ──

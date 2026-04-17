@@ -8,7 +8,7 @@ from web.data import (
     load_portfolio_data, load_rebalance_data, load_summary_data,
     load_instrument_names, load_portfolio_history, load_instrument_history,
     load_performance_periods, load_portfolio_daily_change,
-    load_offline_summary, simulate_sell,
+    load_offline_summary, simulate_sell, get_price_fetch_time,
     simulate_rebalance, compute_net_transaction_value, clear_price_cache,
 )
 from web.serializers import (
@@ -229,3 +229,8 @@ def register_api_routes(app):
         """Clear price cache and force re-fetch."""
         clear_price_cache()
         return jsonify({"success": True})
+
+    @app.route("/api/price-status")
+    def api_price_status():
+        """Return the time when prices were last fetched."""
+        return jsonify({"fetched_at": get_price_fetch_time()})

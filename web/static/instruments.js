@@ -75,6 +75,7 @@ createApp({
         var data = await res.json();
         instruments.value = data.instruments;
         loading.value = false;
+        if (window.__updateNavTimestamp) window.__updateNavTimestamp();
       } catch (err) {
         console.error('Failed to fetch instruments:', err);
         loading.value = false;
