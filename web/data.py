@@ -11,23 +11,32 @@ from portfolio.summary import build_summary
 from portfolio.rebalance import calc_rebalance
 from portfolio.history import build_history
 
-# In-memory price cache (persists while server is running)
+# ── In-memory caches (persist while server is running) ──
+
 _price_cache = {}
 _daily_change_cache = {}
+_price_history_cache = {}
 
 
 def get_cached_price(ticker):
-    """Fetch price with in-memory caching."""
+    """Fetch current price with in-memory caching."""
     if ticker not in _price_cache:
         _price_cache[ticker] = fetch_current_price(ticker)
     return _price_cache[ticker]
 
 
 def get_cached_daily_change(ticker):
-    """Fetch daily price change percentage with caching. Returns float or None."""
+    """Fetch daily price change percentage with caching."""
     if ticker not in _daily_change_cache:
         _daily_change_cache[ticker] = _calc_daily_change(ticker)
     return _daily_change_cache[ticker]
+
+
+def get_cached_price_history(ticker, start_date, end_date):
+    """Fetch price history with in-memory caching. Keyed by ticker."""
+    if ticker not in _price_history_cache:
+        _price_history_cache[ticker] = fetch_price_history(ticker, start_date, end_date)
+    return _price_history_cache[ticker]
 
 
 def _calc_daily_change(ticker):
@@ -48,16 +57,39 @@ def _calc_daily_change(ticker):
 
 
 def clear_price_cache():
-    """Clear the price cache to force re-fetch."""
+    """Clear all price caches to force re-fetch."""
     _price_cache.clear()
     _daily_change_cache.clear()
+    _price_history_cache.clear()
+
+
+# ── Core data loading ──
+
+def _load_common(config_path, transactions_path):
+    """Load config, transactions, and price histories. Shared by multiple functions."""
+    config = load_config(config_path)
+    instruments = config["instruments"]
+    df = load_transactions(transactions_path)
+    df = df.sort_values("Date")
+
+    first_date = df["Date"].min().normalize() if not df.empty else pd.Timestamp.now().normalize()
+    today = pd.Timestamp.now().normalize()
+
+    price_histories = {}
+    for security in df["Security"].unique():
+        inst = instruments.get(security.strip())
+        if not inst:
+            continue
+        prices = get_cached_price_history(inst["ticker"], first_date, today)
+        if prices is not None:
+            price_histories[security] = prices
+
+    return config, instruments, df, price_histories, first_date, today
 
 
 def load_portfolio_data(config_path, transactions_path):
     """Load and analyze the full portfolio. Returns (results, daily_changes, summary, config)."""
-    config = load_config(config_path)
-    instruments = config["instruments"]
-    df = load_transactions(transactions_path)
+    config, instruments, df, _, _, _ = _load_common(config_path, transactions_path)
     portfolio = build_portfolio(df)
 
     results = []
@@ -98,11 +130,7 @@ def load_rebalance_data(config_path, transactions_path):
 
 
 def simulate_rebalance(config_path, transactions_path, new_investment, custom_targets):
-    """Simulate rebalance with optional new investment and custom targets.
-
-    Returns list of dicts with asset_class, current_value, current_weight,
-    target_weight, target_value, difference.
-    """
+    """Simulate rebalance with optional new investment and custom targets."""
     results, _, _, config = load_portfolio_data(config_path, transactions_path)
     instruments = config["instruments"]
 
@@ -112,7 +140,6 @@ def simulate_rebalance(config_path, transactions_path, new_investment, custom_ta
     if total_value <= 0:
         return []
 
-    # Group current values by asset class
     current_by_class = {}
     for r in results:
         inst = instruments.get(r.security.strip(), {})
@@ -140,10 +167,7 @@ def simulate_rebalance(config_path, transactions_path, new_investment, custom_ta
 
 
 def compute_net_transaction_value(tx_type, shares, quote, fees, taxes):
-    """Compute net transaction value from form fields.
-
-    Returns rounded float.
-    """
+    """Compute net transaction value from form fields."""
     amount = shares * quote
     if tx_type == "Buy":
         return round(amount + fees, 2)
@@ -158,27 +182,20 @@ def load_summary_data(transactions_path):
     return build_summary(df)
 
 
-def load_portfolio_daily_change(config_path, transactions_path):
-    """Calculate portfolio value change from previous trading day.
-
-    Returns dict with 'amount' (float) and 'pct' (float), or None if unavailable.
-    """
-    df = load_transactions(transactions_path)
+def load_instrument_names(config_path):
+    """Load list of configured instrument names."""
     config = load_config(config_path)
-    instruments = config["instruments"]
+    return list(config["instruments"].keys())
 
-    df = df.sort_values("Date")
-    if df.empty:
+
+def load_portfolio_daily_change(config_path, transactions_path):
+    """Calculate portfolio value change from previous trading day."""
+    _, _, df, price_histories, first_date, today = _load_common(config_path, transactions_path)
+
+    if df.empty or not price_histories:
         return None
 
-    today = pd.Timestamp.now().normalize()
-    start = today - pd.Timedelta(days=10)
-
-    price_histories = _fetch_all_price_histories(df, instruments, start, today)
-    if not price_histories:
-        return None
-
-    all_dates = _build_date_index(price_histories, df["Date"].min().normalize(), today)
+    all_dates = _build_date_index(price_histories, first_date, today)
     recent = [d for d in all_dates if d <= today]
     if len(recent) < 2:
         return None
@@ -188,14 +205,12 @@ def load_portfolio_daily_change(config_path, transactions_path):
 
     tx_events = _build_tx_events(df)
 
-    # Holdings at previous close
     holdings_prev = {}
     tx_idx = 0
     for d in [d for d in all_dates if d <= date_prev]:
         tx_idx = _apply_transactions(tx_events, tx_idx, d, holdings_prev)
     val_prev = _value_holdings_at(holdings_prev, price_histories, date_prev)
 
-    # Holdings at today's close
     holdings_today = dict(holdings_prev)
     for d in [d for d in all_dates if date_prev < d <= date_today]:
         tx_idx = _apply_transactions(tx_events, tx_idx, d, holdings_today)
@@ -209,28 +224,13 @@ def load_portfolio_daily_change(config_path, transactions_path):
     return {"amount": round(amount, 2), "pct": round(pct, 2)}
 
 
-def load_instrument_names(config_path):
-    """Load list of configured instrument names."""
-    config = load_config(config_path)
-    return list(config["instruments"].keys())
-
-
 def load_portfolio_history(config_path, transactions_path):
-    """Calculate daily portfolio value and cost basis from first transaction to today.
+    """Calculate daily portfolio value, cost basis, return % and unrealized P&L."""
+    _, _, df, price_histories, first_date, today = _load_common(config_path, transactions_path)
 
-    Returns dict with 'dates', 'values', 'costs' (all lists).
-    """
-    df = load_transactions(transactions_path)
-    config = load_config(config_path)
-    instruments = config["instruments"]
-
-    df = df.sort_values("Date")
-    first_date = df["Date"].min().normalize()
-    today = pd.Timestamp.now().normalize()
-
-    price_histories = _fetch_all_price_histories(df, instruments, first_date, today)
-    if not price_histories:
-        return {"dates": [], "values": [], "costs": [], "return_pcts": [], "unrealized_pnls": []}
+    empty = {"dates": [], "values": [], "costs": [], "return_pcts": [], "unrealized_pnls": []}
+    if df.empty or not price_histories:
+        return empty
 
     all_dates = _build_date_index(price_histories, first_date, today)
 
@@ -247,7 +247,7 @@ def load_portfolio_history(config_path, transactions_path):
     tx_events.sort(key=lambda e: e[0])
 
     holdings = {}
-    cost_state = {}  # security -> {"shares": float, "cost": float}
+    cost_state = {}
     tx_idx = 0
     dates = []
     values = []
@@ -275,12 +275,10 @@ def load_portfolio_history(config_path, transactions_path):
 
         total = _value_holdings_at(holdings, price_histories, date)
         total_cost = sum(s["cost"] for s in cost_state.values())
-        pnl_pct = ((total - total_cost) / total_cost * 100) if total_cost > 0 else 0.0
         dates.append(date.strftime("%Y-%m-%d"))
         values.append(round(total, 2))
         costs.append(round(total_cost, 2))
 
-    # Pre-compute return_pct and unrealized_pnl for each day
     return_pcts = []
     unrealized_pnls = []
     for i in range(len(values)):
@@ -295,11 +293,7 @@ def load_portfolio_history(config_path, transactions_path):
 
 
 def load_instrument_history(config_path, transactions_path, security):
-    """Calculate price, avg cost and P&L history for a single instrument.
-
-    Returns dict with 'dates', 'prices', 'cost_avg', 'pnl' (all lists),
-    or None if instrument not found.
-    """
+    """Calculate price, avg cost and P&L history for a single instrument."""
     config = load_config(config_path)
     inst = config["instruments"].get(security)
     if not inst:
@@ -316,7 +310,7 @@ def load_instrument_history(config_path, transactions_path, security):
     first_date = inst_df["Date"].min().normalize()
     today = pd.Timestamp.now().normalize()
 
-    prices = fetch_price_history(inst["ticker"], first_date, today)
+    prices = get_cached_price_history(inst["ticker"], first_date, today)
     if prices is None:
         return empty
 
@@ -383,26 +377,14 @@ def load_instrument_history(config_path, transactions_path, security):
 
 
 def load_performance_periods(config_path, transactions_path):
-    """Calculate performance metrics for standard periods. Returns list of PeriodPerformance."""
-    df = load_transactions(transactions_path)
-    config = load_config(config_path)
-    return build_history(df, config["instruments"])
+    """Calculate performance metrics for standard periods."""
+    _, instruments, df, price_histories, _, _ = _load_common(config_path, transactions_path)
+    if not price_histories:
+        return None
+    return build_history(df, instruments, price_histories)
 
 
 # ── Private helpers ──
-
-def _fetch_all_price_histories(df, instruments, start_date, end_date):
-    """Fetch historical prices for all instruments in the DataFrame."""
-    price_histories = {}
-    for security in df["Security"].unique():
-        inst = instruments.get(security.strip())
-        if not inst:
-            continue
-        prices = fetch_price_history(inst["ticker"], start_date, end_date)
-        if prices is not None:
-            price_histories[security] = prices
-    return price_histories
-
 
 def _build_date_index(price_histories, first_date, today):
     """Build a sorted list of unique market dates from all price histories."""

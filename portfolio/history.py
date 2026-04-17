@@ -3,7 +3,6 @@
 import pandas as pd
 from datetime import timedelta
 
-from portfolio.market import fetch_price_history
 from portfolio.portfolio import (
     get_holdings_at, get_cost_basis_at, value_holdings,
     get_cashflows_between, get_net_new_money_between,
@@ -20,15 +19,31 @@ PERIODS = [
 ]
 
 
-def build_history(df, instruments):
-    """Calculate portfolio performance for each period."""
+def build_history(df, instruments, price_histories=None):
+    """Calculate portfolio performance for each period.
+
+    If price_histories is provided, reuses them instead of fetching again.
+    """
     df = df.sort_values("Date")
     first_date = df["Date"].min()
     today = pd.Timestamp.now().normalize()
 
-    price_histories = _fetch_all_histories(df, instruments, first_date, today)
+    if price_histories is None:
+        from portfolio.market import fetch_price_history
+        price_histories = {}
+        for security in df["Security"].unique():
+            instrument = instruments.get(security.strip())
+            if not instrument:
+                continue
+            prices = fetch_price_history(instrument["ticker"], first_date, today)
+            if prices is not None:
+                price_histories[security] = prices
+
     if not price_histories:
         return None
+
+    # Pre-compute holdings at all unique transaction dates (single replay)
+    holdings_cache = _build_holdings_cache(df)
 
     results = []
     for label, days in PERIODS:
@@ -37,23 +52,64 @@ def build_history(df, instruments):
             results.append(PeriodPerformance(period=label, available=False))
             continue
 
-        result = _analyze_period(label, period_start, today, period_days, df, price_histories)
+        result = _analyze_period(
+            label, period_start, today, period_days, df, price_histories, holdings_cache
+        )
         results.append(result)
 
     return results
 
 
-def _fetch_all_histories(df, instruments, start_date, end_date):
-    """Fetch historical prices for all instruments in the portfolio."""
-    price_histories = {}
-    for security in df["Security"].unique():
-        instrument = instruments.get(security.strip())
-        if not instrument:
-            continue
-        prices = fetch_price_history(instrument["ticker"], start_date, end_date)
-        if prices is not None:
-            price_histories[security] = prices
-    return price_histories
+def _build_holdings_cache(df):
+    """Replay transactions once and cache holdings at every transaction date.
+
+    Returns dict of date -> {security: shares}.
+    Single O(n) pass instead of O(n) per date lookup.
+    """
+    df = df.sort_values("Date")
+    holdings = {}  # security -> shares
+    cache = {}     # date -> snapshot of holdings
+
+    for _, row in df.iterrows():
+        date = row["Date"]
+        tx_type = row["Type"].strip().lower()
+        security = row["Security"]
+        shares = row["Shares"]
+
+        if tx_type == "buy":
+            holdings[security] = holdings.get(security, 0.0) + shares
+        elif tx_type == "sell":
+            holdings[security] = holdings.get(security, 0.0) - shares
+            if holdings.get(security, 0) <= 1e-9:
+                holdings.pop(security, None)
+
+        # Snapshot after processing this date's transactions
+        cache[date] = {s: sh for s, sh in holdings.items() if sh > 1e-9}
+
+    return cache
+
+
+def _get_holdings_from_cache(date, df, cache):
+    """Get holdings at a date using the pre-computed cache.
+
+    If the exact date is in the cache, use it.
+    Otherwise find the latest cached date before this date.
+    """
+    if date in cache:
+        return dict(cache[date])
+
+    # Find latest date in cache that is <= date
+    cached_dates = sorted(cache.keys())
+    best = None
+    for d in cached_dates:
+        if d <= date:
+            best = d
+        else:
+            break
+
+    if best is not None:
+        return dict(cache[best])
+    return {}
 
 
 def _resolve_period(today, first_date, days):
@@ -67,16 +123,14 @@ def _resolve_period(today, first_date, days):
         return first_date, (today - first_date).days
 
 
-def _analyze_period(label, period_start, today, days, df, price_histories):
+def _analyze_period(label, period_start, today, days, df, price_histories, holdings_cache):
     """Analyze a single period: calculate all returns."""
-    start_value = value_holdings(
-        get_holdings_at(period_start, df), price_histories, period_start
-    )
-    end_value = value_holdings(
-        get_holdings_at(today, df), price_histories, today
-    )
+    start_holdings = _get_holdings_from_cache(period_start, df, holdings_cache)
+    end_holdings = _get_holdings_from_cache(today, df, holdings_cache)
 
-    # If we can't value the portfolio, mark as unavailable
+    start_value = value_holdings(start_holdings, price_histories, period_start)
+    end_value = value_holdings(end_holdings, price_histories, today)
+
     if end_value <= 0:
         return PeriodPerformance(period=label, available=False)
 
@@ -97,13 +151,11 @@ def _analyze_period(label, period_start, today, days, df, price_histories):
         cashflows.append((today.to_pydatetime(), end_value))
     mwrr = calc_period_mwrr(cashflows, days) if len(cashflows) >= 2 else None
 
-    # TWR
+    # TWR — use cached holdings instead of replaying per date
     period_txn_dates = sorted(set(
         df[(df["Date"] > period_start) & (df["Date"] <= today)]["Date"].unique()
     ))
-    # Remove today from txn dates if present (it's the end point, not a sub-period boundary)
     eval_dates = [period_start] + [d for d in period_txn_dates if d != today] + [today]
-    # Remove duplicates while preserving order
     seen = set()
     unique_eval = []
     for d in eval_dates:
@@ -113,18 +165,14 @@ def _analyze_period(label, period_start, today, days, df, price_histories):
     eval_dates = unique_eval
 
     def get_value_before(date):
-        """Portfolio value just before transactions on this date.
-
-        Uses previous day's holdings (before any transaction on this date)
-        valued at this date's prices (the price doesn't change due to our transaction).
-        """
+        """Portfolio value just before transactions on this date."""
         prev_day = date - timedelta(days=1)
-        holdings = get_holdings_at(prev_day, df)
+        holdings = _get_holdings_from_cache(prev_day, df, holdings_cache)
         return value_holdings(holdings, price_histories, date)
 
     def get_value_after(date):
-        """Portfolio value after transactions on this date, at this date's price."""
-        holdings = get_holdings_at(date, df)
+        """Portfolio value after transactions on this date."""
+        holdings = _get_holdings_from_cache(date, df, holdings_cache)
         return value_holdings(holdings, price_histories, date)
 
     twr = calc_period_twr(eval_dates, get_value_before, get_value_after)

@@ -11,7 +11,16 @@ from web.data import (
     _apply_transactions,
     _value_holdings_at,
     _build_date_index,
+    clear_price_cache,
 )
+
+
+@pytest.fixture(autouse=True)
+def clear_caches():
+    """Clear all caches before each test."""
+    clear_price_cache()
+    yield
+    clear_price_cache()
 
 
 # ── Helpers ──
@@ -158,7 +167,7 @@ class TestLoadPortfolioHistory:
 
     @patch("web.data.load_config")
     @patch("web.data.load_transactions")
-    @patch("web.data.fetch_price_history")
+    @patch("web.data.get_cached_price_history")
     def test_simple_buy_history(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)
@@ -176,7 +185,7 @@ class TestLoadPortfolioHistory:
 
     @patch("web.data.load_config")
     @patch("web.data.load_transactions")
-    @patch("web.data.fetch_price_history")
+    @patch("web.data.get_cached_price_history")
     def test_return_pcts_calculated(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)
@@ -191,7 +200,7 @@ class TestLoadPortfolioHistory:
 
     @patch("web.data.load_config")
     @patch("web.data.load_transactions")
-    @patch("web.data.fetch_price_history")
+    @patch("web.data.get_cached_price_history")
     def test_sell_all_shows_zero(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(BUY_AND_SELL_ALL)
@@ -209,7 +218,7 @@ class TestLoadPortfolioHistory:
 
     @patch("web.data.load_config")
     @patch("web.data.load_transactions")
-    @patch("web.data.fetch_price_history")
+    @patch("web.data.get_cached_price_history")
     def test_cost_tracks_buys(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(TWO_BUYS)
@@ -230,7 +239,7 @@ class TestLoadPortfolioHistory:
 
     @patch("web.data.load_config")
     @patch("web.data.load_transactions")
-    @patch("web.data.fetch_price_history")
+    @patch("web.data.get_cached_price_history")
     def test_empty_prices_returns_empty(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)
@@ -245,7 +254,7 @@ class TestLoadPortfolioHistory:
 class TestLoadInstrumentHistory:
     @patch("web.data.load_config")
     @patch("web.data.load_transactions")
-    @patch("web.data.fetch_price_history")
+    @patch("web.data.get_cached_price_history")
     def test_price_and_cost_avg(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)
@@ -262,7 +271,7 @@ class TestLoadInstrumentHistory:
 
     @patch("web.data.load_config")
     @patch("web.data.load_transactions")
-    @patch("web.data.fetch_price_history")
+    @patch("web.data.get_cached_price_history")
     def test_two_buys_avg_cost_changes(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(TWO_BUYS)
@@ -283,7 +292,7 @@ class TestLoadInstrumentHistory:
 
     @patch("web.data.load_config")
     @patch("web.data.load_transactions")
-    @patch("web.data.fetch_price_history")
+    @patch("web.data.get_cached_price_history")
     def test_sell_all_skips_zero_holding_days(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(BUY_AND_SELL_ALL)
@@ -305,7 +314,7 @@ class TestLoadInstrumentHistory:
 
     @patch("web.data.load_config")
     @patch("web.data.load_transactions")
-    @patch("web.data.fetch_price_history")
+    @patch("web.data.get_cached_price_history")
     def test_no_transactions_returns_empty(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)
@@ -322,7 +331,7 @@ class TestLoadInstrumentHistory:
 class TestLoadPortfolioDailyChange:
     @patch("web.data.load_config")
     @patch("web.data.load_transactions")
-    @patch("web.data.fetch_price_history")
+    @patch("web.data.get_cached_price_history")
     def test_positive_change(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)
@@ -338,7 +347,7 @@ class TestLoadPortfolioDailyChange:
 
     @patch("web.data.load_config")
     @patch("web.data.load_transactions")
-    @patch("web.data.fetch_price_history")
+    @patch("web.data.get_cached_price_history")
     def test_negative_change(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)
@@ -354,7 +363,7 @@ class TestLoadPortfolioDailyChange:
 
     @patch("web.data.load_config")
     @patch("web.data.load_transactions")
-    @patch("web.data.fetch_price_history")
+    @patch("web.data.get_cached_price_history")
     def test_no_prices_returns_none(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)
@@ -365,7 +374,7 @@ class TestLoadPortfolioDailyChange:
 
     @patch("web.data.load_config")
     @patch("web.data.load_transactions")
-    @patch("web.data.fetch_price_history")
+    @patch("web.data.get_cached_price_history")
     def test_single_day_returns_none(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)
@@ -456,7 +465,7 @@ class TestApplyTransactionsEdgeCases:
 class TestLoadPortfolioHistoryEdgeCases:
     @patch("web.data.load_config")
     @patch("web.data.load_transactions")
-    @patch("web.data.fetch_price_history")
+    @patch("web.data.get_cached_price_history")
     def test_two_instruments(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {
             "instruments": {"ETF_A": {"ticker": "ETF.A"}, "GOLD": {"ticker": "GOLD.X"}}
@@ -482,7 +491,7 @@ class TestLoadPortfolioHistoryEdgeCases:
 
     @patch("web.data.load_config")
     @patch("web.data.load_transactions")
-    @patch("web.data.fetch_price_history")
+    @patch("web.data.get_cached_price_history")
     def test_partial_sell_cost_tracking(self, mock_fetch, mock_txns, mock_config):
         rows = [
             {"Date": "2025-01-02", "Type": "Buy", "Security": "ETF_A", "Shares": 10, "Quote": 100, "Net Transaction Value": 1000},
@@ -505,7 +514,7 @@ class TestLoadPortfolioHistoryEdgeCases:
 
     @patch("web.data.load_config")
     @patch("web.data.load_transactions")
-    @patch("web.data.fetch_price_history")
+    @patch("web.data.get_cached_price_history")
     def test_return_pct_negative(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)
@@ -522,7 +531,7 @@ class TestLoadPortfolioHistoryEdgeCases:
 class TestLoadInstrumentHistoryEdgeCases:
     @patch("web.data.load_config")
     @patch("web.data.load_transactions")
-    @patch("web.data.fetch_price_history")
+    @patch("web.data.get_cached_price_history")
     def test_partial_sell_recalculates_avg(self, mock_fetch, mock_txns, mock_config):
         rows = [
             {"Date": "2025-01-02", "Type": "Buy", "Security": "ETF_A", "Shares": 10, "Quote": 100, "Net Transaction Value": 1000},
@@ -545,7 +554,7 @@ class TestLoadInstrumentHistoryEdgeCases:
 
     @patch("web.data.load_config")
     @patch("web.data.load_transactions")
-    @patch("web.data.fetch_price_history")
+    @patch("web.data.get_cached_price_history")
     def test_instrument_in_config_no_transactions(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"GOLD": {"ticker": "GOLD.X"}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)  # Only ETF_A transactions
@@ -559,7 +568,7 @@ class TestLoadInstrumentHistoryEdgeCases:
 class TestLoadPortfolioDailyChangeEdgeCases:
     @patch("web.data.load_config")
     @patch("web.data.load_transactions")
-    @patch("web.data.fetch_price_history")
+    @patch("web.data.get_cached_price_history")
     def test_two_instruments(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {
             "instruments": {"ETF_A": {"ticker": "ETF.A"}, "GOLD": {"ticker": "GOLD.X"}}
@@ -582,7 +591,7 @@ class TestLoadPortfolioDailyChangeEdgeCases:
 
     @patch("web.data.load_config")
     @patch("web.data.load_transactions")
-    @patch("web.data.fetch_price_history")
+    @patch("web.data.get_cached_price_history")
     def test_zero_change(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)
