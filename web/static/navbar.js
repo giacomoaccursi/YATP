@@ -19,7 +19,7 @@
     { href: '/instruments', label: 'Instruments', icon: 'instruments' },
     { href: '/performance', label: 'Performance', icon: 'performance' },
     { href: '/rebalance', label: 'Rebalance', icon: 'rebalance' },
-    { href: '/sell-simulator', label: 'Sell Sim', icon: 'sellsim' },
+    { href: '/sell-simulator', label: 'Sell Simulator', icon: 'sellsim' },
     { href: '/transactions', label: 'Transactions', icon: 'transactions' },
   ];
 
