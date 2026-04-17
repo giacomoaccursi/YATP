@@ -274,6 +274,33 @@ def load_instrument_names(config_path):
     return list(config["instruments"].keys())
 
 
+def add_instrument_to_config(config_path, security, ticker, instrument_type, capital_gains_rate):
+    """Add a new instrument to the config file.
+
+    Returns True if added, False if already exists.
+    """
+    import json
+    with open(config_path, "r") as f:
+        config = json.load(f)
+
+    if security in config.get("instruments", {}):
+        return False
+
+    if "instruments" not in config:
+        config["instruments"] = {}
+
+    config["instruments"][security] = {
+        "ticker": ticker,
+        "type": instrument_type,
+        "capital_gains_rate": capital_gains_rate,
+    }
+
+    with open(config_path, "w") as f:
+        json.dump(config, f, indent=2)
+
+    return True
+
+
 def load_portfolio_daily_change(config_path, transactions_path):
     """Calculate portfolio value change from previous trading day."""
     _, _, df, price_histories, first_date, today = _load_common(config_path, transactions_path)

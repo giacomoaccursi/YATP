@@ -10,6 +10,7 @@ from web.data import (
     load_performance_periods, load_portfolio_daily_change,
     load_offline_summary, simulate_sell, get_price_fetch_time,
     simulate_rebalance, compute_net_transaction_value, clear_price_cache,
+    add_instrument_to_config,
 )
 from web.serializers import (
     instrument_to_dict, summary_to_dict, transaction_row_to_dict,
@@ -124,6 +125,27 @@ def register_api_routes(app):
         """Return list of configured instruments (for form dropdowns)."""
         names = load_instrument_names(app.config["CONFIG_PATH"])
         return jsonify({"instruments": names})
+
+    @app.route("/api/instruments", methods=["POST"])
+    def api_add_instrument():
+        """Add a new instrument to the config."""
+        data = request.get_json()
+        security = data.get("security", "").strip()
+        ticker = data.get("ticker", "").strip()
+        instrument_type = data.get("type", "ETF").strip()
+        capital_gains_rate = float(data.get("capital_gains_rate", 0.26) or 0.26)
+
+        if not security or not ticker:
+            return jsonify({"error": "Security name and ticker are required"}), 400
+
+        added = add_instrument_to_config(
+            app.config["CONFIG_PATH"], security, ticker, instrument_type, capital_gains_rate,
+        )
+        if not added:
+            return jsonify({"error": "Instrument already exists"}), 409
+
+        clear_price_cache()
+        return jsonify({"success": True})
 
     @app.route("/api/instruments/<path:security>/history")
     def api_instrument_history(security):

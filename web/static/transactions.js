@@ -22,6 +22,7 @@ createApp({
     const form = ref(createEmptyForm());
     const editIndex = ref(null);
     const computedNetValue = ref('0.00');
+    const newInstrument = ref({ ticker: '', type: 'ETF', taxRate: 26, customType: '' });
     let netValueTimer = null;
 
     // Delete state
@@ -51,7 +52,6 @@ createApp({
       }, 150);
     }
 
-    // Watch form fields that affect net value
     watch(function () {
       return [form.value.type, form.value.shares, form.value.quote, form.value.fees, form.value.taxes];
     }, updateNetValue, { deep: true });
@@ -75,6 +75,7 @@ createApp({
       editIndex.value = null;
       form.value = createEmptyForm();
       computedNetValue.value = '0.00';
+      newInstrument.value = { ticker: '', type: 'ETF', taxRate: 26, customType: '' };
       if (availableInstruments.value.length) {
         form.value.security = availableInstruments.value[0];
       }
@@ -129,9 +130,55 @@ createApp({
       }
     }
 
+    async function registerNewInstrument() {
+      if (!newInstrument.value.ticker) {
+        formMessage.value = 'Ticker is required for new instruments';
+        formError.value = true;
+        return false;
+      }
+      var instType = newInstrument.value.type === '__other__'
+        ? newInstrument.value.customType.trim()
+        : newInstrument.value.type;
+      if (!instType) {
+        formMessage.value = 'Asset type is required';
+        formError.value = true;
+        return false;
+      }
+      try {
+        var res = await fetch('/api/instruments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            security: form.value.security,
+            ticker: newInstrument.value.ticker,
+            type: instType,
+            capital_gains_rate: newInstrument.value.taxRate / 100,
+          }),
+        });
+        var data = await res.json();
+        if (!res.ok && res.status !== 409) {
+          formMessage.value = data.error || 'Failed to register instrument';
+          formError.value = true;
+          return false;
+        }
+        return true;
+      } catch (err) {
+        formMessage.value = 'Failed to register instrument';
+        formError.value = true;
+        return false;
+      }
+    }
+
     async function saveTransaction(keepOpen) {
       formMessage.value = '';
       formError.value = false;
+
+      // If new instrument, register it first
+      if (customSecurity.value && form.value.security) {
+        var registered = await registerNewInstrument();
+        if (!registered) return;
+      }
+
       try {
         var result;
         if (isEditing.value) {
@@ -167,6 +214,7 @@ createApp({
       if (val === '__custom__') {
         customSecurity.value = true;
         form.value.security = '';
+        newInstrument.value = { ticker: '', type: 'ETF', taxRate: 26, customType: '' };
       }
     });
 
@@ -177,6 +225,7 @@ createApp({
       hasFilters, filteredTransactions, clearFilters, typeBadge,
       showAddForm, customSecurity, form, formMessage, formError,
       computedNetValue, saveTransaction, isEditing,
+      newInstrument,
       openAddForm, openEditForm,
       deleteIndex, confirmDelete, executeDelete,
       fmt, fmtSigned, pnlColor,
