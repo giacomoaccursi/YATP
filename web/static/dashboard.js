@@ -18,7 +18,6 @@ createApp({
     const dailyChange = ref(null);
     const totalIncome = ref(0);
     const transactionCount = ref(0);
-    const rebalance = ref([]);
     const allocChart = ref(null);
     const classChart = ref(null);
     const valueChart = ref(null);
@@ -117,13 +116,12 @@ createApp({
 
     async function fetchData() {
       try {
-        var responses = await Promise.all([fetch('/api/portfolio'), fetch('/api/rebalance')]);
+        var responses = await Promise.all([fetch('/api/portfolio')]);
         var portfolioData = await responses[0].json();
         summary.value = portfolioData.summary;
         dailyChange.value = portfolioData.daily_change;
         totalIncome.value = portfolioData.total_income || 0;
         transactionCount.value = portfolioData.transaction_count || 0;
-        rebalance.value = (await responses[1].json()).actions;
         loading.value = false;
         await nextTick();
         renderCharts();
@@ -162,7 +160,7 @@ createApp({
     onUnmounted(function () { window.removeEventListener('themechange', onThemeChange); });
 
     return {
-      loading, historyLoading, summary, dailyChange, totalIncome, transactionCount, rebalance,
+      loading, historyLoading, summary, dailyChange, totalIncome, transactionCount,
       allocChart, classChart, valueChart,
       fmt, fmtSigned, pnlColor, refreshPrices,
     };

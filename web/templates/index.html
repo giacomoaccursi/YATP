@@ -75,23 +75,6 @@
       <canvas ref="valueChart" height="80"></canvas>
     </section>
 
-    <section v-if="rebalance.length" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
-      <div class="flex items-center justify-between">
-        <div>
-          <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Rebalance</h3>
-          <p class="text-sm mt-2">
-            <span v-for="(action, i) in rebalance" :key="action.asset_class">
-              <span :class="action.difference > 0 ? 'text-green-600 dark:text-green-400' : action.difference < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-500 dark:text-gray-400'">
-                {{ action.asset_class }}: {{ action.difference > 0 ? '+' : '' }}{{ action.difference.toFixed(0) }} &euro;
-              </span>
-              <span v-if="i < rebalance.length - 1" class="text-gray-300 dark:text-gray-600"> · </span>
-            </span>
-          </p>
-        </div>
-        <a href="/rebalance" class="px-4 py-2 text-sm bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition">Open Rebalancer &rarr;</a>
-      </div>
-    </section>
-
     <section v-if="summary" class="grid md:grid-cols-2 gap-4">
       <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
         <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">Allocation by Instrument</h3>
