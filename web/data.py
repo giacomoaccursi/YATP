@@ -10,8 +10,7 @@ from portfolio.models import InstrumentResult
 from portfolio.summary import build_summary
 from portfolio.rebalance import calc_rebalance
 from portfolio.history import build_history
-from portfolio.engine import replay_transactions, compute_daily_metrics
-from portfolio.portfolio import value_holdings
+from portfolio.engine import PortfolioEngine
 
 # ── In-memory caches (persist while server is running) ──
 
@@ -317,28 +316,8 @@ def load_portfolio_daily_change(config_path, transactions_path):
     if len(recent) < 2:
         return None
 
-    date_today = recent[-1]
-    date_prev = recent[-2]
-
-    tx_events = _build_tx_events(df)
-
-    holdings_prev = {}
-    tx_idx = 0
-    for d in [d for d in all_dates if d <= date_prev]:
-        tx_idx = _apply_transactions(tx_events, tx_idx, d, holdings_prev)
-    val_prev = value_holdings(holdings_prev, price_histories, date_prev)
-
-    holdings_today = dict(holdings_prev)
-    for d in [d for d in all_dates if date_prev < d <= date_today]:
-        tx_idx = _apply_transactions(tx_events, tx_idx, d, holdings_today)
-    val_today = value_holdings(holdings_today, price_histories, date_today)
-
-    if val_prev <= 0:
-        return None
-
-    amount = val_today - val_prev
-    pct = (amount / val_prev) * 100
-    return {"amount": round(amount, 2), "pct": round(pct, 2)}
+    engine = PortfolioEngine(df, price_histories, market_dates=recent[-2:])
+    return engine.daily_change()
 
 
 def load_portfolio_history(config_path, transactions_path):
@@ -350,8 +329,8 @@ def load_portfolio_history(config_path, transactions_path):
         return empty
 
     all_dates = _build_date_index(price_histories, first_date, today)
-    replay = replay_transactions(df, market_dates=all_dates)
-    return compute_daily_metrics(replay, price_histories, value_holdings)
+    engine = PortfolioEngine(df, price_histories, market_dates=all_dates)
+    return engine.full_history()
 
 
 def load_instrument_history(config_path, transactions_path, security):
