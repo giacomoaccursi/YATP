@@ -4,7 +4,7 @@
  * Date filtering is pure UI slicing on pre-computed data.
  */
 
-const { createApp, ref, onMounted, onUnmounted, nextTick } = Vue;
+const { createApp, ref, watch, onMounted, onUnmounted, nextTick } = Vue;
 
 createApp({
   setup() {
@@ -19,6 +19,10 @@ createApp({
     // Pre-computed data from API (fetched once)
     let allDates = [];
     let allReturnPcts = [];
+    let allTotalReturnPcts = [];
+
+    // Toggle: include realized gains
+    const includeRealized = ref(false);
 
     // Period filter state (UI only)
     const activePreset = ref('all');
@@ -67,8 +71,10 @@ createApp({
     function updateReturnChart() {
       var idx = getFilteredIndices();
       var dates = allDates.slice(idx.start, idx.end);
-      var returnPcts = allReturnPcts.slice(idx.start, idx.end);
-      renderReturnChart(dates, returnPcts);
+      var pcts = includeRealized.value
+        ? allTotalReturnPcts.slice(idx.start, idx.end)
+        : allReturnPcts.slice(idx.start, idx.end);
+      renderReturnChart(dates, pcts);
     }
 
     function renderReturnChart(dates, returnPcts) {
@@ -138,6 +144,8 @@ createApp({
       nextTick(updateReturnChart);
     }
 
+    watch(includeRealized, function () { nextTick(updateReturnChart); });
+
     function applyCustomRange() {
       activePreset.value = 'custom';
       nextTick(updateReturnChart);
@@ -154,6 +162,7 @@ createApp({
         var data = await res.json();
         allDates = data.dates;
         allReturnPcts = data.return_pcts || [];
+        allTotalReturnPcts = data.total_return_pcts || [];
         historyLoading.value = false;
         await nextTick();
         updateReturnChart();
@@ -188,7 +197,7 @@ createApp({
 
     return {
       historyLoading, periodsLoading, periods,
-      compareChart, returnChart,
+      compareChart, returnChart, includeRealized,
       activePreset, customFrom, customTo, presets,
       selectPreset, applyCustomRange,
       fmt, fmtSigned, pnlColor,

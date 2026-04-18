@@ -343,7 +343,7 @@ def load_portfolio_history(config_path, transactions_path):
     """Calculate daily portfolio value, cost basis, return % and unrealized P&L."""
     _, _, df, price_histories, first_date, today = _load_common(config_path, transactions_path)
 
-    empty = {"dates": [], "values": [], "costs": [], "return_pcts": [], "unrealized_pnls": []}
+    empty = {"dates": [], "values": [], "costs": [], "return_pcts": [], "total_return_pcts": [], "unrealized_pnls": []}
     if df.empty or not price_histories:
         return empty
 
@@ -364,9 +364,15 @@ def load_portfolio_history(config_path, transactions_path):
     holdings = {}
     cost_state = {}
     tx_idx = 0
+    cumulative_realized = 0.0
+    cumulative_income = 0.0
+    total_invested = 0.0
     dates = []
     values = []
     costs = []
+    return_pcts = []
+    total_return_pcts = []
+    unrealized_pnls = []
 
     for date in all_dates:
         while tx_idx < len(tx_events) and tx_events[tx_idx][0] <= date:
@@ -377,33 +383,39 @@ def load_portfolio_history(config_path, transactions_path):
                 holdings[security] = holdings.get(security, 0.0) + shares
                 cost_state[security]["shares"] += shares
                 cost_state[security]["cost"] += net_value
+                total_invested += net_value
             elif tx_type == "sell":
                 holdings[security] = holdings.get(security, 0.0) - shares
                 if cost_state[security]["shares"] > 0:
                     avg = cost_state[security]["cost"] / cost_state[security]["shares"]
-                    cost_state[security]["cost"] -= avg * shares
+                    cost_of_sold = avg * shares
+                    cumulative_realized += net_value - cost_of_sold
+                    cost_state[security]["cost"] -= cost_of_sold
                 cost_state[security]["shares"] -= shares
                 if holdings.get(security, 0) <= 1e-9:
                     holdings.pop(security, None)
                     cost_state[security] = {"shares": 0.0, "cost": 0.0}
+            elif tx_type in ("dividend", "coupon"):
+                cumulative_income += net_value
             tx_idx += 1
 
         total = _value_holdings_at(holdings, price_histories, date)
         total_cost = sum(s["cost"] for s in cost_state.values())
+        unrealized = total - total_cost
+
         dates.append(date.strftime("%Y-%m-%d"))
         values.append(round(total, 2))
         costs.append(round(total_cost, 2))
+        unrealized_pnls.append(round(unrealized, 2))
+        return_pcts.append(round((unrealized / total_cost) * 100, 2) if total_cost > 0 else 0.0)
 
-    return_pcts = []
-    unrealized_pnls = []
-    for i in range(len(values)):
-        cost = costs[i]
-        return_pcts.append(round(((values[i] - cost) / cost) * 100, 2) if cost > 0 else 0.0)
-        unrealized_pnls.append(round(values[i] - cost, 2))
+        total_gain = unrealized + cumulative_realized + cumulative_income
+        total_return_pcts.append(round((total_gain / total_cost) * 100, 2) if total_cost > 0 else 0.0)
 
     return {
         "dates": dates, "values": values, "costs": costs,
-        "return_pcts": return_pcts, "unrealized_pnls": unrealized_pnls,
+        "return_pcts": return_pcts, "total_return_pcts": total_return_pcts,
+        "unrealized_pnls": unrealized_pnls,
     }
 
 
