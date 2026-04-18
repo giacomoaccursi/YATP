@@ -146,10 +146,10 @@ def _analyze_period(label, period_start, today, days, df, price_histories, holdi
         if row["Type"].strip().lower() in ("dividend", "coupon")
     )
 
-    # Simple return: total gain (market + income) / cost basis
+    # Simple return: total gain / end cost basis (consistent with dashboard)
+    end_cost_basis = get_cost_basis_at(today, df)
     total_gain = market_gain + period_income
-    cost_basis = get_cost_basis_at(period_start, df) + net_new_money
-    simple_return = calc_simple_return(total_gain, cost_basis)
+    simple_return = calc_simple_return(total_gain, end_cost_basis)
 
     # MWRR (de-annualized XIRR)
     cashflows = []
