@@ -134,7 +134,7 @@ def register_api_routes(app):
         ticker = data.get("ticker", "").strip()
         instrument_type = data.get("type", "ETF").strip()
         capital_gains_rate = float(data.get("capital_gains_rate", 0.26) or 0.26)
-        isin = data.get("isin", "").strip() or None
+        isin = (data.get("isin") or "").strip() or None
 
         if not security or not ticker:
             return jsonify({"error": "Security name and ticker are required"}), 400
