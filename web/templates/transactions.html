@@ -13,6 +13,13 @@
   <script src="/static/tooltip.js" defer></script>
   <script src="/static/alert-banner.js" defer></script>
   <style>
+    @keyframes modalIn { from { opacity: 0; transform: scale(0.9) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+    .animate-modal-in { animation: modalIn 0.2s ease-out; }
+    .modal-enter-active { transition: opacity 0.2s ease; }
+    .modal-leave-active { transition: opacity 0.15s ease; }
+    .modal-enter-from, .modal-leave-to { opacity: 0; }
+  </style>
+  <style>
     [v-cloak] { display: none; }
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
   </style>
@@ -185,8 +192,9 @@
   </div>
 
   <!-- New Instrument Modal -->
-  <div v-if="showNewInstrument" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50" @click.self="showNewInstrument = false">
-    <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 w-full max-w-sm space-y-4">
+  <Transition name="modal">
+  <div v-if="showNewInstrument" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 transition-opacity duration-200" @click.self="showNewInstrument = false">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 w-full max-w-md space-y-4 transform transition-all duration-200 ease-out animate-modal-in">
       <h2 class="text-lg font-semibold">New Instrument</h2>
 
       <div>
@@ -199,12 +207,11 @@
         <select v-model="newInstrument.type" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
           <option value="ETF">ETF</option>
           <option value="ETC">ETC</option>
+          <option value="ETN">ETN</option>
           <option value="Stock">Stock</option>
           <option value="Bond">Bond</option>
-          <option value="Fund">Fund</option>
           <option value="REIT">REIT</option>
           <option value="Crypto">Crypto</option>
-          <option value="Cash">Cash</option>
           <option value="__other__">Other...</option>
         </select>
         <input v-if="newInstrument.type === '__other__'" v-model="newInstrument.customType" type="text" placeholder="Custom type"
@@ -234,8 +241,7 @@
       </div>
     </div>
   </div>
-
-</div>
+  </Transition>
 
 <script src="/static/transactions.js"></script>
 </body>

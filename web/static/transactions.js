@@ -201,7 +201,7 @@ createApp({
     watch(function () { return form.value.security; }, function (val) {
       if (val === '__custom__') {
         form.value.security = availableInstruments.value[0] || '';
-        openNewInstrumentModal();
+        Vue.nextTick(openNewInstrumentModal);
       }
     });
 
