@@ -464,30 +464,6 @@ def _build_date_index(price_histories, first_date, today):
     return sorted(d for d in all_dates if first_date <= d <= today)
 
 
-def _build_tx_events(df):
-    """Build sorted list of (date, security, type, shares) from transactions."""
-    tx_events = []
-    for _, row in df.iterrows():
-        tx_events.append((
-            row["Date"].normalize(),
-            row["Security"],
-            row["Type"].strip().lower(),
-            row["Shares"],
-        ))
-    tx_events.sort(key=lambda e: e[0])
-    return tx_events
 
 
-def _apply_transactions(tx_events, tx_idx, date, holdings):
-    """Apply all transactions up to and including date. Mutates holdings. Returns new tx_idx."""
-    while tx_idx < len(tx_events) and tx_events[tx_idx][0] <= date:
-        _, security, tx_type, shares = tx_events[tx_idx]
-        if tx_type == "buy":
-            holdings[security] = holdings.get(security, 0.0) + shares
-        elif tx_type == "sell":
-            holdings[security] = holdings.get(security, 0.0) - shares
-            if holdings[security] <= 1e-9:
-                holdings.pop(security, None)
-        tx_idx += 1
-    return tx_idx
 

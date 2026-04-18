@@ -7,12 +7,11 @@ from web.data import (
     load_portfolio_history,
     load_instrument_history,
     load_portfolio_daily_change,
-    _build_tx_events,
-    _apply_transactions,
     _build_date_index,
     clear_price_cache,
 )
 from portfolio.portfolio import value_holdings
+from portfolio.engine import PortfolioEngine
 
 
 @pytest.fixture(autouse=True)
@@ -61,72 +60,29 @@ TWO_INSTRUMENTS = [
 ]
 
 
-# ── _build_tx_events ──
+# ── PortfolioEngine ──
 
-class TestBuildTxEvents:
-    def test_sorted_by_date(self):
-        rows = [
-            {"Date": "2025-02-01", "Type": "Buy", "Security": "A", "Shares": 5, "Quote": 100, "Net Transaction Value": 500},
-            {"Date": "2025-01-01", "Type": "Buy", "Security": "A", "Shares": 10, "Quote": 100, "Net Transaction Value": 1000},
-        ]
-        events = _build_tx_events(_make_df(rows))
-        assert events[0][0] < events[1][0]
-
-    def test_event_fields(self):
-        events = _build_tx_events(_make_df(SIMPLE_BUY))
-        assert len(events) == 1
-        date, security, tx_type, shares = events[0]
-        assert security == "ETF_A"
-        assert tx_type == "buy"
-        assert shares == 10
-
-
-# ── _apply_transactions ──
-
-class TestApplyTransactions:
-    def test_buy_adds_shares(self):
-        events = [(pd.Timestamp("2025-01-02"), "ETF_A", "buy", 10)]
-        holdings = {}
-        _apply_transactions(events, 0, pd.Timestamp("2025-01-02"), holdings)
-        assert holdings["ETF_A"] == 10
+class TestPortfolioEngine:
+    def test_buy_tracks_holdings(self):
+        engine = PortfolioEngine(_make_df(SIMPLE_BUY), {}, market_dates=[pd.Timestamp("2025-01-02")])
+        assert engine.holdings_at(0)["ETF_A"] == 10
 
     def test_sell_removes_shares(self):
-        events = [
-            (pd.Timestamp("2025-01-02"), "ETF_A", "buy", 10),
-            (pd.Timestamp("2025-01-05"), "ETF_A", "sell", 3),
-        ]
-        holdings = {}
-        idx = _apply_transactions(events, 0, pd.Timestamp("2025-01-02"), holdings)
-        _apply_transactions(events, idx, pd.Timestamp("2025-01-05"), holdings)
-        assert holdings["ETF_A"] == 7
+        engine = PortfolioEngine(_make_df(BUY_AND_SELL_ALL), {}, market_dates=[pd.Timestamp("2025-01-10")])
+        assert len(engine.holdings_at(0)) == 0
 
-    def test_sell_all_removes_key(self):
-        events = [
-            (pd.Timestamp("2025-01-02"), "ETF_A", "buy", 10),
-            (pd.Timestamp("2025-01-05"), "ETF_A", "sell", 10),
-        ]
-        holdings = {}
-        idx = _apply_transactions(events, 0, pd.Timestamp("2025-01-05"), holdings)
-        assert "ETF_A" not in holdings
+    def test_cost_basis_tracked(self):
+        engine = PortfolioEngine(_make_df(SIMPLE_BUY), {}, market_dates=[pd.Timestamp("2025-01-02")])
+        assert engine.cost_basis_at(0) == 1000.0
 
-    def test_skips_future_events(self):
-        events = [
-            (pd.Timestamp("2025-01-02"), "ETF_A", "buy", 10),
-            (pd.Timestamp("2025-02-01"), "ETF_A", "buy", 5),
-        ]
-        holdings = {}
-        idx = _apply_transactions(events, 0, pd.Timestamp("2025-01-15"), holdings)
-        assert holdings["ETF_A"] == 10
-        assert idx == 1
+    def test_realized_pnl(self):
+        engine = PortfolioEngine(_make_df(BUY_AND_SELL_ALL), {}, market_dates=[pd.Timestamp("2025-01-10")])
+        assert engine.realized_pnl() == 100.0  # sold at 110, cost was 100
 
-    def test_dividend_ignored(self):
-        events = [
-            (pd.Timestamp("2025-01-02"), "ETF_A", "buy", 10),
-            (pd.Timestamp("2025-06-01"), "ETF_A", "dividend", 0),
-        ]
-        holdings = {}
-        _apply_transactions(events, 0, pd.Timestamp("2025-12-31"), holdings)
-        assert holdings["ETF_A"] == 10
+    def test_dividend_tracked_as_income(self):
+        rows = SIMPLE_BUY + [{"Date": "2025-06-01", "Type": "Dividend", "Security": "ETF_A", "Shares": 0, "Quote": 0, "Net Transaction Value": 50}]
+        engine = PortfolioEngine(_make_df(rows), {}, market_dates=[pd.Timestamp("2025-06-01")])
+        assert engine.total_income() == 50.0
 
 
 # ── value_holdings ──
@@ -441,25 +397,16 @@ class TestSerializers:
 
 # ── Additional edge cases ──
 
-class TestApplyTransactionsEdgeCases:
-    def test_multiple_transactions_same_day(self):
-        events = [
-            (pd.Timestamp("2025-01-02"), "ETF_A", "buy", 10),
-            (pd.Timestamp("2025-01-02"), "GOLD", "buy", 5),
-        ]
-        holdings = {}
-        _apply_transactions(events, 0, pd.Timestamp("2025-01-02"), holdings)
-        assert holdings["ETF_A"] == 10
-        assert holdings["GOLD"] == 5
+class TestPortfolioEngineEdgeCases:
+    def test_multiple_instruments_same_day(self):
+        engine = PortfolioEngine(_make_df(TWO_INSTRUMENTS), {}, market_dates=[pd.Timestamp("2025-01-02")])
+        h = engine.holdings_at(0)
+        assert h["ETF_A"] == 10
+        assert h["GOLD"] == 5
 
-    def test_buy_then_sell_same_day(self):
-        events = [
-            (pd.Timestamp("2025-01-02"), "ETF_A", "buy", 10),
-            (pd.Timestamp("2025-01-02"), "ETF_A", "sell", 3),
-        ]
-        holdings = {}
-        _apply_transactions(events, 0, pd.Timestamp("2025-01-02"), holdings)
-        assert holdings["ETF_A"] == 7
+    def test_two_buys_cost_basis(self):
+        engine = PortfolioEngine(_make_df(TWO_BUYS), {}, market_dates=[pd.Timestamp("2025-01-15")])
+        assert engine.cost_basis_at(0) == 1600.0
 
 
 class TestLoadPortfolioHistoryEdgeCases:
