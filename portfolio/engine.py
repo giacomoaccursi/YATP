@@ -6,7 +6,7 @@ reads from the shared state without recalculating.
 """
 
 from portfolio.portfolio import value_holdings
-from portfolio.returns import calc_xirr, calc_simple_return, calc_period_mwrr
+from portfolio.returns import calc_xirr, calc_simple_return, calc_period_mwrr, calc_cumulative_twr
 
 
 class PortfolioEngine:
@@ -161,7 +161,7 @@ class PortfolioEngine:
             cost = self._cost_basis_list[i]
             if cost > 0:
                 val = self._value_at(i)
-                last_pct = round(((val - cost) / cost) * 100, 2)
+                last_pct = round(calc_simple_return(val - cost, cost), 2)
             result.append(last_pct)
         return result
 
@@ -173,34 +173,24 @@ class PortfolioEngine:
             cost = self._cost_basis_list[i]
             if cost > 0:
                 val = self._value_at(i)
-                unrealized = val - cost
-                total_gain = unrealized + self._realized_list[i] + self._income_list[i]
-                last_pct = round((total_gain / cost) * 100, 2)
+                total_gain = (val - cost) + self._realized_list[i] + self._income_list[i]
+                last_pct = round(calc_simple_return(total_gain, cost), 2)
             result.append(last_pct)
         return result
 
     def cumulative_twr(self):
-        """Cumulative TWR % for each date."""
-        cum = 1.0
-        prev_after = None
-        result = []
+        """Cumulative TWR % for each date.
 
-        for i in range(len(self._dates)):
-            val = self._value_at(i)
-
-            if self._has_txn_list[i]:
-                val_before = self._value_before_at(i)
-                if prev_after is not None and prev_after > 0 and val_before > 0:
-                    cum *= val_before / prev_after
-                prev_after = val if val > 0 else None
-                result.append(round((cum - 1) * 100, 2))
-            elif prev_after is not None and prev_after > 0 and val > 0:
-                running = cum * (val / prev_after)
-                result.append(round((running - 1) * 100, 2))
-            else:
-                result.append(result[-1] if result else 0.0)
-
-        return result
+        Uses sub-period chaining: at each transaction, close the sub-period
+        with value_before / prev_value_after, then start a new sub-period.
+        Between transactions, show running TWR.
+        """
+        return calc_cumulative_twr(
+            dates=self._dates,
+            has_txn_list=self._has_txn_list,
+            value_at=self._value_at,
+            value_before_at=self._value_before_at,
+        )
 
     def daily_change(self):
         """Portfolio value change from previous day. Returns dict or None."""

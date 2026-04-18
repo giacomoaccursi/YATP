@@ -93,3 +93,40 @@ def calc_period_twr(eval_dates, get_value_before, get_value_after):
         prev_value = get_value_after(date)
 
     return twr - 1
+
+
+def calc_cumulative_twr(dates, has_txn_list, value_at, value_before_at):
+    """Compute cumulative TWR % for each date.
+
+    Sub-period chaining: at each transaction date, close the sub-period
+    with value_before / prev_value_after, then start a new sub-period.
+    Between transactions, show running TWR including partial period.
+
+    Args:
+        dates: list of dates
+        has_txn_list: list of bool, True if date has a transaction
+        value_at: function(index) -> portfolio value after transactions
+        value_before_at: function(index) -> portfolio value before transactions (prev holdings, today's prices)
+
+    Returns list of TWR % values, one per date.
+    """
+    cum = 1.0
+    prev_after = None
+    result = []
+
+    for i in range(len(dates)):
+        val = value_at(i)
+
+        if has_txn_list[i]:
+            val_before = value_before_at(i)
+            if prev_after is not None and prev_after > 0 and val_before > 0:
+                cum *= val_before / prev_after
+            prev_after = val if val > 0 else None
+            result.append(round((cum - 1) * 100, 2))
+        elif prev_after is not None and prev_after > 0 and val > 0:
+            running = cum * (val / prev_after)
+            result.append(round((running - 1) * 100, 2))
+        else:
+            result.append(result[-1] if result else 0.0)
+
+    return result
