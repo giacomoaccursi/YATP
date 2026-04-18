@@ -10,6 +10,8 @@ from portfolio.models import InstrumentResult
 from portfolio.summary import build_summary
 from portfolio.rebalance import calc_rebalance
 from portfolio.history import build_history
+from portfolio.engine import replay_transactions, compute_daily_metrics
+from portfolio.portfolio import value_holdings
 
 # ── In-memory caches (persist while server is running) ──
 
@@ -324,12 +326,12 @@ def load_portfolio_daily_change(config_path, transactions_path):
     tx_idx = 0
     for d in [d for d in all_dates if d <= date_prev]:
         tx_idx = _apply_transactions(tx_events, tx_idx, d, holdings_prev)
-    val_prev = _value_holdings_at(holdings_prev, price_histories, date_prev)
+    val_prev = value_holdings(holdings_prev, price_histories, date_prev)
 
     holdings_today = dict(holdings_prev)
     for d in [d for d in all_dates if date_prev < d <= date_today]:
         tx_idx = _apply_transactions(tx_events, tx_idx, d, holdings_today)
-    val_today = _value_holdings_at(holdings_today, price_histories, date_today)
+    val_today = value_holdings(holdings_today, price_histories, date_today)
 
     if val_prev <= 0:
         return None
@@ -348,106 +350,8 @@ def load_portfolio_history(config_path, transactions_path):
         return empty
 
     all_dates = _build_date_index(price_histories, first_date, today)
-
-    # Build tx events with net value for cost tracking
-    tx_events = []
-    for _, row in df.iterrows():
-        tx_events.append((
-            row["Date"].normalize(),
-            row["Security"],
-            row["Type"].strip().lower(),
-            row["Shares"],
-            row["Net Transaction Value"],
-        ))
-    tx_events.sort(key=lambda e: e[0])
-
-    holdings = {}
-    cost_state = {}
-    tx_idx = 0
-    cumulative_realized = 0.0
-    cumulative_income = 0.0
-    total_invested = 0.0
-    dates = []
-    values = []
-    costs = []
-    return_pcts = []
-    total_return_pcts = []
-    unrealized_pnls = []
-    last_return_pct = 0.0
-    last_total_return_pct = 0.0
-    cumulative_twr = 1.0
-    prev_after_txn_value = None  # value after last transaction
-    twr_daily = []
-
-    for date in all_dates:
-        date_str = date.strftime("%Y-%m-%d")
-
-        # Save holdings BEFORE applying today's transactions
-        prev_holdings = dict(holdings)
-
-        has_txn = False
-        while tx_idx < len(tx_events) and tx_events[tx_idx][0] <= date:
-            has_txn = True
-            _, security, tx_type, shares, net_value = tx_events[tx_idx]
-            if security not in cost_state:
-                cost_state[security] = {"shares": 0.0, "cost": 0.0}
-            if tx_type == "buy":
-                holdings[security] = holdings.get(security, 0.0) + shares
-                cost_state[security]["shares"] += shares
-                cost_state[security]["cost"] += net_value
-                total_invested += net_value
-            elif tx_type == "sell":
-                holdings[security] = holdings.get(security, 0.0) - shares
-                if cost_state[security]["shares"] > 0:
-                    avg = cost_state[security]["cost"] / cost_state[security]["shares"]
-                    cost_of_sold = avg * shares
-                    cumulative_realized += net_value - cost_of_sold
-                    cost_state[security]["cost"] -= cost_of_sold
-                cost_state[security]["shares"] -= shares
-                if holdings.get(security, 0) <= 1e-9:
-                    holdings.pop(security, None)
-                    cost_state[security] = {"shares": 0.0, "cost": 0.0}
-            elif tx_type in ("dividend", "coupon"):
-                cumulative_income += net_value
-            tx_idx += 1
-
-        # Value AFTER transactions at today's price
-        total = _value_holdings_at(holdings, price_histories, date)
-
-        # TWR: on transaction days, close sub-period using prev holdings at today's price
-        if has_txn:
-            value_before = _value_holdings_at(prev_holdings, price_histories, date)
-            if prev_after_txn_value is not None and prev_after_txn_value > 0 and value_before > 0:
-                cumulative_twr *= value_before / prev_after_txn_value
-            prev_after_txn_value = total if total > 0 else None
-            twr_daily.append(round((cumulative_twr - 1) * 100, 2))
-        elif prev_after_txn_value is not None and prev_after_txn_value > 0 and total > 0:
-            running = cumulative_twr * (total / prev_after_txn_value)
-            twr_daily.append(round((running - 1) * 100, 2))
-        else:
-            twr_daily.append(twr_daily[-1] if twr_daily else 0.0)
-
-        total_cost = sum(s["cost"] for s in cost_state.values())
-        unrealized = total - total_cost
-
-        dates.append(date.strftime("%Y-%m-%d"))
-        values.append(round(total, 2))
-        costs.append(round(total_cost, 2))
-        unrealized_pnls.append(round(unrealized, 2))
-
-        if total_cost > 0:
-            last_return_pct = round((unrealized / total_cost) * 100, 2)
-            last_total_return_pct = round(((unrealized + cumulative_realized + cumulative_income) / total_cost) * 100, 2)
-
-        return_pcts.append(last_return_pct)
-        total_return_pcts.append(last_total_return_pct)
-
-    return {
-        "dates": dates, "values": values, "costs": costs,
-        "return_pcts": return_pcts, "total_return_pcts": total_return_pcts,
-        "twr_pcts": twr_daily,
-        "unrealized_pnls": unrealized_pnls,
-    }
+    replay = replay_transactions(df, market_dates=all_dates)
+    return compute_daily_metrics(replay, price_histories, value_holdings)
 
 
 def load_instrument_history(config_path, transactions_path, security):
@@ -608,15 +512,3 @@ def _apply_transactions(tx_events, tx_idx, date, holdings):
         tx_idx += 1
     return tx_idx
 
-
-def _value_holdings_at(holdings, price_histories, date):
-    """Calculate total market value of holdings at a given date."""
-    total = 0.0
-    for security, shares in holdings.items():
-        if security not in price_histories:
-            continue
-        prices = price_histories[security]
-        available = prices[prices.index <= date]
-        if not available.empty:
-            total += shares * available.iloc[-1]
-    return total

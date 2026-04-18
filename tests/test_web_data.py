@@ -9,10 +9,10 @@ from web.data import (
     load_portfolio_daily_change,
     _build_tx_events,
     _apply_transactions,
-    _value_holdings_at,
     _build_date_index,
     clear_price_cache,
 )
+from portfolio.portfolio import value_holdings
 
 
 @pytest.fixture(autouse=True)
@@ -129,27 +129,27 @@ class TestApplyTransactions:
         assert holdings["ETF_A"] == 10
 
 
-# ── _value_holdings_at ──
+# ── value_holdings ──
 
 class TestValueHoldingsAt:
     def test_single_holding(self):
         holdings = {"ETF_A": 10}
         prices = {"ETF_A": _make_price_series({"2025-01-02": 100, "2025-01-03": 105})}
-        assert _value_holdings_at(holdings, prices, pd.Timestamp("2025-01-03")) == 1050
+        assert value_holdings(holdings, prices, pd.Timestamp("2025-01-03")) == 1050
 
     def test_uses_latest_available_price(self):
         holdings = {"ETF_A": 10}
         prices = {"ETF_A": _make_price_series({"2025-01-02": 100})}
         # Date after last price — should use last available
-        assert _value_holdings_at(holdings, prices, pd.Timestamp("2025-01-05")) == 1000
+        assert value_holdings(holdings, prices, pd.Timestamp("2025-01-05")) == 1000
 
     def test_no_price_available(self):
         holdings = {"ETF_A": 10}
         prices = {"ETF_A": _make_price_series({"2025-06-01": 100})}
-        assert _value_holdings_at(holdings, prices, pd.Timestamp("2025-01-01")) == 0
+        assert value_holdings(holdings, prices, pd.Timestamp("2025-01-01")) == 0
 
     def test_empty_holdings(self):
-        assert _value_holdings_at({}, {}, pd.Timestamp("2025-01-01")) == 0
+        assert value_holdings({}, {}, pd.Timestamp("2025-01-01")) == 0
 
     def test_multiple_holdings(self):
         holdings = {"ETF_A": 10, "GOLD": 5}
@@ -157,7 +157,7 @@ class TestValueHoldingsAt:
             "ETF_A": _make_price_series({"2025-01-02": 100}),
             "GOLD": _make_price_series({"2025-01-02": 80}),
         }
-        assert _value_holdings_at(holdings, prices, pd.Timestamp("2025-01-02")) == 1400
+        assert value_holdings(holdings, prices, pd.Timestamp("2025-01-02")) == 1400
 
 
 # ── load_portfolio_history (mocked) ──
