@@ -440,7 +440,7 @@ def load_instrument_history(config_path, transactions_path, security):
     tx_events.sort(key=lambda e: e[0])
 
     all_dates = sorted(prices.index.normalize().unique())
-    all_dates = [d for d in all_dates if first_date <= d <= today]
+    all_dates = [d for d in all_dates if d <= today]
 
     tx_idx = 0
     shares = 0.0
@@ -482,6 +482,35 @@ def load_instrument_history(config_path, transactions_path, security):
         price_values.append(round(price, 4))
         cost_avg_values.append(round(avg_cost, 4))
         pnl_values.append(round(unrealized, 2))
+
+    # Handle transactions after the last available price date (e.g. today, market closed)
+    while tx_idx < len(tx_events):
+        _, tx_type, tx_shares, net_value = tx_events[tx_idx]
+        if tx_type == "buy":
+            shares += tx_shares
+            total_cost += net_value
+        elif tx_type == "sell":
+            if shares > 0:
+                avg = total_cost / shares
+                total_cost -= avg * tx_shares
+            shares -= tx_shares
+            if shares <= 1e-9:
+                shares = 0.0
+                total_cost = 0.0
+        tx_idx += 1
+
+    if shares > 1e-9 and not dates:
+        # No chart data yet — use last available price
+        if not prices.empty:
+            last_price = prices.iloc[-1]
+            last_date = prices.index[-1].normalize()
+            avg_cost = total_cost / shares if shares > 0 else 0
+            market_val = shares * last_price
+            unrealized = market_val - total_cost
+            dates.append(last_date.strftime("%Y-%m-%d"))
+            price_values.append(round(float(last_price), 4))
+            cost_avg_values.append(round(avg_cost, 4))
+            pnl_values.append(round(unrealized, 2))
 
     return {
         "dates": dates,
