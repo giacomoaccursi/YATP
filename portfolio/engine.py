@@ -258,3 +258,114 @@ class PortfolioEngine:
             "twr_pcts": self.cumulative_twr(),
             "unrealized_pnls": [p for _, p in self.daily_unrealized()],
         }
+
+
+    # ── Period methods ──
+
+    def period_twr(self, start_date, end_date):
+        """TWR for a specific period. Returns float (decimal, not %) or None."""
+        twr_series = self.cumulative_twr()
+        dates = self._dates
+
+        # Find indices for start and end
+        start_idx = None
+        end_idx = None
+        for i, d in enumerate(dates):
+            if start_idx is None and d >= start_date:
+                start_idx = i
+            if d <= end_date:
+                end_idx = i
+
+        # Use last date before start if exact match not found
+        for i, d in enumerate(dates):
+            if d <= start_date:
+                start_idx = i
+
+        if start_idx is None or end_idx is None or end_idx <= start_idx:
+            return None
+
+        start_factor = 1 + twr_series[start_idx] / 100
+        end_factor = 1 + twr_series[end_idx] / 100
+        if start_factor <= 0:
+            return None
+        return end_factor / start_factor - 1
+
+    def period_mwrr(self, start_date, end_date, days):
+        """MWRR (de-annualized XIRR) for a specific period. Returns float (%) or None."""
+        from portfolio.portfolio import value_holdings as _val, get_cashflows_between
+
+        # Find holdings at start
+        start_idx = 0
+        for i, d in enumerate(self._dates):
+            if d <= start_date:
+                start_idx = i
+
+        start_value = self._value_at(start_idx) if start_idx < len(self._dates) else 0
+
+        # Find holdings at end
+        end_idx = len(self._dates) - 1
+        for i, d in enumerate(self._dates):
+            if d <= end_date:
+                end_idx = i
+
+        end_value = self._value_at(end_idx) if end_idx < len(self._dates) else 0
+
+        # Build cashflows for the period from stored cashflows
+        cashflows = []
+        if start_value > 0:
+            cashflows.append((start_date.to_pydatetime() if hasattr(start_date, 'to_pydatetime') else start_date, -start_value))
+
+        for cf_date, cf_amount in self._cashflows:
+            cf_ts = cf_date if hasattr(cf_date, 'timestamp') else cf_date
+            sd = start_date.to_pydatetime() if hasattr(start_date, 'to_pydatetime') else start_date
+            ed = end_date.to_pydatetime() if hasattr(end_date, 'to_pydatetime') else end_date
+            if sd < cf_date <= ed:
+                cashflows.append((cf_date, cf_amount))
+
+        if end_value > 0:
+            cashflows.append((end_date.to_pydatetime() if hasattr(end_date, 'to_pydatetime') else end_date, end_value))
+
+        if len(cashflows) < 2:
+            return None
+
+        return calc_period_mwrr(cashflows, days)
+
+    def period_market_gain(self, start_date, end_date, df):
+        """Market gain for a period (price appreciation, excludes new money)."""
+        from portfolio.portfolio import get_net_new_money_between
+
+        start_idx = 0
+        end_idx = len(self._dates) - 1
+        for i, d in enumerate(self._dates):
+            if d <= start_date:
+                start_idx = i
+            if d <= end_date:
+                end_idx = i
+
+        start_value = self._value_at(start_idx)
+        end_value = self._value_at(end_idx)
+        net_new = get_net_new_money_between(start_date, end_date, df)
+        return (end_value - start_value) - net_new
+
+    def period_income(self, start_date, end_date, df):
+        """Income (dividends + coupons) in a period."""
+        period_df = df[(df["Date"] > start_date) & (df["Date"] <= end_date)]
+        return sum(
+            row["Net Transaction Value"]
+            for _, row in period_df.iterrows()
+            if row["Type"].strip().lower() in ("dividend", "coupon")
+        )
+
+    def period_simple_return(self, start_date, end_date, df):
+        """Simple return for a period. Uses end cost basis."""
+        market_gain = self.period_market_gain(start_date, end_date, df)
+        income = self.period_income(start_date, end_date, df)
+        total_gain = market_gain + income
+
+        end_idx = len(self._dates) - 1
+        for i, d in enumerate(self._dates):
+            if d <= end_date:
+                end_idx = i
+
+        end_cost = self._cost_basis_list[end_idx]
+        return calc_simple_return(total_gain, end_cost)
