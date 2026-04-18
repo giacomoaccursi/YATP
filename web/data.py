@@ -343,7 +343,7 @@ def load_portfolio_history(config_path, transactions_path):
     """Calculate daily portfolio value, cost basis, return % and unrealized P&L."""
     _, _, df, price_histories, first_date, today = _load_common(config_path, transactions_path)
 
-    empty = {"dates": [], "values": [], "costs": [], "return_pcts": [], "total_return_pcts": [], "unrealized_pnls": []}
+    empty = {"dates": [], "values": [], "costs": [], "return_pcts": [], "total_return_pcts": [], "twr_pcts": [], "unrealized_pnls": []}
     if df.empty or not price_histories:
         return empty
 
@@ -373,9 +373,21 @@ def load_portfolio_history(config_path, transactions_path):
     return_pcts = []
     total_return_pcts = []
     unrealized_pnls = []
+    last_return_pct = 0.0
+    last_total_return_pct = 0.0
+    cumulative_twr = 1.0
+    prev_after_txn_value = None  # value after last transaction
+    twr_daily = []
 
     for date in all_dates:
+        date_str = date.strftime("%Y-%m-%d")
+
+        # Save holdings BEFORE applying today's transactions
+        prev_holdings = dict(holdings)
+
+        has_txn = False
         while tx_idx < len(tx_events) and tx_events[tx_idx][0] <= date:
+            has_txn = True
             _, security, tx_type, shares, net_value = tx_events[tx_idx]
             if security not in cost_state:
                 cost_state[security] = {"shares": 0.0, "cost": 0.0}
@@ -399,7 +411,22 @@ def load_portfolio_history(config_path, transactions_path):
                 cumulative_income += net_value
             tx_idx += 1
 
+        # Value AFTER transactions at today's price
         total = _value_holdings_at(holdings, price_histories, date)
+
+        # TWR: on transaction days, close sub-period using prev holdings at today's price
+        if has_txn:
+            value_before = _value_holdings_at(prev_holdings, price_histories, date)
+            if prev_after_txn_value is not None and prev_after_txn_value > 0 and value_before > 0:
+                cumulative_twr *= value_before / prev_after_txn_value
+            prev_after_txn_value = total if total > 0 else None
+            twr_daily.append(round((cumulative_twr - 1) * 100, 2))
+        elif prev_after_txn_value is not None and prev_after_txn_value > 0 and total > 0:
+            running = cumulative_twr * (total / prev_after_txn_value)
+            twr_daily.append(round((running - 1) * 100, 2))
+        else:
+            twr_daily.append(twr_daily[-1] if twr_daily else 0.0)
+
         total_cost = sum(s["cost"] for s in cost_state.values())
         unrealized = total - total_cost
 
@@ -407,14 +434,18 @@ def load_portfolio_history(config_path, transactions_path):
         values.append(round(total, 2))
         costs.append(round(total_cost, 2))
         unrealized_pnls.append(round(unrealized, 2))
-        return_pcts.append(round((unrealized / total_cost) * 100, 2) if total_cost > 0 else 0.0)
 
-        total_gain = unrealized + cumulative_realized + cumulative_income
-        total_return_pcts.append(round((total_gain / total_cost) * 100, 2) if total_cost > 0 else 0.0)
+        if total_cost > 0:
+            last_return_pct = round((unrealized / total_cost) * 100, 2)
+            last_total_return_pct = round(((unrealized + cumulative_realized + cumulative_income) / total_cost) * 100, 2)
+
+        return_pcts.append(last_return_pct)
+        total_return_pcts.append(last_total_return_pct)
 
     return {
         "dates": dates, "values": values, "costs": costs,
         "return_pcts": return_pcts, "total_return_pcts": total_return_pcts,
+        "twr_pcts": twr_daily,
         "unrealized_pnls": unrealized_pnls,
     }
 

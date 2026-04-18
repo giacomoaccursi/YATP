@@ -246,7 +246,7 @@ class TestLoadPortfolioHistory:
         mock_fetch.return_value = None
 
         result = load_portfolio_history("config.json", "transactions.csv")
-        assert result == {"dates": [], "values": [], "costs": [], "return_pcts": [], "total_return_pcts": [], "unrealized_pnls": []}
+        assert result == {"dates": [], "values": [], "costs": [], "return_pcts": [], "total_return_pcts": [], "twr_pcts": [], "unrealized_pnls": []}
 
 
 # ── load_instrument_history (mocked) ──
