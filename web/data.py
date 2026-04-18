@@ -5,7 +5,7 @@ import pandas as pd
 from portfolio.loader import load_config, load_transactions
 from portfolio.portfolio import build_portfolio
 from portfolio.analysis import analyze_instrument, analyze_portfolio
-from portfolio.market import fetch_current_price, fetch_price_history
+from portfolio.market import fetch_current_price, fetch_price_history, clear_bond_price_cache
 from portfolio.models import InstrumentResult
 from portfolio.summary import build_summary
 from portfolio.rebalance import calc_rebalance
@@ -19,11 +19,11 @@ _price_history_cache = {}
 _price_fetch_time = None
 
 
-def get_cached_price(ticker):
+def get_cached_price(ticker, isin=None):
     """Fetch current price with in-memory caching."""
     global _price_fetch_time
     if ticker not in _price_cache:
-        _price_cache[ticker] = fetch_current_price(ticker)
+        _price_cache[ticker] = fetch_current_price(ticker, isin=isin)
         if _price_fetch_time is None:
             from datetime import datetime
             _price_fetch_time = datetime.now().strftime("%H:%M")
@@ -73,6 +73,7 @@ def clear_price_cache():
     _daily_change_cache.clear()
     _price_history_cache.clear()
     _price_fetch_time = None
+    clear_bond_price_cache()
 
 
 # ── Core data loading ──
@@ -139,7 +140,7 @@ def load_portfolio_data(config_path, transactions_path):
             continue
 
         ticker = instrument["ticker"]
-        current_price = get_cached_price(ticker)
+        current_price = get_cached_price(ticker, isin=instrument.get("isin"))
         if current_price is None:
             if data.shares_held > 0:
                 failed_instruments.append(security)
@@ -236,7 +237,7 @@ def simulate_sell(config_path, transactions_path, security, shares_to_sell):
     if not data or data.shares_held < shares_to_sell or shares_to_sell <= 0:
         return None
 
-    current_price = get_cached_price(instrument["ticker"])
+    current_price = get_cached_price(instrument["ticker"], isin=instrument.get("isin"))
     if current_price is None:
         return None
 
@@ -274,11 +275,8 @@ def load_instrument_names(config_path):
     return list(config["instruments"].keys())
 
 
-def add_instrument_to_config(config_path, security, ticker, instrument_type, capital_gains_rate):
-    """Add a new instrument to the config file.
-
-    Returns True if added, False if already exists.
-    """
+def add_instrument_to_config(config_path, security, ticker, instrument_type, capital_gains_rate, isin=None):
+    """Add a new instrument to the config file."""
     import json
     with open(config_path, "r") as f:
         config = json.load(f)
@@ -289,11 +287,15 @@ def add_instrument_to_config(config_path, security, ticker, instrument_type, cap
     if "instruments" not in config:
         config["instruments"] = {}
 
-    config["instruments"][security] = {
+    instrument = {
         "ticker": ticker,
         "type": instrument_type,
         "capital_gains_rate": capital_gains_rate,
     }
+    if isin:
+        instrument["isin"] = isin
+
+    config["instruments"][security] = instrument
 
     with open(config_path, "w") as f:
         json.dump(config, f, indent=2)

@@ -7,25 +7,25 @@ const { createApp, ref, computed, onMounted, watch } = Vue;
 
 createApp({
   setup() {
-    // Data
     const transactions = ref([]);
     const availableInstruments = ref([]);
-
-    // Filters
     const filters = ref({ security: '', type: '', dateFrom: '', dateTo: '' });
 
-    // Form state
+    // Transaction form
     const showAddForm = ref(false);
-    const customSecurity = ref(false);
     const formMessage = ref('');
     const formError = ref(false);
     const form = ref(createEmptyForm());
     const editIndex = ref(null);
     const computedNetValue = ref('0.00');
-    const newInstrument = ref({ ticker: '', type: 'ETF', taxRate: 26, customType: '' });
     let netValueTimer = null;
 
-    // Delete state
+    // New instrument modal
+    const showNewInstrument = ref(false);
+    const newInstrument = ref({ name: '', ticker: '', isin: '', type: 'ETF', taxRate: 26, customType: '' });
+    const newInstrumentError = ref('');
+
+    // Delete
     const deleteIndex = ref(null);
 
     // Computed
@@ -43,12 +43,11 @@ createApp({
       });
     });
 
-    // Fetch net value from backend (debounced)
+    // Net value (debounced backend call)
     function updateNetValue() {
       clearTimeout(netValueTimer);
       netValueTimer = setTimeout(async function () {
-        var val = await fetchNetValue(form.value);
-        computedNetValue.value = val;
+        computedNetValue.value = await fetchNetValue(form.value);
       }, 150);
     }
 
@@ -56,7 +55,7 @@ createApp({
       return [form.value.type, form.value.shares, form.value.quote, form.value.fees, form.value.taxes];
     }, updateNetValue, { deep: true });
 
-    // Methods
+    // Transaction type badge
     function typeBadge(type) {
       var map = {
         Buy: 'bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-400',
@@ -67,19 +66,13 @@ createApp({
       return map[type] || 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
     }
 
-    function clearFilters() {
-      filters.value = { security: '', type: '', dateFrom: '', dateTo: '' };
-    }
+    function clearFilters() { filters.value = { security: '', type: '', dateFrom: '', dateTo: '' }; }
 
     function openAddForm() {
       editIndex.value = null;
       form.value = createEmptyForm();
       computedNetValue.value = '0.00';
-      newInstrument.value = { ticker: '', type: 'ETF', taxRate: 26, customType: '' };
-      if (availableInstruments.value.length) {
-        form.value.security = availableInstruments.value[0];
-      }
-      customSecurity.value = false;
+      if (availableInstruments.value.length) form.value.security = availableInstruments.value[0];
       formMessage.value = '';
       formError.value = false;
       showAddForm.value = true;
@@ -88,9 +81,7 @@ createApp({
     function openEditForm(tx) {
       editIndex.value = tx.index;
       form.value = {
-        date: tx.date,
-        type: tx.type,
-        security: tx.security,
+        date: tx.date, type: tx.type, security: tx.security,
         shares: tx.shares > 0 ? String(tx.shares) : '',
         quote: tx.quote > 0 ? String(tx.quote) : '',
         fees: tx.fees > 0 ? String(tx.fees) : '',
@@ -98,31 +89,23 @@ createApp({
         net_transaction_value: String(tx.net_transaction_value),
       };
       computedNetValue.value = String(tx.net_transaction_value);
-      customSecurity.value = !availableInstruments.value.includes(tx.security);
       formMessage.value = '';
       formError.value = false;
       showAddForm.value = true;
     }
 
-    function confirmDelete(index) {
-      deleteIndex.value = index;
-    }
+    function confirmDelete(index) { deleteIndex.value = index; }
 
     async function executeDelete() {
       try {
         var res = await fetch('/api/transactions/' + deleteIndex.value, { method: 'DELETE' });
         if (res.ok) await fetchData();
-      } catch (err) {
-        console.error('Delete failed:', err);
-      }
+      } catch (err) { console.error('Delete failed:', err); }
       deleteIndex.value = null;
     }
 
     async function fetchData() {
-      var responses = await Promise.all([
-        fetch('/api/transactions/list'),
-        fetch('/api/instruments'),
-      ]);
+      var responses = await Promise.all([fetch('/api/transactions/list'), fetch('/api/instruments')]);
       transactions.value = (await responses[0].json()).transactions;
       availableInstruments.value = (await responses[1].json()).instruments;
       if (!form.value.security && availableInstruments.value.length) {
@@ -130,55 +113,9 @@ createApp({
       }
     }
 
-    async function registerNewInstrument() {
-      if (!newInstrument.value.ticker) {
-        formMessage.value = 'Ticker is required for new instruments';
-        formError.value = true;
-        return false;
-      }
-      var instType = newInstrument.value.type === '__other__'
-        ? newInstrument.value.customType.trim()
-        : newInstrument.value.type;
-      if (!instType) {
-        formMessage.value = 'Asset type is required';
-        formError.value = true;
-        return false;
-      }
-      try {
-        var res = await fetch('/api/instruments', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            security: form.value.security,
-            ticker: newInstrument.value.ticker,
-            type: instType,
-            capital_gains_rate: newInstrument.value.taxRate / 100,
-          }),
-        });
-        var data = await res.json();
-        if (!res.ok && res.status !== 409) {
-          formMessage.value = data.error || 'Failed to register instrument';
-          formError.value = true;
-          return false;
-        }
-        return true;
-      } catch (err) {
-        formMessage.value = 'Failed to register instrument';
-        formError.value = true;
-        return false;
-      }
-    }
-
     async function saveTransaction(keepOpen) {
       formMessage.value = '';
       formError.value = false;
-
-      // If new instrument, register it first
-      if (customSecurity.value && form.value.security) {
-        var registered = await registerNewInstrument();
-        if (!registered) return;
-      }
-
       try {
         var result;
         if (isEditing.value) {
@@ -210,11 +147,61 @@ createApp({
       }
     }
 
+    // New instrument modal
+    function openNewInstrumentModal() {
+      newInstrument.value = { name: '', ticker: '', isin: '', type: 'ETF', taxRate: 26, customType: '' };
+      newInstrumentError.value = '';
+      showNewInstrument.value = true;
+    }
+
+    async function saveNewInstrument() {
+      newInstrumentError.value = '';
+      var ni = newInstrument.value;
+      if (!ni.name.trim()) { newInstrumentError.value = 'Name is required'; return; }
+
+      var instType = ni.type === '__other__' ? ni.customType.trim() : ni.type;
+      if (!instType) { newInstrumentError.value = 'Asset type is required'; return; }
+
+      var ticker = ni.ticker.trim();
+      var isin = ni.isin.trim();
+
+      if (instType === 'Bond') {
+        if (!isin) { newInstrumentError.value = 'ISIN is required for bonds'; return; }
+        if (!ticker) ticker = isin;
+      } else {
+        if (!ticker) { newInstrumentError.value = 'Ticker is required'; return; }
+      }
+
+      try {
+        var res = await fetch('/api/instruments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            security: ni.name.trim(),
+            ticker: ticker,
+            type: instType,
+            capital_gains_rate: ni.taxRate / 100,
+            isin: isin || null,
+          }),
+        });
+        var data = await res.json();
+        if (!res.ok && res.status !== 409) {
+          newInstrumentError.value = data.error || 'Failed to add instrument';
+          return;
+        }
+        await fetchData();
+        form.value.security = ni.name.trim();
+        showNewInstrument.value = false;
+      } catch (err) {
+        newInstrumentError.value = 'Network error';
+      }
+    }
+
+    // When user selects __custom__, open the modal
     watch(function () { return form.value.security; }, function (val) {
       if (val === '__custom__') {
-        customSecurity.value = true;
-        form.value.security = '';
-        newInstrument.value = { ticker: '', type: 'ETF', taxRate: 26, customType: '' };
+        form.value.security = availableInstruments.value[0] || '';
+        openNewInstrumentModal();
       }
     });
 
@@ -223,10 +210,10 @@ createApp({
     return {
       transactions, availableInstruments, filters, securities,
       hasFilters, filteredTransactions, clearFilters, typeBadge,
-      showAddForm, customSecurity, form, formMessage, formError,
+      showAddForm, form, formMessage, formError,
       computedNetValue, saveTransaction, isEditing,
-      newInstrument,
       openAddForm, openEditForm,
+      showNewInstrument, newInstrument, newInstrumentError, saveNewInstrument,
       deleteIndex, confirmDelete, executeDelete,
       fmt, fmtSigned, pnlColor,
     };

@@ -134,12 +134,13 @@ def register_api_routes(app):
         ticker = data.get("ticker", "").strip()
         instrument_type = data.get("type", "ETF").strip()
         capital_gains_rate = float(data.get("capital_gains_rate", 0.26) or 0.26)
+        isin = data.get("isin", "").strip() or None
 
         if not security or not ticker:
             return jsonify({"error": "Security name and ticker are required"}), 400
 
         added = add_instrument_to_config(
-            app.config["CONFIG_PATH"], security, ticker, instrument_type, capital_gains_rate,
+            app.config["CONFIG_PATH"], security, ticker, instrument_type, capital_gains_rate, isin=isin,
         )
         if not added:
             return jsonify({"error": "Instrument already exists"}), 409
