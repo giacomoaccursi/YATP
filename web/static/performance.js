@@ -175,7 +175,7 @@ createApp({
       if (returnChartInstance) returnChartInstance.destroy();
 
       var datasets = [{
-        label: 'Simple Return',
+        label: 'Unrealized Return',
         data: returnPcts,
         borderColor: '#6366f1',
         backgroundColor: function (ctx) {

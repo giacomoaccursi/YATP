@@ -66,7 +66,6 @@
             <tr>
               <th class="px-5 py-3 text-left">Period</th>
               <th class="px-5 py-3 text-right"><span class="tip" data-tip="Change in portfolio value due to market price movements.">Market Gain</span></th>
-              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Percentage gain or loss relative to cost basis.">Simple Return</span></th>
               <th class="px-5 py-3 text-right"><span class="tip" data-tip="Time-Weighted Return. Measures performance independent of cash flow timing.">TWR</span></th>
               <th class="px-5 py-3 text-right"><span class="tip" data-tip="Money-Weighted Return for the period. Reflects actual investor experience.">MWRR</span></th>
             </tr>
@@ -76,12 +75,11 @@
               <td class="px-5 py-3 font-medium">{{ p.period }}</td>
               <template v-if="p.available">
                 <td class="px-5 py-3 text-right" :class="pnlColor(p.market_gain)">{{ fmtSigned(p.market_gain) }} &euro;</td>
-                <td class="px-5 py-3 text-right" :class="pnlColor(p.simple_return)">{{ fmtSigned(p.simple_return) }}%</td>
                 <td class="px-5 py-3 text-right" :class="pnlColor(p.twr)">{{ p.twr != null ? fmtSigned(p.twr) + '%' : 'N/A' }}</td>
                 <td class="px-5 py-3 text-right" :class="pnlColor(p.mwrr)">{{ p.mwrr != null ? fmtSigned(p.mwrr) + '%' : 'N/A' }}</td>
               </template>
               <template v-else>
-                <td colspan="4" class="px-5 py-3 text-gray-500 dark:text-gray-400">Not enough data</td>
+                <td colspan="3" class="px-5 py-3 text-gray-500 dark:text-gray-400">Not enough data</td>
               </template>
             </tr>
           </tbody>
