@@ -426,6 +426,7 @@ class PortfolioEngine:
             "total_return_pcts": total_return_pcts,
             "twr_pcts": twr_pcts,
             "drawdown_pcts": drawdown_pcts,
+            "heatmap": self.monthly_returns_heatmap(twr_pcts=self.cumulative_twr()),
         }
 
     def full_instrument_history(self, start_date=None, end_date=None):
@@ -534,6 +535,58 @@ class PortfolioEngine:
             dd = ((factor - peak_factor) / peak_factor * 100) if peak_factor > 0 else 0.0
             series.append(round(dd, 2))
         return series
+
+    def monthly_returns_heatmap(self, twr_pcts=None):
+        """Compute monthly returns from TWR factors.
+
+        Returns dict with:
+            years: sorted list of years
+            cells: {year: {month_index: return_pct}}
+            year_totals: {year: compounded_annual_return_pct}
+        """
+        if twr_pcts is None:
+            twr_pcts = self.cumulative_twr()
+        dates = self.date_strings()
+
+        if len(dates) < 2 or len(twr_pcts) < 2:
+            return {"years": [], "cells": {}, "year_totals": {}}
+
+        # Group TWR factors by month — take last factor per month
+        monthly_factors = {}
+        for i in range(len(dates)):
+            year = int(dates[i][:4])
+            month = int(dates[i][5:7]) - 1
+            key = f"{year}-{month:02d}"
+            monthly_factors[key] = {"year": year, "month": month, "factor": 1 + twr_pcts[i] / 100}
+
+        sorted_keys = sorted(monthly_factors.keys())
+        cells = {}
+        year_totals = {}
+        years_set = set()
+        prev_factor = None
+
+        for key in sorted_keys:
+            entry = monthly_factors[key]
+            years_set.add(entry["year"])
+
+            if prev_factor is not None and prev_factor > 0:
+                month_return = round((entry["factor"] / prev_factor - 1) * 100, 1)
+                cells.setdefault(entry["year"], {})[entry["month"]] = month_return
+
+                if entry["year"] not in year_totals:
+                    year_totals[entry["year"]] = 1.0
+                year_totals[entry["year"]] *= (1 + month_return / 100)
+
+            prev_factor = entry["factor"]
+
+        for year in year_totals:
+            year_totals[year] = round((year_totals[year] - 1) * 100, 1)
+
+        return {
+            "years": sorted(years_set),
+            "cells": cells,
+            "year_totals": year_totals,
+        }
 
     # ── Helpers ──
 

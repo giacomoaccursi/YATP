@@ -201,7 +201,10 @@ createApp({
       renderReturnChart(dates, returnPcts, twrPcts);
       renderValueCostChart(dates, values, costs);
       renderDrawdownChart(dates, drawdownPcts);
-      computeHeatmap(dates, twrPcts);
+
+      // Heatmap comes pre-computed from the API
+      var heatmap = apiData.heatmap || { years: [], cells: {}, year_totals: {} };
+      heatmapData.value = { years: heatmap.years || [], cells: heatmap.cells || {}, yearTotals: heatmap.year_totals || {} };
     }
 
     function renderReturnChart(dates, returnPcts, twrPcts) {
@@ -319,52 +322,6 @@ createApp({
           scales: chartScales({ xGrid: false, yFormat: function (v) { return v + '%'; } }),
         },
       });
-    }
-
-    // ── Heatmap (pure grouping of API data, no return calculations) ──
-
-    function computeHeatmap(dates, twrPcts) {
-      if (!dates || dates.length < 2 || !twrPcts || twrPcts.length < 2) {
-        heatmapData.value = { years: [], cells: {}, yearTotals: {} };
-        return;
-      }
-
-      // Group TWR factors by month — take last factor per month
-      var monthlyFactors = {};
-      for (var i = 0; i < dates.length; i++) {
-        var parts = dates[i].split('-');
-        var year = parseInt(parts[0]);
-        var month = parseInt(parts[1]) - 1;
-        var key = year + '-' + month;
-        monthlyFactors[key] = { year: year, month: month, factor: 1 + twrPcts[i] / 100 };
-      }
-
-      var sortedKeys = Object.keys(monthlyFactors).sort();
-      var cells = {};
-      var yearTotals = {};
-      var yearsSet = new Set();
-      var prevFactor = null;
-
-      for (var k = 0; k < sortedKeys.length; k++) {
-        var entry = monthlyFactors[sortedKeys[k]];
-        yearsSet.add(entry.year);
-
-        if (prevFactor != null && prevFactor > 0) {
-          var monthReturn = (entry.factor / prevFactor - 1) * 100;
-          if (!cells[entry.year]) cells[entry.year] = {};
-          cells[entry.year][entry.month] = Math.round(monthReturn * 10) / 10;
-
-          if (!yearTotals[entry.year]) yearTotals[entry.year] = 1;
-          yearTotals[entry.year] *= (1 + monthReturn / 100);
-        }
-        prevFactor = entry.factor;
-      }
-
-      for (var yr in yearTotals) {
-        yearTotals[yr] = Math.round((yearTotals[yr] - 1) * 1000) / 10;
-      }
-
-      heatmapData.value = { years: Array.from(yearsSet).sort(), cells: cells, yearTotals: yearTotals };
     }
 
     function heatmapCellStyle(value) {
