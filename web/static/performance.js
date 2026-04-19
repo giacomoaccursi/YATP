@@ -40,7 +40,6 @@ createApp({
     let activeReturnPcts = [];
     let activeTotalReturnPcts = [];
     let activeTwrPcts = [];
-    let activeDrawdownPcts = [];
 
     // Toggle: include realized gains
     const includeRealized = ref(false);
@@ -314,45 +313,48 @@ createApp({
     // ── Monthly heatmap ──
 
     function computeHeatmap() {
-      if (activeDates.length < 2) {
+      if (activeDates.length < 2 || activeTwrPcts.length < 2) {
         heatmapData.value = { years: [], cells: {}, yearTotals: {} };
         return;
       }
 
-      // Group values by year-month, take first and last value per month
+      // Use TWR cumulative series to compute monthly returns.
+      // TWR already neutralizes cashflows (buys/sells don't affect the return).
+      // Convert TWR % to growth factors, then compute month-over-month change.
       var monthlyData = {};
       for (var i = 0; i < activeDates.length; i++) {
         var parts = activeDates[i].split('-');
         var year = parseInt(parts[0]);
         var month = parseInt(parts[1]) - 1;
         var key = year + '-' + month;
+        var twrFactor = 1 + activeTwrPcts[i] / 100;
         if (!monthlyData[key]) {
-          monthlyData[key] = { year: year, month: month, first: activeValues[i], last: activeValues[i] };
+          monthlyData[key] = { year: year, month: month, first: twrFactor, last: twrFactor };
         } else {
-          monthlyData[key].last = activeValues[i];
+          monthlyData[key].last = twrFactor;
         }
       }
 
-      // Compute monthly returns: (last / prev_month_last - 1) * 100
+      // Compute monthly returns from TWR factors
       var sortedKeys = Object.keys(monthlyData).sort();
       var cells = {};
       var yearTotals = {};
       var yearsSet = new Set();
-      var prevLast = null;
+      var prevLastFactor = null;
 
       for (var k = 0; k < sortedKeys.length; k++) {
         var entry = monthlyData[sortedKeys[k]];
         yearsSet.add(entry.year);
 
-        if (prevLast != null && prevLast > 0) {
-          var monthReturn = (entry.last / prevLast - 1) * 100;
+        if (prevLastFactor != null && prevLastFactor > 0) {
+          var monthReturn = (entry.last / prevLastFactor - 1) * 100;
           if (!cells[entry.year]) cells[entry.year] = {};
           cells[entry.year][entry.month] = Math.round(monthReturn * 10) / 10;
 
           if (!yearTotals[entry.year]) yearTotals[entry.year] = 1;
           yearTotals[entry.year] *= (1 + monthReturn / 100);
         }
-        prevLast = entry.last;
+        prevLastFactor = entry.last;
       }
 
       for (var yr in yearTotals) {
@@ -435,7 +437,6 @@ createApp({
       activeReturnPcts = data.return_pcts || [];
       activeTotalReturnPcts = data.total_return_pcts || [];
       activeTwrPcts = data.twr_pcts || [];
-      activeDrawdownPcts = data.drawdown_pcts || [];
     }
 
     async function fetchFilteredHistory(securities, isFullPortfolio) {
