@@ -72,8 +72,8 @@ def _resolve_period(today, first_date, days):
 
 def _analyze_period(engine, label, period_start, today, days, df):
     """Analyze a single period using the engine."""
-    market_gain = engine.period_market_gain(period_start, today, df)
-    simple_return = engine.period_simple_return(period_start, today, df)
+    market_gain = engine.period_market_gain(period_start, today)
+    simple_return = engine.period_simple_return(period_start, today)
     twr = engine.period_twr(period_start, today)
     mwrr = engine.period_mwrr(period_start, today, days)
 
@@ -82,7 +82,7 @@ def _analyze_period(engine, label, period_start, today, days, df):
     for i, d in enumerate(engine._dates):
         if d <= today:
             end_idx = i
-    end_value = engine._value_at(end_idx)
+    end_value = engine.value_at(end_idx)
 
     if end_value <= 0:
         return PeriodPerformance(period=label, available=False)
