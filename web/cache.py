@@ -8,11 +8,11 @@ _price_history_cache = {}
 _price_fetch_time = None
 
 
-def get_cached_price(ticker, isin=None):
+def get_cached_price(ticker, isin=None, instrument_type=None):
     """Fetch current price with in-memory caching."""
     global _price_fetch_time
     if ticker not in _price_cache:
-        _price_cache[ticker] = fetch_current_price(ticker, isin=isin)
+        _price_cache[ticker] = fetch_current_price(ticker, isin=isin, instrument_type=instrument_type)
         if _price_fetch_time is None:
             from datetime import datetime
             _price_fetch_time = datetime.now().strftime("%H:%M")

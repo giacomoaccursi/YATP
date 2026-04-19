@@ -49,7 +49,7 @@ def load_portfolio_data(config_path, transactions_path):
             continue
 
         ticker = instrument["ticker"]
-        current_price = get_cached_price(ticker, isin=instrument.get("isin"))
+        current_price = get_cached_price(ticker, isin=instrument.get("isin"), instrument_type=instrument.get("type"))
         if current_price is None:
             if data.shares_held > 0:
                 failed_instruments.append(security)

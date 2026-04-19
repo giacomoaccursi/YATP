@@ -31,7 +31,7 @@ def simulate_sell(config_path, transactions_path, security, shares_to_sell):
     if not instrument_data or instrument_data.shares_held < shares_to_sell or shares_to_sell <= 0:
         return None
 
-    current_price = get_cached_price(instrument["ticker"], isin=instrument.get("isin"))
+    current_price = get_cached_price(instrument["ticker"], isin=instrument.get("isin"), instrument_type=instrument.get("type"))
     if current_price is None:
         return None
 

@@ -5,15 +5,24 @@ import yfinance as yf
 from datetime import timedelta
 
 
-def fetch_current_price(ticker_symbol, isin=None):
+def fetch_current_price(ticker_symbol, isin=None, instrument_type=None):
     """Fetch current price. Tries Yahoo Finance first, then Borsa Italiana for bonds.
+
+    For bonds (instrument_type='Bond'), skips Yahoo and goes directly to Borsa Italiana.
 
     Args:
         ticker_symbol: Yahoo Finance ticker (e.g. VWCE.DE)
         isin: Optional ISIN code for Borsa Italiana bond fallback
+        instrument_type: Optional instrument type from config (e.g. 'Bond', 'ETF')
 
     Returns float price or None.
     """
+    # Bonds: skip Yahoo, go directly to Borsa Italiana
+    if instrument_type == "Bond" and isin:
+        price = _fetch_bond_price(isin)
+        if price is not None:
+            return price
+
     price = _fetch_yahoo_price(ticker_symbol)
     if price is not None:
         return price

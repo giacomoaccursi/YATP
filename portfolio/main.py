@@ -55,7 +55,7 @@ def main():
             print(f"⚠️  Instrument '{security}' not found in config.json. Please add it.")
             continue
 
-        current_price = fetch_current_price(instrument["ticker"])
+        current_price = fetch_current_price(instrument["ticker"], isin=instrument.get("isin"), instrument_type=instrument.get("type"))
         if current_price is None:
             print(f"⚠️  No data for {instrument['ticker']}")
             continue
