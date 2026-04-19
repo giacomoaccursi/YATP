@@ -88,19 +88,25 @@ _SINGLE_PRICE_PATTERN = re.compile(
 def _fetch_bond_price(isin):
     """Fetch bond price by ISIN from Borsa Italiana.
 
-    1. Check bulk cache (loaded from list pages on first call)
-    2. If not found, scrape individual bond page
+    1. Try individual bond page first (fast, single request)
+    2. Fall back to bulk list pages if single page fails
     """
-    if not _bond_cache.get("__loaded__"):
-        _load_bulk()
-
     if isin in _bond_cache:
         return _bond_cache[isin]
 
+    # Fast path: single page scrape
     price = _fetch_single(isin)
     if price is not None:
         _bond_cache[isin] = price
-    return price
+        return price
+
+    # Slow path: bulk load all bonds, then check cache
+    if not _bond_cache.get("__loaded__"):
+        _load_bulk()
+        if isin in _bond_cache:
+            return _bond_cache[isin]
+
+    return None
 
 
 def _load_bulk():
