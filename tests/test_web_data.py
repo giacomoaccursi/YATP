@@ -3,13 +3,8 @@
 import pandas as pd
 import pytest
 from unittest.mock import patch, MagicMock
-from web.data import (
-    load_portfolio_history,
-    load_instrument_history,
-    load_portfolio_daily_change,
-    _build_date_index,
-    clear_price_cache,
-)
+from web.history_service import load_portfolio_history, load_instrument_history, load_portfolio_daily_change
+from web.cache import clear_all_caches as clear_price_cache
 from portfolio.portfolio import value_holdings
 from portfolio.engine import PortfolioEngine
 
@@ -121,9 +116,9 @@ class TestValueHoldingsAt:
 class TestLoadPortfolioHistory:
     """Test with mocked config, transactions, and price fetching."""
 
-    @patch("web.data.load_config")
-    @patch("web.data.load_transactions")
-    @patch("web.data.get_cached_price_history")
+    @patch("web.portfolio_service.load_config")
+    @patch("web.portfolio_service.load_transactions")
+    @patch("web.portfolio_service.get_cached_price_history")
     def test_simple_buy_history(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)
@@ -139,9 +134,9 @@ class TestLoadPortfolioHistory:
         assert result["values"][2] == 1100.0  # 10 * 110
         assert result["costs"] == [1000.0, 1000.0, 1000.0]
 
-    @patch("web.data.load_config")
-    @patch("web.data.load_transactions")
-    @patch("web.data.get_cached_price_history")
+    @patch("web.portfolio_service.load_config")
+    @patch("web.portfolio_service.load_transactions")
+    @patch("web.portfolio_service.get_cached_price_history")
     def test_return_pcts_calculated(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)
@@ -154,9 +149,9 @@ class TestLoadPortfolioHistory:
         assert result["return_pcts"][0] == 0.0  # (1000-1000)/1000 = 0%
         assert result["return_pcts"][1] == 10.0  # (1100-1000)/1000 = 10%
 
-    @patch("web.data.load_config")
-    @patch("web.data.load_transactions")
-    @patch("web.data.get_cached_price_history")
+    @patch("web.portfolio_service.load_config")
+    @patch("web.portfolio_service.load_transactions")
+    @patch("web.portfolio_service.get_cached_price_history")
     def test_sell_all_shows_zero(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(BUY_AND_SELL_ALL)
@@ -172,9 +167,9 @@ class TestLoadPortfolioHistory:
         assert result["values"][idx_after_sell] == 0.0
         assert result["costs"][idx_after_sell] == 0.0
 
-    @patch("web.data.load_config")
-    @patch("web.data.load_transactions")
-    @patch("web.data.get_cached_price_history")
+    @patch("web.portfolio_service.load_config")
+    @patch("web.portfolio_service.load_transactions")
+    @patch("web.portfolio_service.get_cached_price_history")
     def test_cost_tracks_buys(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(TWO_BUYS)
@@ -193,9 +188,9 @@ class TestLoadPortfolioHistory:
         idx_after = result["dates"].index("2025-01-16")
         assert result["costs"][idx_after] == 1600.0
 
-    @patch("web.data.load_config")
-    @patch("web.data.load_transactions")
-    @patch("web.data.get_cached_price_history")
+    @patch("web.portfolio_service.load_config")
+    @patch("web.portfolio_service.load_transactions")
+    @patch("web.portfolio_service.get_cached_price_history")
     def test_empty_prices_returns_empty(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)
@@ -208,9 +203,9 @@ class TestLoadPortfolioHistory:
 # ── load_instrument_history (mocked) ──
 
 class TestLoadInstrumentHistory:
-    @patch("web.data.load_config")
-    @patch("web.data.load_transactions")
-    @patch("web.data.get_cached_price_history")
+    @patch("web.history_service.load_config")
+    @patch("web.history_service.load_transactions")
+    @patch("web.history_service.get_cached_price_history")
     def test_price_and_cost_avg(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)
@@ -225,9 +220,9 @@ class TestLoadInstrumentHistory:
         assert result["pnl"][0] == 0.0  # (10*100 - 1000) = 0
         assert result["pnl"][1] == 100.0  # (10*110 - 1000) = 100
 
-    @patch("web.data.load_config")
-    @patch("web.data.load_transactions")
-    @patch("web.data.get_cached_price_history")
+    @patch("web.history_service.load_config")
+    @patch("web.history_service.load_transactions")
+    @patch("web.history_service.get_cached_price_history")
     def test_two_buys_avg_cost_changes(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(TWO_BUYS)
@@ -246,9 +241,9 @@ class TestLoadInstrumentHistory:
         idx_after = result["dates"].index("2025-01-16")
         assert abs(result["cost_avg"][idx_after] - 106.6667) < 0.01
 
-    @patch("web.data.load_config")
-    @patch("web.data.load_transactions")
-    @patch("web.data.get_cached_price_history")
+    @patch("web.history_service.load_config")
+    @patch("web.history_service.load_transactions")
+    @patch("web.history_service.get_cached_price_history")
     def test_sell_all_skips_zero_holding_days(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(BUY_AND_SELL_ALL)
@@ -262,15 +257,15 @@ class TestLoadInstrumentHistory:
         # Days after sell should not appear
         assert "2025-01-13" not in result["dates"]
 
-    @patch("web.data.load_config")
+    @patch("web.history_service.load_config")
     def test_unknown_instrument_returns_none(self, mock_config):
         mock_config.return_value = {"instruments": {}}
         result = load_instrument_history("config.json", "transactions.csv", "UNKNOWN")
         assert result is None
 
-    @patch("web.data.load_config")
-    @patch("web.data.load_transactions")
-    @patch("web.data.get_cached_price_history")
+    @patch("web.history_service.load_config")
+    @patch("web.history_service.load_transactions")
+    @patch("web.history_service.get_cached_price_history")
     def test_no_transactions_returns_empty(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)
@@ -285,9 +280,9 @@ class TestLoadInstrumentHistory:
 # ── load_portfolio_daily_change (mocked) ──
 
 class TestLoadPortfolioDailyChange:
-    @patch("web.data.load_config")
-    @patch("web.data.load_transactions")
-    @patch("web.data.get_cached_price_history")
+    @patch("web.portfolio_service.load_config")
+    @patch("web.portfolio_service.load_transactions")
+    @patch("web.portfolio_service.get_cached_price_history")
     def test_positive_change(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)
@@ -301,9 +296,9 @@ class TestLoadPortfolioDailyChange:
         assert result["amount"] == 100.0  # 10 * (110-100)
         assert result["pct"] == 10.0
 
-    @patch("web.data.load_config")
-    @patch("web.data.load_transactions")
-    @patch("web.data.get_cached_price_history")
+    @patch("web.portfolio_service.load_config")
+    @patch("web.portfolio_service.load_transactions")
+    @patch("web.portfolio_service.get_cached_price_history")
     def test_negative_change(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)
@@ -317,9 +312,9 @@ class TestLoadPortfolioDailyChange:
         assert result["amount"] == -50.0  # 10 * (95-100)
         assert result["pct"] == -5.0
 
-    @patch("web.data.load_config")
-    @patch("web.data.load_transactions")
-    @patch("web.data.get_cached_price_history")
+    @patch("web.portfolio_service.load_config")
+    @patch("web.portfolio_service.load_transactions")
+    @patch("web.portfolio_service.get_cached_price_history")
     def test_no_prices_returns_none(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)
@@ -328,9 +323,9 @@ class TestLoadPortfolioDailyChange:
         result = load_portfolio_daily_change("config.json", "transactions.csv")
         assert result is None
 
-    @patch("web.data.load_config")
-    @patch("web.data.load_transactions")
-    @patch("web.data.get_cached_price_history")
+    @patch("web.portfolio_service.load_config")
+    @patch("web.portfolio_service.load_transactions")
+    @patch("web.portfolio_service.get_cached_price_history")
     def test_single_day_returns_none(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)
@@ -339,8 +334,8 @@ class TestLoadPortfolioDailyChange:
         result = load_portfolio_daily_change("config.json", "transactions.csv")
         assert result is None
 
-    @patch("web.data.load_config")
-    @patch("web.data.load_transactions")
+    @patch("web.portfolio_service.load_config")
+    @patch("web.portfolio_service.load_transactions")
     def test_empty_transactions_returns_none(self, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {}}
         mock_txns.return_value = pd.DataFrame(columns=["Date", "Type", "Security", "Shares", "Quote", "Net Transaction Value"])
@@ -410,9 +405,9 @@ class TestPortfolioEngineEdgeCases:
 
 
 class TestLoadPortfolioHistoryEdgeCases:
-    @patch("web.data.load_config")
-    @patch("web.data.load_transactions")
-    @patch("web.data.get_cached_price_history")
+    @patch("web.portfolio_service.load_config")
+    @patch("web.portfolio_service.load_transactions")
+    @patch("web.portfolio_service.get_cached_price_history")
     def test_two_instruments(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {
             "instruments": {"ETF_A": {"ticker": "ETF.A"}, "GOLD": {"ticker": "GOLD.X"}}
@@ -436,9 +431,9 @@ class TestLoadPortfolioHistoryEdgeCases:
         assert result["costs"][0] == 1400.0
         assert result["costs"][1] == 1400.0
 
-    @patch("web.data.load_config")
-    @patch("web.data.load_transactions")
-    @patch("web.data.get_cached_price_history")
+    @patch("web.portfolio_service.load_config")
+    @patch("web.portfolio_service.load_transactions")
+    @patch("web.portfolio_service.get_cached_price_history")
     def test_partial_sell_cost_tracking(self, mock_fetch, mock_txns, mock_config):
         rows = [
             {"Date": "2025-01-02", "Type": "Buy", "Security": "ETF_A", "Shares": 10, "Quote": 100, "Net Transaction Value": 1000},
@@ -459,9 +454,9 @@ class TestLoadPortfolioHistoryEdgeCases:
         # Value: 6 * 125 = 750
         assert result["values"][idx_after] == 750.0
 
-    @patch("web.data.load_config")
-    @patch("web.data.load_transactions")
-    @patch("web.data.get_cached_price_history")
+    @patch("web.portfolio_service.load_config")
+    @patch("web.portfolio_service.load_transactions")
+    @patch("web.portfolio_service.get_cached_price_history")
     def test_return_pct_negative(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)
@@ -476,9 +471,9 @@ class TestLoadPortfolioHistoryEdgeCases:
 
 
 class TestLoadInstrumentHistoryEdgeCases:
-    @patch("web.data.load_config")
-    @patch("web.data.load_transactions")
-    @patch("web.data.get_cached_price_history")
+    @patch("web.history_service.load_config")
+    @patch("web.history_service.load_transactions")
+    @patch("web.history_service.get_cached_price_history")
     def test_partial_sell_recalculates_avg(self, mock_fetch, mock_txns, mock_config):
         rows = [
             {"Date": "2025-01-02", "Type": "Buy", "Security": "ETF_A", "Shares": 10, "Quote": 100, "Net Transaction Value": 1000},
@@ -499,9 +494,9 @@ class TestLoadInstrumentHistoryEdgeCases:
         # P&L: 6 * 125 - 600 = 150
         assert result["pnl"][idx_after] == 150.0
 
-    @patch("web.data.load_config")
-    @patch("web.data.load_transactions")
-    @patch("web.data.get_cached_price_history")
+    @patch("web.history_service.load_config")
+    @patch("web.history_service.load_transactions")
+    @patch("web.history_service.get_cached_price_history")
     def test_instrument_in_config_no_transactions(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"GOLD": {"ticker": "GOLD.X"}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)  # Only ETF_A transactions
@@ -513,9 +508,9 @@ class TestLoadInstrumentHistoryEdgeCases:
 
 
 class TestLoadPortfolioDailyChangeEdgeCases:
-    @patch("web.data.load_config")
-    @patch("web.data.load_transactions")
-    @patch("web.data.get_cached_price_history")
+    @patch("web.portfolio_service.load_config")
+    @patch("web.portfolio_service.load_transactions")
+    @patch("web.portfolio_service.get_cached_price_history")
     def test_two_instruments(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {
             "instruments": {"ETF_A": {"ticker": "ETF.A"}, "GOLD": {"ticker": "GOLD.X"}}
@@ -536,9 +531,9 @@ class TestLoadPortfolioDailyChangeEdgeCases:
         assert result["amount"] == 60.0
         assert abs(result["pct"] - (60 / 1400 * 100)) < 0.01
 
-    @patch("web.data.load_config")
-    @patch("web.data.load_transactions")
-    @patch("web.data.get_cached_price_history")
+    @patch("web.portfolio_service.load_config")
+    @patch("web.portfolio_service.load_transactions")
+    @patch("web.portfolio_service.get_cached_price_history")
     def test_zero_change(self, mock_fetch, mock_txns, mock_config):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A"}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)
@@ -596,7 +591,8 @@ class TestSerializerEdgeCases:
 
 # ── simulate_rebalance and compute_net_transaction_value ──
 
-from web.data import simulate_rebalance, compute_net_transaction_value
+from web.rebalance_service import simulate_rebalance
+from web.transaction_service import compute_net_transaction_value
 
 
 class TestComputeNetTransactionValue:
@@ -614,7 +610,7 @@ class TestComputeNetTransactionValue:
 
 
 class TestSimulateRebalance:
-    @patch("web.data.load_portfolio_data")
+    @patch("web.rebalance_service.load_portfolio_data")
     def test_with_new_investment(self, mock_load):
         from portfolio.models import InstrumentResult, InstrumentData, InstrumentAnalysis
         data = InstrumentData(shares_held=10, avg_cost_per_share=100, cost_basis=1000, realized_pnl=0)
@@ -634,20 +630,20 @@ class TestSimulateRebalance:
         assert actions[0]["target_value"] == 1500.0
         assert actions[0]["difference"] == 500.0
 
-    @patch("web.data.load_portfolio_data")
+    @patch("web.rebalance_service.load_portfolio_data")
     def test_empty_portfolio(self, mock_load):
         mock_load.return_value = ([], {}, None, {"instruments": {}}, [])
         actions = simulate_rebalance("c.json", "t.csv", 0, {"ETF": 100})
         assert actions == []
 
 
-from web.data import simulate_sell
+from web.transaction_service import simulate_sell
 
 
 class TestSimulateSell:
-    @patch("web.data.get_cached_price")
-    @patch("web.data.load_transactions")
-    @patch("web.data.load_config")
+    @patch("web.transaction_service.get_cached_price")
+    @patch("web.transaction_service.load_transactions")
+    @patch("web.transaction_service.load_config")
     def test_sell_with_gain(self, mock_config, mock_txns, mock_price):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A", "capital_gains_rate": 0.26}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)
@@ -665,9 +661,9 @@ class TestSimulateSell:
         assert result["estimated_tax"] == 26.0
         assert result["net_proceeds"] == 574.0
 
-    @patch("web.data.get_cached_price")
-    @patch("web.data.load_transactions")
-    @patch("web.data.load_config")
+    @patch("web.transaction_service.get_cached_price")
+    @patch("web.transaction_service.load_transactions")
+    @patch("web.transaction_service.load_config")
     def test_sell_with_loss_no_tax(self, mock_config, mock_txns, mock_price):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A", "capital_gains_rate": 0.26}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)
@@ -679,9 +675,9 @@ class TestSimulateSell:
         assert result["estimated_tax"] == 0.0
         assert result["net_proceeds"] == 400.0
 
-    @patch("web.data.get_cached_price")
-    @patch("web.data.load_transactions")
-    @patch("web.data.load_config")
+    @patch("web.transaction_service.get_cached_price")
+    @patch("web.transaction_service.load_transactions")
+    @patch("web.transaction_service.load_config")
     def test_sell_more_than_held_returns_none(self, mock_config, mock_txns, mock_price):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A", "capital_gains_rate": 0.26}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)
@@ -690,15 +686,15 @@ class TestSimulateSell:
         result = simulate_sell("c.json", "t.csv", "ETF_A", 999)
         assert result is None
 
-    @patch("web.data.load_config")
+    @patch("web.transaction_service.load_config")
     def test_unknown_instrument_returns_none(self, mock_config):
         mock_config.return_value = {"instruments": {}}
         result = simulate_sell("c.json", "t.csv", "UNKNOWN", 5)
         assert result is None
 
-    @patch("web.data.get_cached_price")
-    @patch("web.data.load_transactions")
-    @patch("web.data.load_config")
+    @patch("web.transaction_service.get_cached_price")
+    @patch("web.transaction_service.load_transactions")
+    @patch("web.transaction_service.load_config")
     def test_no_market_data_returns_none(self, mock_config, mock_txns, mock_price):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A", "capital_gains_rate": 0.26}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)
@@ -707,9 +703,9 @@ class TestSimulateSell:
         result = simulate_sell("c.json", "t.csv", "ETF_A", 5)
         assert result is None
 
-    @patch("web.data.get_cached_price")
-    @patch("web.data.load_transactions")
-    @patch("web.data.load_config")
+    @patch("web.transaction_service.get_cached_price")
+    @patch("web.transaction_service.load_transactions")
+    @patch("web.transaction_service.load_config")
     def test_sell_zero_returns_none(self, mock_config, mock_txns, mock_price):
         mock_config.return_value = {"instruments": {"ETF_A": {"ticker": "ETF.A", "capital_gains_rate": 0.26}}}
         mock_txns.return_value = _make_df(SIMPLE_BUY)

@@ -4,13 +4,17 @@ import csv
 import os
 import pandas as pd
 from flask import jsonify, request
-from web.data import (
-    load_portfolio_data, load_rebalance_data, load_summary_data,
-    load_instrument_names, load_portfolio_history, load_instrument_history,
-    load_performance_periods, load_portfolio_daily_change,
-    load_offline_summary, simulate_sell, get_price_fetch_time,
-    simulate_rebalance, compute_net_transaction_value, clear_price_cache,
-    add_instrument_to_config,
+
+from web.cache import clear_all_caches, get_price_fetch_time
+from web.portfolio_service import load_portfolio_data, load_offline_summary
+from web.history_service import (
+    load_portfolio_history, load_instrument_history,
+    load_portfolio_daily_change, load_performance_periods,
+)
+from web.rebalance_service import load_rebalance_data, simulate_rebalance
+from web.transaction_service import (
+    load_summary_data, load_instrument_names, simulate_sell,
+    compute_net_transaction_value, add_instrument_to_config,
 )
 from web.serializers import (
     instrument_to_dict, summary_to_dict, transaction_row_to_dict,
@@ -145,7 +149,7 @@ def register_api_routes(app):
         if not added:
             return jsonify({"error": "Instrument already exists"}), 409
 
-        clear_price_cache()
+        clear_all_caches()
         return jsonify({"success": True})
 
     @app.route("/api/instruments/<path:security>/history")
@@ -250,7 +254,7 @@ def register_api_routes(app):
     @app.route("/api/refresh", methods=["POST"])
     def api_refresh():
         """Clear price cache and force re-fetch."""
-        clear_price_cache()
+        clear_all_caches()
         return jsonify({"success": True})
 
     @app.route("/api/price-status")

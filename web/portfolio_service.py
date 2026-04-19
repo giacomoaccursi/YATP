@@ -1,0 +1,92 @@
+"""Portfolio service: loads and analyzes the full portfolio."""
+
+import pandas as pd
+
+from portfolio.loader import load_config, load_transactions
+from portfolio.portfolio import build_portfolio
+from portfolio.analysis import analyze_instrument, analyze_portfolio
+from portfolio.models import InstrumentResult
+from web.cache import get_cached_price, get_cached_daily_change, get_cached_price_history
+
+
+def load_common(config_path, transactions_path):
+    """Load config, transactions, and price histories. Shared by multiple services."""
+    config = load_config(config_path)
+    instruments = config["instruments"]
+    df = load_transactions(transactions_path)
+    df = df.sort_values("Date")
+
+    first_date = df["Date"].min().normalize() if not df.empty else pd.Timestamp.now().normalize()
+    today = pd.Timestamp.now().normalize()
+
+    price_histories = {}
+    for security in df["Security"].unique():
+        inst = instruments.get(security.strip())
+        if not inst:
+            continue
+        prices = get_cached_price_history(inst["ticker"], first_date, today)
+        if prices is not None:
+            price_histories[security] = prices
+
+    return config, instruments, df, price_histories, first_date, today
+
+
+def load_portfolio_data(config_path, transactions_path):
+    """Load and analyze the full portfolio.
+
+    Returns (results, daily_changes, summary, config, failed_instruments).
+    """
+    config, instruments, df, _, _, _ = load_common(config_path, transactions_path)
+    portfolio = build_portfolio(df)
+
+    results = []
+    daily_changes = {}
+    failed_instruments = []
+
+    for security, data in portfolio.items():
+        instrument = instruments.get(security.strip())
+        if not instrument:
+            continue
+
+        ticker = instrument["ticker"]
+        current_price = get_cached_price(ticker, isin=instrument.get("isin"))
+        if current_price is None:
+            if data.shares_held > 0:
+                failed_instruments.append(security)
+            continue
+
+        capital_gains_rate = instrument.get("capital_gains_rate", 0.26)
+        analysis = analyze_instrument(data, current_price, capital_gains_rate)
+        results.append(InstrumentResult(
+            security=security,
+            ticker=ticker,
+            isin=instrument.get("isin"),
+            capital_gains_rate=capital_gains_rate,
+            data=data,
+            analysis=analysis,
+        ))
+        daily_changes[security] = get_cached_daily_change(ticker)
+
+    summary = analyze_portfolio(results, instruments) if results else None
+    return results, daily_changes, summary, config, failed_instruments
+
+
+def load_offline_summary(config_path, transactions_path):
+    """Load portfolio summary from CSV only (no market data needed)."""
+    config = load_config(config_path)
+    df = load_transactions(transactions_path)
+
+    if df.empty:
+        return {"cost_basis": 0, "transaction_count": 0, "total_income": 0, "instruments_count": 0}
+
+    portfolio = build_portfolio(df)
+    cost_basis = sum(d.cost_basis for d in portfolio.values())
+    total_income = sum(d.total_income for d in portfolio.values())
+    instruments_count = sum(1 for d in portfolio.values() if d.shares_held > 0)
+
+    return {
+        "cost_basis": round(cost_basis, 2),
+        "transaction_count": len(df),
+        "total_income": round(total_income, 2),
+        "instruments_count": instruments_count,
+    }
