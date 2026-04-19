@@ -567,20 +567,22 @@ class PortfolioEngine:
 
         for key in sorted_keys:
             entry = monthly_factors[key]
+            year_str = str(entry["year"])
+            month_str = str(entry["month"])
             years_set.add(entry["year"])
 
             if prev_factor is not None and prev_factor > 0:
                 month_return = round((entry["factor"] / prev_factor - 1) * 100, 1)
-                cells.setdefault(entry["year"], {})[entry["month"]] = month_return
+                cells.setdefault(year_str, {})[month_str] = month_return
 
-                if entry["year"] not in year_totals:
-                    year_totals[entry["year"]] = 1.0
-                year_totals[entry["year"]] *= (1 + month_return / 100)
+                if year_str not in year_totals:
+                    year_totals[year_str] = 1.0
+                year_totals[year_str] *= (1 + month_return / 100)
 
             prev_factor = entry["factor"]
 
-        for year in year_totals:
-            year_totals[year] = round((year_totals[year] - 1) * 100, 1)
+        for year_str in year_totals:
+            year_totals[year_str] = round((year_totals[year_str] - 1) * 100, 1)
 
         return {
             "years": sorted(years_set),

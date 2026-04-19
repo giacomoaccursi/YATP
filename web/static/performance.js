@@ -177,9 +177,9 @@ createApp({
 
     async function fetchInstrumentNames() {
       try {
-        var res = await fetch('/api/portfolio');
+        var res = await fetch('/api/instruments');
         var data = await res.json();
-        instrumentNames.value = (data.instruments || []).map(function (i) { return i.security; });
+        instrumentNames.value = data.instruments || [];
         selectedSet.value = new Set(instrumentNames.value);
       } catch (err) {
         console.error('Failed to fetch instrument names:', err);

@@ -159,18 +159,18 @@
             <tr v-for="year in heatmapData.years" :key="year">
               <td class="px-2 py-1 font-medium text-gray-700 dark:text-gray-300">{{ year }}</td>
               <td v-for="(month, monthIdx) in heatmapMonths" :key="month" class="px-1 py-1">
-                <div v-if="heatmapData.cells[year] && heatmapData.cells[year][monthIdx] != null"
+                <div v-if="heatmapData.cells[String(year)] && heatmapData.cells[String(year)][String(monthIdx)] != null"
                      class="heatmap-cell font-medium"
-                     :style="heatmapCellStyle(heatmapData.cells[year][monthIdx])">
-                  {{ heatmapData.cells[year][monthIdx] > 0 ? '+' : '' }}{{ heatmapData.cells[year][monthIdx].toFixed(1) }}%
+                     :style="heatmapCellStyle(heatmapData.cells[String(year)][String(monthIdx)])">
+                  {{ heatmapData.cells[String(year)][String(monthIdx)] > 0 ? '+' : '' }}{{ heatmapData.cells[String(year)][String(monthIdx)].toFixed(1) }}%
                 </div>
                 <div v-else class="heatmap-cell text-gray-400 dark:text-gray-600">&mdash;</div>
               </td>
               <td class="px-2 py-1">
-                <div v-if="heatmapData.yearTotals[year] != null"
+                <div v-if="heatmapData.yearTotals[String(year)] != null"
                      class="heatmap-cell font-semibold"
-                     :style="heatmapCellStyle(heatmapData.yearTotals[year])">
-                  {{ heatmapData.yearTotals[year] > 0 ? '+' : '' }}{{ heatmapData.yearTotals[year].toFixed(1) }}%
+                     :style="heatmapCellStyle(heatmapData.yearTotals[String(year)])">
+                  {{ heatmapData.yearTotals[String(year)] > 0 ? '+' : '' }}{{ heatmapData.yearTotals[String(year)].toFixed(1) }}%
                 </div>
               </td>
             </tr>
