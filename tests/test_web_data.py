@@ -504,7 +504,12 @@ class TestLoadInstrumentHistoryEdgeCases:
 
         result = load_instrument_history("config.json", "transactions.csv", "GOLD")
 
-        assert result == {"dates": [], "prices": [], "cost_avg": [], "pnl": [], "drawdown_pcts": []}
+        assert result == {
+            "dates": [], "prices": [], "cost_avg": [], "pnl": [],
+            "values": [], "costs": [], "return_pcts": [],
+            "total_return_pcts": [], "twr_pcts": [],
+            "drawdown_pcts": [],
+        }
 
 
 class TestLoadPortfolioDailyChangeEdgeCases:

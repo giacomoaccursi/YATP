@@ -203,6 +203,43 @@ class PortfolioEngine:
             series.append(round(drawdown_pct, 2))
         return series
 
+    def shares_series(self):
+        """Total shares held for each date (single-instrument use)."""
+        series = []
+        for holdings in self._holdings_list:
+            total_shares = sum(holdings.values())
+            series.append(round(total_shares, 6))
+        return series
+
+    def price_series(self):
+        """Price per share for each date. Derived from value / shares.
+
+        Meaningful when the engine runs on a single instrument.
+        For multi-instrument, returns value per total shares (less useful).
+        """
+        series = []
+        for i in range(len(self._dates)):
+            total_shares = sum(self._holdings_list[i].values())
+            if total_shares > 1e-9:
+                series.append(round(self._values[i] / total_shares, 4))
+            else:
+                series.append(None)
+        return series
+
+    def avg_cost_series(self):
+        """Average cost per share for each date. Derived from cost / shares.
+
+        Meaningful when the engine runs on a single instrument.
+        """
+        series = []
+        for i in range(len(self._dates)):
+            total_shares = sum(self._holdings_list[i].values())
+            if total_shares > 1e-9:
+                series.append(round(self._cost_basis_list[i] / total_shares, 4))
+            else:
+                series.append(None)
+        return series
+
     def simple_return_series(self):
         """Unrealized return % for each date. Carries forward when empty."""
         last_pct = 0.0
@@ -338,7 +375,7 @@ class PortfolioEngine:
     # ── Convenience ──
 
     def full_history(self):
-        """All daily metrics in one dict."""
+        """All daily metrics in one dict (portfolio-level)."""
         return {
             "dates": self.date_strings(),
             "values": self.daily_values(),
@@ -349,6 +386,45 @@ class PortfolioEngine:
             "unrealized_pnls": self.daily_unrealized(),
             "drawdown_pcts": self.drawdown_series(),
         }
+
+    def full_instrument_history(self):
+        """All daily metrics for a single instrument, including per-share data.
+
+        Skips dates where shares held is zero (instrument not yet bought or fully sold).
+        """
+        dates = self.date_strings()
+        prices = self.price_series()
+        avg_costs = self.avg_cost_series()
+        pnl = self.daily_unrealized()
+        values = self.daily_values()
+        costs = self.daily_costs()
+        return_pcts = self.simple_return_series()
+        total_return_pcts = self.total_return_series()
+        twr_pcts = self.cumulative_twr()
+        drawdown_pcts = self.drawdown_series()
+
+        # Filter out dates where no shares are held
+        filtered = {
+            "dates": [], "prices": [], "cost_avg": [], "pnl": [],
+            "values": [], "costs": [], "return_pcts": [],
+            "total_return_pcts": [], "twr_pcts": [],
+            "drawdown_pcts": [],
+        }
+        for i in range(len(dates)):
+            if prices[i] is None:
+                continue
+            filtered["dates"].append(dates[i])
+            filtered["prices"].append(prices[i])
+            filtered["cost_avg"].append(avg_costs[i])
+            filtered["pnl"].append(pnl[i])
+            filtered["values"].append(values[i])
+            filtered["costs"].append(costs[i])
+            filtered["return_pcts"].append(return_pcts[i])
+            filtered["total_return_pcts"].append(total_return_pcts[i])
+            filtered["twr_pcts"].append(twr_pcts[i])
+            filtered["drawdown_pcts"].append(drawdown_pcts[i])
+
+        return filtered
 
     # ── Helpers ──
 

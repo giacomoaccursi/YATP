@@ -45,8 +45,8 @@
       </div>
     </div>
 
-    <!-- Period Returns Table (portfolio only) -->
-    <section v-if="!selectedInstrument" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-visible">
+    <!-- Period Returns Table -->
+    <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-visible">
       <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
         <h2 class="text-lg font-medium">Returns by Period</h2>
         <div v-if="periodsLoading" class="text-xs text-gray-500 dark:text-gray-400">Loading...</div>
@@ -81,8 +81,8 @@
       <div v-else-if="!periodsLoading" class="px-5 py-8 text-center text-gray-500 dark:text-gray-400">No period data available</div>
     </section>
 
-    <!-- TWR vs MWRR Bar Chart (portfolio only) -->
-    <section v-if="!selectedInstrument && periods.some(p => p.available)" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+    <!-- TWR vs MWRR Bar Chart -->
+    <section v-if="periods.some(p => p.available)" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
       <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">TWR vs MWRR by Period</h3>
       <canvas ref="compareChart" height="60"></canvas>
     </section>
@@ -90,11 +90,9 @@
     <!-- Cumulative Return Chart with Filters -->
     <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 space-y-4">
       <div class="flex items-center justify-between">
-        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">
-          {{ selectedInstrument ? 'Price Return' : 'Cumulative Return' }}
-        </h3>
+        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Cumulative Return</h3>
         <div class="flex items-center gap-3">
-          <label v-if="!selectedInstrument" class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 cursor-pointer">
+          <label class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 cursor-pointer">
             <input type="checkbox" v-model="includeRealized" class="rounded">
             Include realized
           </label>
@@ -125,9 +123,7 @@
 
     <!-- Value vs Cost Chart -->
     <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 space-y-4">
-      <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">
-        {{ selectedInstrument ? 'Price vs Avg Cost' : 'Portfolio Value vs Cost Basis' }}
-      </h3>
+      <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Value vs Cost Basis</h3>
       <canvas ref="valueCostChart" height="80"></canvas>
     </section>
 
@@ -135,9 +131,7 @@
     <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 space-y-4">
       <div>
         <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Drawdown from Peak</h3>
-        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-          {{ selectedInstrument ? 'Price decline from highest price reached' : 'Portfolio value decline from all-time high' }}
-        </p>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Decline from all-time high value</p>
       </div>
       <canvas ref="drawdownChart" height="80"></canvas>
     </section>

@@ -39,7 +39,10 @@ def load_portfolio_daily_change(config_path, transactions_path):
 
 
 def load_instrument_history(config_path, transactions_path, security):
-    """Calculate price, avg cost and P&L history for a single instrument."""
+    """Calculate all metrics for a single instrument using the engine.
+
+    Returns the same structure as portfolio history plus per-share data (prices, cost_avg).
+    """
     config = load_config(config_path)
     instrument = config["instruments"].get(security)
     if not instrument:
@@ -49,7 +52,7 @@ def load_instrument_history(config_path, transactions_path, security):
     df = df.sort_values("Date")
     instrument_df = df[df["Security"].str.strip() == security.strip()]
 
-    empty_response = {"dates": [], "prices": [], "cost_avg": [], "pnl": [], "drawdown_pcts": []}
+    empty_response = _empty_instrument_response()
     if instrument_df.empty:
         return empty_response
 
@@ -60,102 +63,21 @@ def load_instrument_history(config_path, transactions_path, security):
     if prices is None:
         return empty_response
 
-    tx_events = []
-    for _, row in instrument_df.iterrows():
-        tx_events.append((
-            row["Date"].normalize(),
-            row["Type"].strip().lower(),
-            row["Shares"],
-            row["Net Transaction Value"],
-        ))
-    tx_events.sort(key=lambda e: e[0])
-
+    price_histories = {security: prices}
     all_dates = sorted(prices.index.normalize().unique())
-    all_dates = [d for d in all_dates if d <= today]
+    all_dates = [date for date in all_dates if date <= today]
 
-    transaction_index = 0
-    shares = 0.0
-    total_cost = 0.0
-    dates = []
-    price_values = []
-    cost_avg_values = []
-    pnl_values = []
+    engine = PortfolioEngine(instrument_df, price_histories, market_dates=all_dates)
+    return engine.full_instrument_history()
 
-    for date in all_dates:
-        while transaction_index < len(tx_events) and tx_events[transaction_index][0] <= date:
-            _, tx_type, tx_shares, net_value = tx_events[transaction_index]
-            if tx_type == "buy":
-                shares += tx_shares
-                total_cost += net_value
-            elif tx_type == "sell":
-                if shares > 0:
-                    avg_cost_per_share = total_cost / shares
-                    total_cost -= avg_cost_per_share * tx_shares
-                shares -= tx_shares
-                if shares <= 1e-9:
-                    shares = 0.0
-                    total_cost = 0.0
-            transaction_index += 1
 
-        if shares <= 1e-9:
-            continue
-
-        available = prices[prices.index <= date]
-        if available.empty:
-            continue
-
-        price = available.iloc[-1]
-        current_avg_cost = total_cost / shares if shares > 0 else 0
-        market_val = shares * price
-        unrealized = market_val - total_cost
-
-        dates.append(date.strftime("%Y-%m-%d"))
-        price_values.append(round(price, 4))
-        cost_avg_values.append(round(current_avg_cost, 4))
-        pnl_values.append(round(unrealized, 2))
-
-    # Handle transactions after last available price
-    while transaction_index < len(tx_events):
-        _, tx_type, tx_shares, net_value = tx_events[transaction_index]
-        if tx_type == "buy":
-            shares += tx_shares
-            total_cost += net_value
-        elif tx_type == "sell":
-            if shares > 0:
-                avg_cost_per_share = total_cost / shares
-                total_cost -= avg_cost_per_share * tx_shares
-            shares -= tx_shares
-            if shares <= 1e-9:
-                shares = 0.0
-                total_cost = 0.0
-        transaction_index += 1
-
-    if shares > 1e-9 and not dates:
-        if not prices.empty:
-            last_price = prices.iloc[-1]
-            last_date = prices.index[-1].normalize()
-            current_avg_cost = total_cost / shares if shares > 0 else 0
-            unrealized = shares * last_price - total_cost
-            dates.append(last_date.strftime("%Y-%m-%d"))
-            price_values.append(round(float(last_price), 4))
-            cost_avg_values.append(round(current_avg_cost, 4))
-            pnl_values.append(round(unrealized, 2))
-
-    # Compute drawdown from peak price
-    drawdown_pcts = []
-    peak_price = 0.0
-    for price_val in price_values:
-        if price_val > peak_price:
-            peak_price = price_val
-        drawdown = ((price_val - peak_price) / peak_price * 100) if peak_price > 0 else 0.0
-        drawdown_pcts.append(round(drawdown, 2))
-
+def _empty_instrument_response():
+    """Return an empty instrument history response."""
     return {
-        "dates": dates,
-        "prices": price_values,
-        "cost_avg": cost_avg_values,
-        "pnl": pnl_values,
-        "drawdown_pcts": drawdown_pcts,
+        "dates": [], "prices": [], "cost_avg": [], "pnl": [],
+        "values": [], "costs": [], "return_pcts": [],
+        "total_return_pcts": [], "twr_pcts": [],
+        "drawdown_pcts": [],
     }
 
 
@@ -165,6 +87,30 @@ def load_performance_periods(config_path, transactions_path):
     if not price_histories:
         return None
     return build_history(df, instruments, price_histories)
+
+
+def load_instrument_performance_periods(config_path, transactions_path, security):
+    """Calculate performance metrics for standard periods for a single instrument."""
+    config = load_config(config_path)
+    instrument = config["instruments"].get(security)
+    if not instrument:
+        return None
+
+    df = load_transactions(transactions_path)
+    df = df.sort_values("Date")
+    instrument_df = df[df["Security"].str.strip() == security.strip()]
+    if instrument_df.empty:
+        return None
+
+    first_date = instrument_df["Date"].min().normalize()
+    today = pd.Timestamp.now().normalize()
+
+    prices = get_cached_price_history(instrument["ticker"], first_date, today)
+    if prices is None:
+        return None
+
+    price_histories = {security: prices}
+    return build_history(instrument_df, {security: instrument}, price_histories)
 
 
 def _build_date_index(price_histories, first_date, today):

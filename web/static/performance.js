@@ -35,12 +35,17 @@ createApp({
     let portfolioTotalReturnPcts = [];
     let portfolioTwrPcts = [];
     let portfolioDrawdownPcts = [];
+    let portfolioPeriods = [];
 
     // Instrument data (fetched on selection)
     let instrumentDates = [];
     let instrumentPrices = [];
     let instrumentCostAvg = [];
-    let instrumentPnl = [];
+    let instrumentValues = [];
+    let instrumentCosts = [];
+    let instrumentReturnPcts = [];
+    let instrumentTotalReturnPcts = [];
+    let instrumentTwrPcts = [];
     let instrumentDrawdownPcts = [];
 
     // Active data pointers (switch between portfolio and instrument)
@@ -113,15 +118,28 @@ createApp({
       var dates = activeDates.slice(idx.start, idx.end);
 
       if (selectedInstrument.value) {
-        // Instrument mode: show price return %
-        var prices = instrumentPrices.slice(idx.start, idx.end);
-        if (prices.length > 0) {
-          var basePrice = prices[0];
-          var priceReturnPcts = prices.map(function (p) {
-            return basePrice > 0 ? Math.round((p / basePrice - 1) * 10000) / 100 : 0;
-          });
-          renderReturnChart(dates, priceReturnPcts, null);
+        // Instrument mode: show simple return + TWR (same as portfolio)
+        var rawPcts = includeRealized.value
+          ? instrumentTotalReturnPcts.slice(idx.start, idx.end)
+          : instrumentReturnPcts.slice(idx.start, idx.end);
+
+        var pcts = rawPcts;
+        if (rawPcts.length > 0) {
+          var base = rawPcts[0];
+          pcts = rawPcts.map(function (v) { return Math.round((v - base) * 100) / 100; });
         }
+
+        var twrPcts = null;
+        var rawTwr = instrumentTwrPcts.slice(idx.start, idx.end);
+        if (rawTwr.length > 0) {
+          var startFactor = 1 + rawTwr[0] / 100;
+          twrPcts = rawTwr.map(function (v) {
+            var factor = 1 + v / 100;
+            return startFactor > 0 ? Math.round((factor / startFactor - 1) * 10000) / 100 : 0;
+          });
+        }
+
+        renderReturnChart(dates, pcts, twrPcts);
       } else {
         // Portfolio mode: show simple return + TWR
         var rawPcts = includeRealized.value
@@ -194,9 +212,9 @@ createApp({
       if (selectedInstrument.value) {
         renderValueCostChart(
           dates,
-          instrumentPrices.slice(idx.start, idx.end),
-          instrumentCostAvg.slice(idx.start, idx.end),
-          'Price', 'Avg Cost'
+          instrumentValues.slice(idx.start, idx.end),
+          instrumentCosts.slice(idx.start, idx.end),
+          'Market Value', 'Cost Basis'
         );
       } else {
         renderValueCostChart(
@@ -252,8 +270,8 @@ createApp({
 
       // Rebase drawdown to filtered period (recalculate from peak within window)
       if (selectedInstrument.value) {
-        var prices = instrumentPrices.slice(idx.start, idx.end);
-        drawdown = rebaseDrawdown(prices);
+        var instrumentVals = instrumentValues.slice(idx.start, idx.end);
+        drawdown = rebaseDrawdown(instrumentVals);
       } else {
         var values = portfolioValues.slice(idx.start, idx.end);
         drawdown = rebaseDrawdown(values);
@@ -309,7 +327,7 @@ createApp({
       var dates, values;
       if (selectedInstrument.value) {
         dates = instrumentDates;
-        values = instrumentPrices;
+        values = instrumentValues;
       } else {
         dates = portfolioDates;
         values = portfolioValues;
@@ -434,9 +452,13 @@ createApp({
     async function onInstrumentChange() {
       activePreset.value = 'all';
       if (selectedInstrument.value) {
-        await fetchInstrumentHistory(selectedInstrument.value);
+        await Promise.all([
+          fetchInstrumentHistory(selectedInstrument.value),
+          fetchInstrumentPeriods(selectedInstrument.value),
+        ]);
       } else {
         setPortfolioActive();
+        periods.value = portfolioPeriods;
         await nextTick();
         updateAllCharts();
         if (periods.value.length) renderCompareChart(periods.value);
@@ -480,6 +502,7 @@ createApp({
       try {
         var res = await fetch('/api/performance/periods');
         var data = await res.json();
+        portfolioPeriods = data.periods;
         periods.value = data.periods;
         periodsLoading.value = false;
         await nextTick();
@@ -508,7 +531,11 @@ createApp({
         instrumentDates = data.dates || [];
         instrumentPrices = data.prices || [];
         instrumentCostAvg = data.cost_avg || [];
-        instrumentPnl = data.pnl || [];
+        instrumentValues = data.values || [];
+        instrumentCosts = data.costs || [];
+        instrumentReturnPcts = data.return_pcts || [];
+        instrumentTotalReturnPcts = data.total_return_pcts || [];
+        instrumentTwrPcts = data.twr_pcts || [];
         instrumentDrawdownPcts = data.drawdown_pcts || [];
         historyLoading.value = false;
         setInstrumentActive();
@@ -517,6 +544,21 @@ createApp({
       } catch (err) {
         console.error('Failed to fetch instrument history:', err);
         historyLoading.value = false;
+      }
+    }
+
+    async function fetchInstrumentPeriods(security) {
+      periodsLoading.value = true;
+      try {
+        var res = await fetch('/api/instruments/' + encodeURIComponent(security) + '/periods');
+        var data = await res.json();
+        periods.value = data.periods;
+        periodsLoading.value = false;
+        await nextTick();
+        renderCompareChart(data.periods);
+      } catch (err) {
+        console.error('Failed to fetch instrument periods:', err);
+        periodsLoading.value = false;
       }
     }
 

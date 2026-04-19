@@ -10,6 +10,7 @@ from web.portfolio_service import load_portfolio_data, load_offline_summary
 from web.history_service import (
     load_portfolio_history, load_instrument_history,
     load_portfolio_daily_change, load_performance_periods,
+    load_instrument_performance_periods,
 )
 from web.rebalance_service import load_rebalance_data, simulate_rebalance
 from web.transaction_service import (
@@ -161,6 +162,16 @@ def register_api_routes(app):
         if data is None:
             return jsonify({"error": "Instrument not found"}), 404
         return jsonify(data)
+
+    @app.route("/api/instruments/<path:security>/periods")
+    def api_instrument_periods(security):
+        """Return performance metrics for standard periods for a single instrument."""
+        periods = load_instrument_performance_periods(
+            app.config["CONFIG_PATH"], app.config["TRANSACTIONS_PATH"], security
+        )
+        if not periods:
+            return jsonify({"periods": []})
+        return jsonify({"periods": [period_to_dict(p) for p in periods]})
 
     @app.route("/api/performance/periods")
     def api_performance_periods():
