@@ -193,10 +193,18 @@ class PortfolioEngine:
         return [round(self._values[i] - self._cost_basis_list[i], 2) for i in range(len(self._dates))]
 
     def drawdown_series(self):
-        """Drawdown % from peak for each date. Always negative or zero."""
+        """Drawdown % from peak for each date. Always negative or zero.
+
+        When portfolio value is zero (no holdings), drawdown is 0% and peak resets.
+        """
         peak = 0.0
         series = []
         for value in self._values:
+            if value <= 0:
+                # No holdings — reset peak, no drawdown
+                peak = 0.0
+                series.append(0.0)
+                continue
             if value > peak:
                 peak = value
             drawdown_pct = ((value - peak) / peak * 100) if peak > 0 else 0.0

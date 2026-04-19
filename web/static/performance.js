@@ -269,6 +269,11 @@ createApp({
       var peak = 0;
       var result = [];
       for (var i = 0; i < values.length; i++) {
+        if (values[i] <= 0) {
+          peak = 0;
+          result.push(0);
+          continue;
+        }
         if (values[i] > peak) peak = values[i];
         var dd = peak > 0 ? Math.round((values[i] - peak) / peak * 10000) / 100 : 0;
         result.push(dd);
