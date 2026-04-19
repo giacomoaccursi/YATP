@@ -197,12 +197,17 @@ class PortfolioEngine:
 
         Uses cumulative TWR to neutralize the effect of buys/sells.
         A purchase doesn't create a new peak; only market gains do.
-        When TWR factor is at or below 1.0 (no gains yet), drawdown is 0%.
+        When no holdings exist (value = 0), drawdown is 0% and peak resets.
         """
         twr_pcts = self.cumulative_twr()
         peak_factor = 0.0
         series = []
-        for twr_pct in twr_pcts:
+        for i, twr_pct in enumerate(twr_pcts):
+            if self._values[i] <= 0:
+                # No holdings — reset peak, no drawdown
+                peak_factor = 0.0
+                series.append(0.0)
+                continue
             factor = 1 + twr_pct / 100
             if factor <= 0:
                 series.append(0.0)
