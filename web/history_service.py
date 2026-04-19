@@ -59,7 +59,7 @@ def load_instrument_history(config_path, transactions_path, security):
     first_date = instrument_df["Date"].min().normalize()
     today = pd.Timestamp.now().normalize()
 
-    prices = get_cached_price_history(instrument["ticker"], first_date, today)
+    prices = get_cached_price_history(instrument["ticker"], first_date, today, instrument_type=instrument.get("type"))
     if prices is None:
         return empty_response
 
@@ -141,7 +141,7 @@ def load_instrument_performance_periods(config_path, transactions_path, security
     first_date = instrument_df["Date"].min().normalize()
     today = pd.Timestamp.now().normalize()
 
-    prices = get_cached_price_history(instrument["ticker"], first_date, today)
+    prices = get_cached_price_history(instrument["ticker"], first_date, today, instrument_type=instrument.get("type"))
     if prices is None:
         return None
 

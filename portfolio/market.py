@@ -35,8 +35,14 @@ def fetch_current_price(ticker_symbol, isin=None, instrument_type=None):
     return None
 
 
-def fetch_price_history(ticker_symbol, start_date, end_date):
-    """Fetch historical prices from Yahoo Finance. Returns a Close price Series."""
+def fetch_price_history(ticker_symbol, start_date, end_date, instrument_type=None):
+    """Fetch historical prices. Returns a Close price Series or None.
+
+    Bonds have no Yahoo history — returns None immediately for instrument_type='Bond'.
+    """
+    if instrument_type == "Bond":
+        return None
+
     try:
         hist = yf.Ticker(ticker_symbol).history(
             start=start_date - timedelta(days=5),

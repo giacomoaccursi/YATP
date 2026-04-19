@@ -26,10 +26,10 @@ def get_cached_daily_change(ticker):
     return _daily_change_cache[ticker]
 
 
-def get_cached_price_history(ticker, start_date, end_date):
+def get_cached_price_history(ticker, start_date, end_date, instrument_type=None):
     """Fetch price history with in-memory caching."""
     if ticker not in _price_history_cache:
-        _price_history_cache[ticker] = fetch_price_history(ticker, start_date, end_date)
+        _price_history_cache[ticker] = fetch_price_history(ticker, start_date, end_date, instrument_type=instrument_type)
     return _price_history_cache[ticker]
 
 

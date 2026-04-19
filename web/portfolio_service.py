@@ -24,7 +24,7 @@ def load_common(config_path, transactions_path):
         instrument = instruments.get(security.strip())
         if not instrument:
             continue
-        prices = get_cached_price_history(instrument["ticker"], first_date, today)
+        prices = get_cached_price_history(instrument["ticker"], first_date, today, instrument_type=instrument.get("type"))
         if prices is not None:
             price_histories[security] = prices
 
