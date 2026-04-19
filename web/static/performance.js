@@ -259,22 +259,22 @@ createApp({
     function updateDrawdownChart() {
       var idx = getFilteredIndices();
       var dates = activeDates.slice(idx.start, idx.end);
-      var values = activeValues.slice(idx.start, idx.end);
-      var drawdown = rebaseDrawdown(values);
+      var twrSlice = activeTwrPcts.slice(idx.start, idx.end);
+      var drawdown = rebaseDrawdownFromTwr(twrSlice);
       renderDrawdownChart(dates, drawdown);
     }
 
-    function rebaseDrawdown(values) {
-      var peak = 0;
+    function rebaseDrawdownFromTwr(twrPcts) {
+      var peakFactor = 0;
       var result = [];
-      for (var i = 0; i < values.length; i++) {
-        if (values[i] <= 0) {
-          peak = 0;
+      for (var i = 0; i < twrPcts.length; i++) {
+        var factor = 1 + twrPcts[i] / 100;
+        if (factor <= 0) {
           result.push(0);
           continue;
         }
-        if (values[i] > peak) peak = values[i];
-        var dd = peak > 0 ? Math.round((values[i] - peak) / peak * 10000) / 100 : 0;
+        if (factor > peakFactor) peakFactor = factor;
+        var dd = peakFactor > 0 ? Math.round((factor - peakFactor) / peakFactor * 10000) / 100 : 0;
         result.push(dd);
       }
       return result;

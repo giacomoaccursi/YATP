@@ -193,21 +193,23 @@ class PortfolioEngine:
         return [round(self._values[i] - self._cost_basis_list[i], 2) for i in range(len(self._dates))]
 
     def drawdown_series(self):
-        """Drawdown % from peak for each date. Always negative or zero.
+        """Drawdown % from peak TWR for each date. Always negative or zero.
 
-        When portfolio value is zero (no holdings), drawdown is 0% and peak resets.
+        Uses cumulative TWR to neutralize the effect of buys/sells.
+        A purchase doesn't create a new peak; only market gains do.
+        When TWR factor is at or below 1.0 (no gains yet), drawdown is 0%.
         """
-        peak = 0.0
+        twr_pcts = self.cumulative_twr()
+        peak_factor = 0.0
         series = []
-        for value in self._values:
-            if value <= 0:
-                # No holdings — reset peak, no drawdown
-                peak = 0.0
+        for twr_pct in twr_pcts:
+            factor = 1 + twr_pct / 100
+            if factor <= 0:
                 series.append(0.0)
                 continue
-            if value > peak:
-                peak = value
-            drawdown_pct = ((value - peak) / peak * 100) if peak > 0 else 0.0
+            if factor > peak_factor:
+                peak_factor = factor
+            drawdown_pct = ((factor - peak_factor) / peak_factor * 100) if peak_factor > 0 else 0.0
             series.append(round(drawdown_pct, 2))
         return series
 
