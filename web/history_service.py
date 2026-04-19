@@ -9,17 +9,17 @@ from web.portfolio_service import load_common
 from web.cache import get_cached_price_history
 
 
-def load_portfolio_history(config_path, transactions_path):
+def load_portfolio_history(config_path, transactions_path, start_date=None, end_date=None):
     """Calculate daily portfolio value, cost basis, return % and unrealized P&L."""
     _, _, df, price_histories, first_date, today = load_common(config_path, transactions_path)
 
-    empty_response = {"dates": [], "values": [], "costs": [], "return_pcts": [], "total_return_pcts": [], "twr_pcts": [], "unrealized_pnls": [], "drawdown_pcts": []}
+    empty_response = {"dates": [], "values": [], "costs": [], "return_pcts": [], "total_return_pcts": [], "twr_pcts": [], "drawdown_pcts": []}
     if df.empty or not price_histories:
         return empty_response
 
     all_dates = _build_date_index(price_histories, first_date, today)
     engine = PortfolioEngine(df, price_histories, market_dates=all_dates)
-    return engine.full_history()
+    return engine.full_history(start_date=start_date, end_date=end_date)
 
 
 def load_portfolio_daily_change(config_path, transactions_path):
@@ -89,11 +89,11 @@ def load_performance_periods(config_path, transactions_path):
     return build_history(df, instruments, price_histories)
 
 
-def load_filtered_history(config_path, transactions_path, securities):
+def load_filtered_history(config_path, transactions_path, securities, start_date=None, end_date=None):
     """Calculate daily metrics for a subset of instruments using the engine."""
     _, instruments, df, price_histories, first_date, today = load_common(config_path, transactions_path)
 
-    empty_response = {"dates": [], "values": [], "costs": [], "return_pcts": [], "total_return_pcts": [], "twr_pcts": [], "unrealized_pnls": [], "drawdown_pcts": []}
+    empty_response = {"dates": [], "values": [], "costs": [], "return_pcts": [], "total_return_pcts": [], "twr_pcts": [], "drawdown_pcts": []}
 
     filtered_df = df[df["Security"].str.strip().isin(securities)]
     if filtered_df.empty:
@@ -106,7 +106,7 @@ def load_filtered_history(config_path, transactions_path, securities):
     first_date = filtered_df["Date"].min().normalize()
     all_dates = _build_date_index(filtered_prices, first_date, today)
     engine = PortfolioEngine(filtered_df, filtered_prices, market_dates=all_dates)
-    return engine.full_history()
+    return engine.full_history(start_date=start_date, end_date=end_date)
 
 
 def load_filtered_performance_periods(config_path, transactions_path, securities):

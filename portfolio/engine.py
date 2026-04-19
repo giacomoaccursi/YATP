@@ -389,23 +389,50 @@ class PortfolioEngine:
 
     # ── Convenience ──
 
-    def full_history(self):
-        """All daily metrics in one dict (portfolio-level)."""
+    def full_history(self, start_date=None, end_date=None):
+        """All daily metrics in one dict (portfolio-level).
+
+        If start_date/end_date are provided, slices and rebases all series
+        to that date range. TWR and drawdown are rebased to start from zero.
+        """
+        dates = self.date_strings()
+        values = self.daily_values()
+        costs = self.daily_costs()
+        return_pcts = self.simple_return_series()
+        total_return_pcts = self.total_return_series()
+        twr_pcts = self.cumulative_twr()
+        drawdown_pcts = self.drawdown_series()
+
+        if start_date or end_date:
+            start_str = start_date or dates[0]
+            end_str = end_date or dates[-1]
+            start_idx, end_idx = self._resolve_slice(dates, start_str, end_str)
+
+            dates = dates[start_idx:end_idx]
+            values = values[start_idx:end_idx]
+            costs = costs[start_idx:end_idx]
+            return_pcts = self._rebase_pcts(return_pcts[start_idx:end_idx])
+            total_return_pcts = self._rebase_pcts(total_return_pcts[start_idx:end_idx])
+            twr_pcts = self._rebase_twr(twr_pcts[start_idx:end_idx])
+            drawdown_pcts = self._rebase_drawdown(
+                twr_pcts, self._values[start_idx:end_idx]
+            )
+
         return {
-            "dates": self.date_strings(),
-            "values": self.daily_values(),
-            "costs": self.daily_costs(),
-            "return_pcts": self.simple_return_series(),
-            "total_return_pcts": self.total_return_series(),
-            "twr_pcts": self.cumulative_twr(),
-            "unrealized_pnls": self.daily_unrealized(),
-            "drawdown_pcts": self.drawdown_series(),
+            "dates": dates,
+            "values": values,
+            "costs": costs,
+            "return_pcts": return_pcts,
+            "total_return_pcts": total_return_pcts,
+            "twr_pcts": twr_pcts,
+            "drawdown_pcts": drawdown_pcts,
         }
 
-    def full_instrument_history(self):
+    def full_instrument_history(self, start_date=None, end_date=None):
         """All daily metrics for a single instrument, including per-share data.
 
         Skips dates where shares held is zero (instrument not yet bought or fully sold).
+        If start_date/end_date are provided, slices and rebases to that range.
         """
         dates = self.date_strings()
         prices = self.price_series()
@@ -439,7 +466,74 @@ class PortfolioEngine:
             filtered["twr_pcts"].append(twr_pcts[i])
             filtered["drawdown_pcts"].append(drawdown_pcts[i])
 
+        if start_date or end_date:
+            fd = filtered["dates"]
+            if fd:
+                start_str = start_date or fd[0]
+                end_str = end_date or fd[-1]
+                start_idx, end_idx = self._resolve_slice(fd, start_str, end_str)
+                for key in filtered:
+                    filtered[key] = filtered[key][start_idx:end_idx]
+                filtered["return_pcts"] = self._rebase_pcts(filtered["return_pcts"])
+                filtered["total_return_pcts"] = self._rebase_pcts(filtered["total_return_pcts"])
+                filtered["twr_pcts"] = self._rebase_twr(filtered["twr_pcts"])
+                filtered["drawdown_pcts"] = self._rebase_drawdown(
+                    filtered["twr_pcts"], filtered["values"]
+                )
+
         return filtered
+
+    # ── Rebase helpers ──
+
+    @staticmethod
+    def _resolve_slice(dates, start_str, end_str):
+        """Find start (inclusive) and end (exclusive) indices for a date range."""
+        start_idx = 0
+        end_idx = len(dates)
+        for i, d in enumerate(dates):
+            if d <= start_str:
+                start_idx = i
+            if d <= end_str:
+                end_idx = i + 1
+        return start_idx, end_idx
+
+    @staticmethod
+    def _rebase_pcts(pcts):
+        """Rebase a percentage series so the first value becomes 0."""
+        if not pcts:
+            return pcts
+        base = pcts[0]
+        return [round(v - base, 2) for v in pcts]
+
+    @staticmethod
+    def _rebase_twr(twr_pcts):
+        """Rebase cumulative TWR so the first value becomes 0%."""
+        if not twr_pcts:
+            return twr_pcts
+        start_factor = 1 + twr_pcts[0] / 100
+        if start_factor <= 0:
+            return twr_pcts
+        return [round(((1 + v / 100) / start_factor - 1) * 100, 2) for v in twr_pcts]
+
+    @staticmethod
+    def _rebase_drawdown(rebased_twr_pcts, values):
+        """Compute drawdown from rebased TWR, resetting when value is zero."""
+        peak_factor = 0.0
+        series = []
+        for i, twr_pct in enumerate(rebased_twr_pcts):
+            if values[i] <= 0:
+                peak_factor = 0.0
+                series.append(0.0)
+                continue
+            factor = 1 + twr_pct / 100
+            if factor <= 0:
+                series.append(0.0)
+                continue
+            if factor > peak_factor:
+                peak_factor = factor
+            dd = ((factor - peak_factor) / peak_factor * 100) if peak_factor > 0 else 0.0
+            series.append(round(dd, 2))
+        return series
 
     # ── Helpers ──
 

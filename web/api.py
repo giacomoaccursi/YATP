@@ -61,8 +61,11 @@ def register_api_routes(app):
     @app.route("/api/portfolio/history")
     def api_portfolio_history():
         """Return daily portfolio value from first transaction to today."""
+        start_date = request.args.get("start_date")
+        end_date = request.args.get("end_date")
         data = load_portfolio_history(
-            app.config["CONFIG_PATH"], app.config["TRANSACTIONS_PATH"]
+            app.config["CONFIG_PATH"], app.config["TRANSACTIONS_PATH"],
+            start_date=start_date, end_date=end_date,
         )
         return jsonify(data)
 
@@ -189,10 +192,13 @@ def register_api_routes(app):
         """Return daily metrics for a subset of instruments."""
         data = request.get_json()
         securities = data.get("securities", [])
+        start_date = data.get("start_date")
+        end_date = data.get("end_date")
         if not securities:
-            return jsonify({"dates": [], "values": [], "costs": [], "return_pcts": [], "total_return_pcts": [], "twr_pcts": [], "unrealized_pnls": [], "drawdown_pcts": []})
+            return jsonify({"dates": [], "values": [], "costs": [], "return_pcts": [], "total_return_pcts": [], "twr_pcts": [], "drawdown_pcts": []})
         result = load_filtered_history(
-            app.config["CONFIG_PATH"], app.config["TRANSACTIONS_PATH"], securities
+            app.config["CONFIG_PATH"], app.config["TRANSACTIONS_PATH"],
+            securities, start_date=start_date, end_date=end_date,
         )
         return jsonify(result)
 
