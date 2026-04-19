@@ -20,6 +20,7 @@
     .tip:hover::after { display: block; }
     .dark .tip::after { background: #1f2937; color: #d1d5db; border: 1px solid #374151; }
     html:not(.dark) .tip::after { background: #fff; color: #374151; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    .heatmap-cell { min-width: 48px; text-align: center; font-size: 11px; padding: 6px 4px; border-radius: 4px; }
   </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 min-h-screen">
@@ -28,13 +29,24 @@
 
   <main class="max-w-7xl mx-auto px-6 py-8 space-y-6">
 
-    <div>
-      <h2 class="text-xl font-semibold">Performance</h2>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Returns analysis with period filters</p>
+    <div class="flex items-center justify-between">
+      <div>
+        <h2 class="text-xl font-semibold">Performance</h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Returns analysis with period filters</p>
+      </div>
+      <!-- Instrument Filter -->
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-gray-500 dark:text-gray-400">View</label>
+        <select v-model="selectedInstrument" @change="onInstrumentChange"
+                class="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+          <option value="">Portfolio</option>
+          <option v-for="name in instrumentNames" :key="name" :value="name">{{ name }}</option>
+        </select>
+      </div>
     </div>
 
-    <!-- Period Returns Table -->
-    <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-visible">
+    <!-- Period Returns Table (portfolio only) -->
+    <section v-if="!selectedInstrument" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-visible">
       <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">
         <h2 class="text-lg font-medium">Returns by Period</h2>
         <div v-if="periodsLoading" class="text-xs text-gray-500 dark:text-gray-400">Loading...</div>
@@ -69,8 +81,8 @@
       <div v-else-if="!periodsLoading" class="px-5 py-8 text-center text-gray-500 dark:text-gray-400">No period data available</div>
     </section>
 
-    <!-- TWR vs MWRR Bar Chart -->
-    <section v-if="periods.some(p => p.available)" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+    <!-- TWR vs MWRR Bar Chart (portfolio only) -->
+    <section v-if="!selectedInstrument && periods.some(p => p.available)" class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
       <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">TWR vs MWRR by Period</h3>
       <canvas ref="compareChart" height="60"></canvas>
     </section>
@@ -78,9 +90,11 @@
     <!-- Cumulative Return Chart with Filters -->
     <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 space-y-4">
       <div class="flex items-center justify-between">
-        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Cumulative Return</h3>
+        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">
+          {{ selectedInstrument ? 'Price Return' : 'Cumulative Return' }}
+        </h3>
         <div class="flex items-center gap-3">
-          <label class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 cursor-pointer">
+          <label v-if="!selectedInstrument" class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 cursor-pointer">
             <input type="checkbox" v-model="includeRealized" class="rounded">
             Include realized
           </label>
@@ -107,7 +121,62 @@
       </div>
 
       <canvas ref="returnChart" height="80"></canvas>
+    </section>
 
+    <!-- Value vs Cost Chart -->
+    <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 space-y-4">
+      <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">
+        {{ selectedInstrument ? 'Price vs Avg Cost' : 'Portfolio Value vs Cost Basis' }}
+      </h3>
+      <canvas ref="valueCostChart" height="80"></canvas>
+    </section>
+
+    <!-- Drawdown Chart -->
+    <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 space-y-4">
+      <div>
+        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Drawdown from Peak</h3>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          {{ selectedInstrument ? 'Price decline from highest price reached' : 'Portfolio value decline from all-time high' }}
+        </p>
+      </div>
+      <canvas ref="drawdownChart" height="80"></canvas>
+    </section>
+
+    <!-- Monthly Returns Heatmap -->
+    <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 space-y-4">
+      <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Monthly Returns</h3>
+      <div v-if="heatmapData.years.length" class="overflow-x-auto">
+        <table class="text-xs">
+          <thead>
+            <tr>
+              <th class="px-2 py-1 text-left text-gray-500 dark:text-gray-400 font-medium">Year</th>
+              <th v-for="month in heatmapMonths" :key="month" class="px-1 py-1 text-center text-gray-500 dark:text-gray-400 font-medium">{{ month }}</th>
+              <th class="px-2 py-1 text-center text-gray-500 dark:text-gray-400 font-medium">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="year in heatmapData.years" :key="year">
+              <td class="px-2 py-1 font-medium text-gray-700 dark:text-gray-300">{{ year }}</td>
+              <td v-for="(month, monthIdx) in heatmapMonths" :key="month" class="px-1 py-1">
+                <div v-if="heatmapData.cells[year] && heatmapData.cells[year][monthIdx] != null"
+                     class="heatmap-cell font-medium"
+                     :style="heatmapCellStyle(heatmapData.cells[year][monthIdx])">
+                  {{ heatmapData.cells[year][monthIdx] > 0 ? '+' : '' }}{{ heatmapData.cells[year][monthIdx].toFixed(1) }}%
+                </div>
+                <div v-else class="heatmap-cell text-gray-400 dark:text-gray-600">&mdash;</div>
+              </td>
+              <td class="px-2 py-1">
+                <div v-if="heatmapData.yearTotals[year] != null"
+                     class="heatmap-cell font-semibold"
+                     :style="heatmapCellStyle(heatmapData.yearTotals[year])">
+                  {{ heatmapData.yearTotals[year] > 0 ? '+' : '' }}{{ heatmapData.yearTotals[year].toFixed(1) }}%
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div v-else class="text-center py-4 text-sm text-gray-500 dark:text-gray-400">Not enough data for monthly breakdown</div>
     </section>
 
   </main>

@@ -197,7 +197,7 @@ class TestLoadPortfolioHistory:
         mock_fetch.return_value = None
 
         result = load_portfolio_history("config.json", "transactions.csv")
-        assert result == {"dates": [], "values": [], "costs": [], "return_pcts": [], "total_return_pcts": [], "twr_pcts": [], "unrealized_pnls": []}
+        assert result == {"dates": [], "values": [], "costs": [], "return_pcts": [], "total_return_pcts": [], "twr_pcts": [], "unrealized_pnls": [], "drawdown_pcts": []}
 
 
 # ── load_instrument_history (mocked) ──
@@ -504,7 +504,7 @@ class TestLoadInstrumentHistoryEdgeCases:
 
         result = load_instrument_history("config.json", "transactions.csv", "GOLD")
 
-        assert result == {"dates": [], "prices": [], "cost_avg": [], "pnl": []}
+        assert result == {"dates": [], "prices": [], "cost_avg": [], "pnl": [], "drawdown_pcts": []}
 
 
 class TestLoadPortfolioDailyChangeEdgeCases:

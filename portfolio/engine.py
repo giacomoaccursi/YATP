@@ -192,6 +192,17 @@ class PortfolioEngine:
         """Unrealized P&L for each date."""
         return [round(self._values[i] - self._cost_basis_list[i], 2) for i in range(len(self._dates))]
 
+    def drawdown_series(self):
+        """Drawdown % from peak for each date. Always negative or zero."""
+        peak = 0.0
+        series = []
+        for value in self._values:
+            if value > peak:
+                peak = value
+            drawdown_pct = ((value - peak) / peak * 100) if peak > 0 else 0.0
+            series.append(round(drawdown_pct, 2))
+        return series
+
     def simple_return_series(self):
         """Unrealized return % for each date. Carries forward when empty."""
         last_pct = 0.0
@@ -336,6 +347,7 @@ class PortfolioEngine:
             "total_return_pcts": self.total_return_series(),
             "twr_pcts": self.cumulative_twr(),
             "unrealized_pnls": self.daily_unrealized(),
+            "drawdown_pcts": self.drawdown_series(),
         }
 
     # ── Helpers ──

@@ -13,7 +13,7 @@ def load_portfolio_history(config_path, transactions_path):
     """Calculate daily portfolio value, cost basis, return % and unrealized P&L."""
     _, _, df, price_histories, first_date, today = load_common(config_path, transactions_path)
 
-    empty_response = {"dates": [], "values": [], "costs": [], "return_pcts": [], "total_return_pcts": [], "twr_pcts": [], "unrealized_pnls": []}
+    empty_response = {"dates": [], "values": [], "costs": [], "return_pcts": [], "total_return_pcts": [], "twr_pcts": [], "unrealized_pnls": [], "drawdown_pcts": []}
     if df.empty or not price_histories:
         return empty_response
 
@@ -49,7 +49,7 @@ def load_instrument_history(config_path, transactions_path, security):
     df = df.sort_values("Date")
     instrument_df = df[df["Security"].str.strip() == security.strip()]
 
-    empty_response = {"dates": [], "prices": [], "cost_avg": [], "pnl": []}
+    empty_response = {"dates": [], "prices": [], "cost_avg": [], "pnl": [], "drawdown_pcts": []}
     if instrument_df.empty:
         return empty_response
 
@@ -141,11 +141,21 @@ def load_instrument_history(config_path, transactions_path, security):
             cost_avg_values.append(round(current_avg_cost, 4))
             pnl_values.append(round(unrealized, 2))
 
+    # Compute drawdown from peak price
+    drawdown_pcts = []
+    peak_price = 0.0
+    for price_val in price_values:
+        if price_val > peak_price:
+            peak_price = price_val
+        drawdown = ((price_val - peak_price) / peak_price * 100) if peak_price > 0 else 0.0
+        drawdown_pcts.append(round(drawdown, 2))
+
     return {
         "dates": dates,
         "prices": price_values,
         "cost_avg": cost_avg_values,
         "pnl": pnl_values,
+        "drawdown_pcts": drawdown_pcts,
     }
 
 
