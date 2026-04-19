@@ -4,3 +4,4 @@ __pycache__/
 *.json
 .kiro/
 TODO.md
+tests/test_integration.py
