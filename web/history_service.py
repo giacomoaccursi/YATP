@@ -13,9 +13,9 @@ def load_portfolio_history(config_path, transactions_path):
     """Calculate daily portfolio value, cost basis, return % and unrealized P&L."""
     _, _, df, price_histories, first_date, today = load_common(config_path, transactions_path)
 
-    empty = {"dates": [], "values": [], "costs": [], "return_pcts": [], "total_return_pcts": [], "twr_pcts": [], "unrealized_pnls": []}
+    empty_response = {"dates": [], "values": [], "costs": [], "return_pcts": [], "total_return_pcts": [], "twr_pcts": [], "unrealized_pnls": []}
     if df.empty or not price_histories:
-        return empty
+        return empty_response
 
     all_dates = _build_date_index(price_histories, first_date, today)
     engine = PortfolioEngine(df, price_histories, market_dates=all_dates)
@@ -41,27 +41,27 @@ def load_portfolio_daily_change(config_path, transactions_path):
 def load_instrument_history(config_path, transactions_path, security):
     """Calculate price, avg cost and P&L history for a single instrument."""
     config = load_config(config_path)
-    inst = config["instruments"].get(security)
-    if not inst:
+    instrument = config["instruments"].get(security)
+    if not instrument:
         return None
 
     df = load_transactions(transactions_path)
     df = df.sort_values("Date")
-    inst_df = df[df["Security"].str.strip() == security.strip()]
+    instrument_df = df[df["Security"].str.strip() == security.strip()]
 
-    empty = {"dates": [], "prices": [], "cost_avg": [], "pnl": []}
-    if inst_df.empty:
-        return empty
+    empty_response = {"dates": [], "prices": [], "cost_avg": [], "pnl": []}
+    if instrument_df.empty:
+        return empty_response
 
-    first_date = inst_df["Date"].min().normalize()
+    first_date = instrument_df["Date"].min().normalize()
     today = pd.Timestamp.now().normalize()
 
-    prices = get_cached_price_history(inst["ticker"], first_date, today)
+    prices = get_cached_price_history(instrument["ticker"], first_date, today)
     if prices is None:
-        return empty
+        return empty_response
 
     tx_events = []
-    for _, row in inst_df.iterrows():
+    for _, row in instrument_df.iterrows():
         tx_events.append((
             row["Date"].normalize(),
             row["Type"].strip().lower(),
@@ -73,7 +73,7 @@ def load_instrument_history(config_path, transactions_path, security):
     all_dates = sorted(prices.index.normalize().unique())
     all_dates = [d for d in all_dates if d <= today]
 
-    tx_idx = 0
+    transaction_index = 0
     shares = 0.0
     total_cost = 0.0
     dates = []
@@ -82,20 +82,20 @@ def load_instrument_history(config_path, transactions_path, security):
     pnl_values = []
 
     for date in all_dates:
-        while tx_idx < len(tx_events) and tx_events[tx_idx][0] <= date:
-            _, tx_type, tx_shares, net_value = tx_events[tx_idx]
+        while transaction_index < len(tx_events) and tx_events[transaction_index][0] <= date:
+            _, tx_type, tx_shares, net_value = tx_events[transaction_index]
             if tx_type == "buy":
                 shares += tx_shares
                 total_cost += net_value
             elif tx_type == "sell":
                 if shares > 0:
-                    avg = total_cost / shares
-                    total_cost -= avg * tx_shares
+                    avg_cost_per_share = total_cost / shares
+                    total_cost -= avg_cost_per_share * tx_shares
                 shares -= tx_shares
                 if shares <= 1e-9:
                     shares = 0.0
                     total_cost = 0.0
-            tx_idx += 1
+            transaction_index += 1
 
         if shares <= 1e-9:
             continue
@@ -105,40 +105,40 @@ def load_instrument_history(config_path, transactions_path, security):
             continue
 
         price = available.iloc[-1]
-        avg_cost = total_cost / shares if shares > 0 else 0
+        current_avg_cost = total_cost / shares if shares > 0 else 0
         market_val = shares * price
         unrealized = market_val - total_cost
 
         dates.append(date.strftime("%Y-%m-%d"))
         price_values.append(round(price, 4))
-        cost_avg_values.append(round(avg_cost, 4))
+        cost_avg_values.append(round(current_avg_cost, 4))
         pnl_values.append(round(unrealized, 2))
 
     # Handle transactions after last available price
-    while tx_idx < len(tx_events):
-        _, tx_type, tx_shares, net_value = tx_events[tx_idx]
+    while transaction_index < len(tx_events):
+        _, tx_type, tx_shares, net_value = tx_events[transaction_index]
         if tx_type == "buy":
             shares += tx_shares
             total_cost += net_value
         elif tx_type == "sell":
             if shares > 0:
-                avg = total_cost / shares
-                total_cost -= avg * tx_shares
+                avg_cost_per_share = total_cost / shares
+                total_cost -= avg_cost_per_share * tx_shares
             shares -= tx_shares
             if shares <= 1e-9:
                 shares = 0.0
                 total_cost = 0.0
-        tx_idx += 1
+        transaction_index += 1
 
     if shares > 1e-9 and not dates:
         if not prices.empty:
             last_price = prices.iloc[-1]
             last_date = prices.index[-1].normalize()
-            avg_cost = total_cost / shares if shares > 0 else 0
+            current_avg_cost = total_cost / shares if shares > 0 else 0
             unrealized = shares * last_price - total_cost
             dates.append(last_date.strftime("%Y-%m-%d"))
             price_values.append(round(float(last_price), 4))
-            cost_avg_values.append(round(avg_cost, 4))
+            cost_avg_values.append(round(current_avg_cost, 4))
             pnl_values.append(round(unrealized, 2))
 
     return {
@@ -162,4 +162,4 @@ def _build_date_index(price_histories, first_date, today):
     all_dates = set()
     for prices in price_histories.values():
         all_dates.update(prices.index.normalize())
-    return sorted(d for d in all_dates if first_date <= d <= today)
+    return sorted(date for date in all_dates if first_date <= date <= today)

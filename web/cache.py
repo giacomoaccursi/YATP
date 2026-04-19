@@ -52,10 +52,10 @@ def _calc_daily_change(ticker):
     """Calculate daily price change percentage from Yahoo Finance."""
     try:
         import yfinance as yf
-        hist = yf.Ticker(ticker).history(period="5d")
-        if hist is None or len(hist) < 2:
+        price_history = yf.Ticker(ticker).history(period="5d")
+        if price_history is None or len(price_history) < 2:
             return None
-        closes = hist["Close"].dropna()
+        closes = price_history["Close"].dropna()
         if len(closes) < 2:
             return None
         prev = closes.iloc[-2]

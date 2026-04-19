@@ -35,11 +35,11 @@ class PortfolioEngine:
 
         holdings = {}
         cost_state = {}
-        cum_realized = 0.0
-        cum_income = 0.0
+        cumulative_realized_pnl = 0.0
+        cumulative_income = 0.0
         total_invested = 0.0
         cashflows = []
-        tx_idx = 0
+        transaction_index = 0
 
         self._dates = []
         self._holdings_list = []
@@ -48,15 +48,15 @@ class PortfolioEngine:
         self._realized_list = []
         self._income_list = []
         self._invested_list = []
-        self._has_txn_list = []
+        self._has_transaction_list = []
 
         for date in all_dates:
             prev_holdings = dict(holdings)
-            has_txn = False
+            has_transaction = False
 
-            while tx_idx < len(tx_events) and tx_events[tx_idx][0] <= date:
-                has_txn = True
-                _, security, tx_type, shares, net_value = tx_events[tx_idx]
+            while transaction_index < len(tx_events) and tx_events[transaction_index][0] <= date:
+                has_transaction = True
+                _, security, tx_type, shares, net_value = tx_events[transaction_index]
 
                 if security not in cost_state:
                     cost_state[security] = {"shares": 0.0, "cost": 0.0}
@@ -69,22 +69,22 @@ class PortfolioEngine:
                     cashflows.append((date.to_pydatetime(), -net_value))
                 elif tx_type == "sell":
                     self._apply_sell(holdings, cost_state, security, shares, net_value)
-                    cum_realized += self._last_sell_realized
+                    cumulative_realized_pnl += self._last_sell_realized
                     cashflows.append((date.to_pydatetime(), net_value))
                 elif tx_type in ("dividend", "coupon"):
-                    cum_income += net_value
+                    cumulative_income += net_value
                     cashflows.append((date.to_pydatetime(), net_value))
 
-                tx_idx += 1
+                transaction_index += 1
 
             self._dates.append(date)
             self._holdings_list.append(dict(holdings))
             self._prev_holdings_list.append(prev_holdings)
             self._cost_basis_list.append(sum(s["cost"] for s in cost_state.values()))
-            self._realized_list.append(cum_realized)
-            self._income_list.append(cum_income)
+            self._realized_list.append(cumulative_realized_pnl)
+            self._income_list.append(cumulative_income)
             self._invested_list.append(total_invested)
-            self._has_txn_list.append(has_txn)
+            self._has_transaction_list.append(has_transaction)
 
         self._cashflows = cashflows
 
@@ -93,8 +93,8 @@ class PortfolioEngine:
         holdings[security] = holdings.get(security, 0.0) - shares
         self._last_sell_realized = 0.0
         if cost_state[security]["shares"] > 0:
-            avg = cost_state[security]["cost"] / cost_state[security]["shares"]
-            cost_of_sold = avg * shares
+            avg_cost_per_share = cost_state[security]["cost"] / cost_state[security]["shares"]
+            cost_of_sold = avg_cost_per_share * shares
             self._last_sell_realized = net_value - cost_of_sold
             cost_state[security]["cost"] -= cost_of_sold
         cost_state[security]["shares"] -= shares
@@ -135,16 +135,16 @@ class PortfolioEngine:
 
     def _index_at_or_before(self, target_date):
         """Find the last snapshot index where date <= target_date."""
-        result = None
-        for i, d in enumerate(self._dates):
-            if d <= target_date:
-                result = i
-        return result
+        snapshot_index = None
+        for i, date in enumerate(self._dates):
+            if date <= target_date:
+                snapshot_index = i
+        return snapshot_index
 
     def _index_at_or_after(self, target_date):
         """Find the first snapshot index where date >= target_date."""
-        for i, d in enumerate(self._dates):
-            if d >= target_date:
+        for i, date in enumerate(self._dates):
+            if date >= target_date:
                 return i
         return None
 
@@ -195,31 +195,31 @@ class PortfolioEngine:
     def simple_return_series(self):
         """Unrealized return % for each date. Carries forward when empty."""
         last_pct = 0.0
-        result = []
+        series = []
         for i in range(len(self._dates)):
             cost = self._cost_basis_list[i]
             if cost > 0:
                 last_pct = round(calc_simple_return(self._values[i] - cost, cost), 2)
-            result.append(last_pct)
-        return result
+            series.append(last_pct)
+        return series
 
     def total_return_series(self):
         """Total return % (unrealized + realized + income) for each date."""
         last_pct = 0.0
-        result = []
+        series = []
         for i in range(len(self._dates)):
             cost = self._cost_basis_list[i]
             if cost > 0:
                 total_gain = (self._values[i] - cost) + self._realized_list[i] + self._income_list[i]
                 last_pct = round(calc_simple_return(total_gain, cost), 2)
-            result.append(last_pct)
-        return result
+            series.append(last_pct)
+        return series
 
     def cumulative_twr(self):
         """Cumulative TWR % for each date."""
         return calc_cumulative_twr(
             dates=self._dates,
-            has_txn_list=self._has_txn_list,
+            has_txn_list=self._has_transaction_list,
             value_at=lambda i: self._values[i],
             value_before_at=lambda i: self._values_before[i],
         )
@@ -230,23 +230,23 @@ class PortfolioEngine:
         """Portfolio value change from previous day. Returns dict or None."""
         if len(self._dates) < 2:
             return None
-        val_prev = self._values[-2]
-        val_today = self._values[-1]
-        if val_prev <= 0:
+        previous_value = self._values[-2]
+        current_value = self._values[-1]
+        if previous_value <= 0:
             return None
-        amount = val_today - val_prev
-        pct = calc_simple_return(amount, val_prev)
-        return {"amount": round(amount, 2), "pct": round(pct, 2)}
+        change_amount = current_value - previous_value
+        change_pct = calc_simple_return(change_amount, previous_value)
+        return {"amount": round(change_amount, 2), "pct": round(change_pct, 2)}
 
     def xirr(self):
         """Annualized XIRR from all cashflows. Returns float or None."""
         if not self._cashflows or not self._dates:
             return None
-        val = self._values[-1]
-        if val <= 0:
+        final_value = self._values[-1]
+        if final_value <= 0:
             return None
-        cfs = self._cashflows + [(self._dates[-1].to_pydatetime(), val)]
-        return calc_xirr(cfs)
+        cashflows_with_final = self._cashflows + [(self._dates[-1].to_pydatetime(), final_value)]
+        return calc_xirr(cashflows_with_final)
 
     # ── Period metrics ──
 

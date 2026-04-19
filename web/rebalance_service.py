@@ -18,28 +18,28 @@ def simulate_rebalance(config_path, transactions_path, new_investment, custom_ta
     results, _, _, config, _ = load_portfolio_data(config_path, transactions_path)
     instruments = config["instruments"]
 
-    total_market = sum(r.analysis.market_value for r in results)
+    total_market = sum(instrument_result.analysis.market_value for instrument_result in results)
     total_value = total_market + new_investment
 
     if total_value <= 0:
         return []
 
     current_by_class = {}
-    for r in results:
-        inst = instruments.get(r.security.strip(), {})
-        asset_class = inst.get("type", "Other")
-        current_by_class[asset_class] = current_by_class.get(asset_class, 0) + r.analysis.market_value
+    for instrument_result in results:
+        instrument = instruments.get(instrument_result.security.strip(), {})
+        asset_class = instrument.get("type", "Other")
+        current_by_class[asset_class] = current_by_class.get(asset_class, 0) + instrument_result.analysis.market_value
 
     all_classes = sorted(set(current_by_class.keys()) | set(custom_targets.keys()))
 
     actions = []
-    for cls in all_classes:
-        current_value = current_by_class.get(cls, 0)
+    for asset_class_name in all_classes:
+        current_value = current_by_class.get(asset_class_name, 0)
         current_weight = (current_value / total_value) * 100 if total_value > 0 else 0
-        target_weight = custom_targets.get(cls, 0)
+        target_weight = custom_targets.get(asset_class_name, 0)
         target_value = total_value * (target_weight / 100)
         actions.append({
-            "asset_class": cls,
+            "asset_class": asset_class_name,
             "current_value": round(current_value, 2),
             "current_weight": round(current_weight, 2),
             "target_weight": round(target_weight, 2),

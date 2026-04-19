@@ -42,21 +42,21 @@ def build_history(df, instruments, price_histories=None):
     all_dates = set()
     for prices in price_histories.values():
         all_dates.update(prices.index.normalize())
-    all_dates = sorted(d for d in all_dates if first_date <= d <= today)
+    all_dates = sorted(date for date in all_dates if first_date <= date <= today)
 
     engine = PortfolioEngine(df, price_histories, market_dates=all_dates)
 
-    results = []
+    period_results = []
     for label, days in PERIODS:
         period_start, period_days = _resolve_period(today, first_date, days)
         if period_start is None:
-            results.append(PeriodPerformance(period=label, available=False))
+            period_results.append(PeriodPerformance(period=label, available=False))
             continue
 
-        result = _analyze_period(engine, label, period_start, today, period_days, df)
-        results.append(result)
+        period_result = _analyze_period(engine, label, period_start, today, period_days, df)
+        period_results.append(period_result)
 
-    return results
+    return period_results
 
 
 def _resolve_period(today, first_date, days):
@@ -79,8 +79,8 @@ def _analyze_period(engine, label, period_start, today, days, df):
 
     # Check if we have valid data
     end_idx = len(engine._dates) - 1
-    for i, d in enumerate(engine._dates):
-        if d <= today:
+    for i, date in enumerate(engine._dates):
+        if date <= today:
             end_idx = i
     end_value = engine.value_at(end_idx)
 

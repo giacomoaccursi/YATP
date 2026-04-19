@@ -42,8 +42,8 @@ def calc_twr(twr_txns, current_price):
         return None
 
     twr = 1.0
-    for ratio in sub_returns:
-        twr *= ratio
+    for sub_period_return in sub_returns:
+        twr *= sub_period_return
     return twr - 1
 
 
@@ -110,23 +110,23 @@ def calc_cumulative_twr(dates, has_txn_list, value_at, value_before_at):
 
     Returns list of TWR % values, one per date.
     """
-    cum = 1.0
+    cumulative = 1.0
     prev_after = None
-    result = []
+    twr_series = []
 
     for i in range(len(dates)):
-        val = value_at(i)
+        current_value = value_at(i)
 
         if has_txn_list[i]:
-            val_before = value_before_at(i)
-            if prev_after is not None and prev_after > 0 and val_before > 0:
-                cum *= val_before / prev_after
-            prev_after = val if val > 0 else None
-            result.append(round((cum - 1) * 100, 2))
-        elif prev_after is not None and prev_after > 0 and val > 0:
-            running = cum * (val / prev_after)
-            result.append(round((running - 1) * 100, 2))
+            value_before = value_before_at(i)
+            if prev_after is not None and prev_after > 0 and value_before > 0:
+                cumulative *= value_before / prev_after
+            prev_after = current_value if current_value > 0 else None
+            twr_series.append(round((cumulative - 1) * 100, 2))
+        elif prev_after is not None and prev_after > 0 and current_value > 0:
+            running = cumulative * (current_value / prev_after)
+            twr_series.append(round((running - 1) * 100, 2))
         else:
-            result.append(result[-1] if result else 0.0)
+            twr_series.append(twr_series[-1] if twr_series else 0.0)
 
-    return result
+    return twr_series

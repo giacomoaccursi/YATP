@@ -27,8 +27,8 @@ def simulate_sell(config_path, transactions_path, security, shares_to_sell):
 
     df = load_transactions(transactions_path)
     portfolio = build_portfolio(df)
-    data = portfolio.get(security)
-    if not data or data.shares_held < shares_to_sell or shares_to_sell <= 0:
+    instrument_data = portfolio.get(security)
+    if not instrument_data or instrument_data.shares_held < shares_to_sell or shares_to_sell <= 0:
         return None
 
     current_price = get_cached_price(instrument["ticker"], isin=instrument.get("isin"))
@@ -37,7 +37,7 @@ def simulate_sell(config_path, transactions_path, security, shares_to_sell):
 
     capital_gains_rate = instrument.get("capital_gains_rate", 0.26)
     gross_proceeds = shares_to_sell * current_price
-    cost_of_sold = shares_to_sell * data.avg_cost_per_share
+    cost_of_sold = shares_to_sell * instrument_data.avg_cost_per_share
     gain = gross_proceeds - cost_of_sold
     tax = max(0, gain) * capital_gains_rate
     net_proceeds = gross_proceeds - tax
@@ -45,9 +45,9 @@ def simulate_sell(config_path, transactions_path, security, shares_to_sell):
     return {
         "security": security,
         "shares_to_sell": round(shares_to_sell, 6),
-        "shares_held": round(data.shares_held, 6),
+        "shares_held": round(instrument_data.shares_held, 6),
         "current_price": round(current_price, 4),
-        "avg_cost_per_share": round(data.avg_cost_per_share, 4),
+        "avg_cost_per_share": round(instrument_data.avg_cost_per_share, 4),
         "gross_proceeds": round(gross_proceeds, 2),
         "cost_of_sold": round(cost_of_sold, 2),
         "gain": round(gain, 2),

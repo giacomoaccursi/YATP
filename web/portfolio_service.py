@@ -21,10 +21,10 @@ def load_common(config_path, transactions_path):
 
     price_histories = {}
     for security in df["Security"].unique():
-        inst = instruments.get(security.strip())
-        if not inst:
+        instrument = instruments.get(security.strip())
+        if not instrument:
             continue
-        prices = get_cached_price_history(inst["ticker"], first_date, today)
+        prices = get_cached_price_history(instrument["ticker"], first_date, today)
         if prices is not None:
             price_histories[security] = prices
 
@@ -80,9 +80,9 @@ def load_offline_summary(config_path, transactions_path):
         return {"cost_basis": 0, "transaction_count": 0, "total_income": 0, "instruments_count": 0}
 
     portfolio = build_portfolio(df)
-    cost_basis = sum(d.cost_basis for d in portfolio.values())
-    total_income = sum(d.total_income for d in portfolio.values())
-    instruments_count = sum(1 for d in portfolio.values() if d.shares_held > 0)
+    cost_basis = sum(instrument_data.cost_basis for instrument_data in portfolio.values())
+    total_income = sum(instrument_data.total_income for instrument_data in portfolio.values())
+    instruments_count = sum(1 for instrument_data in portfolio.values() if instrument_data.shares_held > 0)
 
     return {
         "cost_basis": round(cost_basis, 2),
