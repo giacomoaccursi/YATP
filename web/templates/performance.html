@@ -29,20 +29,29 @@
 
   <main class="max-w-7xl mx-auto px-6 py-8 space-y-6">
 
-    <div class="flex items-center justify-between">
-      <div>
-        <h2 class="text-xl font-semibold">Performance</h2>
-        <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Returns analysis with period filters</p>
-      </div>
-      <!-- Instrument Filter -->
-      <div class="flex items-center gap-2">
-        <label class="text-xs text-gray-500 dark:text-gray-400">View</label>
-        <select v-model="selectedInstrument" @change="onInstrumentChange"
-                class="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-1.5 text-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
-          <option value="">Portfolio</option>
-          <option v-for="name in instrumentNames" :key="name" :value="name">{{ name }}</option>
-        </select>
-      </div>
+    <div>
+      <h2 class="text-xl font-semibold">Performance</h2>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Returns analysis with period filters</p>
+    </div>
+
+    <!-- Instrument Chips -->
+    <div v-if="instrumentNames.length" class="flex flex-wrap items-center gap-2">
+      <button @click="selectAll"
+              class="px-3 py-1.5 text-xs font-medium rounded-lg transition"
+              :class="allSelected
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'">
+        All
+      </button>
+      <button v-for="name in instrumentNames" :key="name"
+              @click="toggleChip(name)" @dblclick="selectOnly(name)"
+              class="px-3 py-1.5 text-xs font-medium rounded-lg transition"
+              :class="selectedSet.has(name)
+                ? 'bg-indigo-600/80 text-white'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'"
+              :title="'Double-click to view only ' + name">
+        {{ name }}
+      </button>
     </div>
 
     <!-- Period Returns Table -->

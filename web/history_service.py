@@ -89,6 +89,42 @@ def load_performance_periods(config_path, transactions_path):
     return build_history(df, instruments, price_histories)
 
 
+def load_filtered_history(config_path, transactions_path, securities):
+    """Calculate daily metrics for a subset of instruments using the engine."""
+    _, instruments, df, price_histories, first_date, today = load_common(config_path, transactions_path)
+
+    empty_response = {"dates": [], "values": [], "costs": [], "return_pcts": [], "total_return_pcts": [], "twr_pcts": [], "unrealized_pnls": [], "drawdown_pcts": []}
+
+    filtered_df = df[df["Security"].str.strip().isin(securities)]
+    if filtered_df.empty:
+        return empty_response
+
+    filtered_prices = {sec: ph for sec, ph in price_histories.items() if sec.strip() in securities}
+    if not filtered_prices:
+        return empty_response
+
+    first_date = filtered_df["Date"].min().normalize()
+    all_dates = _build_date_index(filtered_prices, first_date, today)
+    engine = PortfolioEngine(filtered_df, filtered_prices, market_dates=all_dates)
+    return engine.full_history()
+
+
+def load_filtered_performance_periods(config_path, transactions_path, securities):
+    """Calculate performance metrics for standard periods for a subset of instruments."""
+    _, instruments, df, price_histories, _, _ = load_common(config_path, transactions_path)
+
+    filtered_df = df[df["Security"].str.strip().isin(securities)]
+    if filtered_df.empty:
+        return None
+
+    filtered_prices = {sec: ph for sec, ph in price_histories.items() if sec.strip() in securities}
+    if not filtered_prices:
+        return None
+
+    filtered_instruments = {sec: inst for sec, inst in instruments.items() if sec.strip() in securities}
+    return build_history(filtered_df, filtered_instruments, filtered_prices)
+
+
 def load_instrument_performance_periods(config_path, transactions_path, security):
     """Calculate performance metrics for standard periods for a single instrument."""
     config = load_config(config_path)

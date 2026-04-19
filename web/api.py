@@ -11,6 +11,7 @@ from web.history_service import (
     load_portfolio_history, load_instrument_history,
     load_portfolio_daily_change, load_performance_periods,
     load_instrument_performance_periods,
+    load_filtered_history, load_filtered_performance_periods,
 )
 from web.rebalance_service import load_rebalance_data, simulate_rebalance
 from web.transaction_service import (
@@ -178,6 +179,32 @@ def register_api_routes(app):
         """Return performance metrics for standard periods."""
         periods = load_performance_periods(
             app.config["CONFIG_PATH"], app.config["TRANSACTIONS_PATH"]
+        )
+        if not periods:
+            return jsonify({"periods": []})
+        return jsonify({"periods": [period_to_dict(p) for p in periods]})
+
+    @app.route("/api/performance/filtered/history", methods=["POST"])
+    def api_filtered_history():
+        """Return daily metrics for a subset of instruments."""
+        data = request.get_json()
+        securities = data.get("securities", [])
+        if not securities:
+            return jsonify({"dates": [], "values": [], "costs": [], "return_pcts": [], "total_return_pcts": [], "twr_pcts": [], "unrealized_pnls": [], "drawdown_pcts": []})
+        result = load_filtered_history(
+            app.config["CONFIG_PATH"], app.config["TRANSACTIONS_PATH"], securities
+        )
+        return jsonify(result)
+
+    @app.route("/api/performance/filtered/periods", methods=["POST"])
+    def api_filtered_periods():
+        """Return performance periods for a subset of instruments."""
+        data = request.get_json()
+        securities = data.get("securities", [])
+        if not securities:
+            return jsonify({"periods": []})
+        periods = load_filtered_performance_periods(
+            app.config["CONFIG_PATH"], app.config["TRANSACTIONS_PATH"], securities
         )
         if not periods:
             return jsonify({"periods": []})
