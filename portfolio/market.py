@@ -62,7 +62,7 @@ def _fetch_yahoo_price(ticker_symbol):
     """Fetch current price from Yahoo Finance."""
     try:
         ticker = yf.Ticker(ticker_symbol)
-        hist = ticker.history(period="1d")
+        hist = ticker.history(period="5d")
         if hist.empty:
             return None
         return hist["Close"].iloc[-1]
