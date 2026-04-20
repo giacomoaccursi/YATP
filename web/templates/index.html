@@ -56,7 +56,7 @@
     </div>
 
     <!-- Overview Cards -->
-    <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <section class="grid grid-cols-2 md:grid-cols-5 gap-4">
       <!-- Invested — always available from CSV -->
       <div class="bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-200 dark:border-gray-800" data-info="cost-basis">
         <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Invested</div>
@@ -87,12 +87,17 @@
         </template>
         <div v-else class="text-sm text-gray-400 dark:text-gray-500 mt-1">No market data</div>
       </div>
+      <!-- Income — always available from CSV -->
+      <div class="bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-200 dark:border-gray-800" data-info="income">
+        <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Income</div>
+        <div class="text-2xl font-semibold mt-1 text-green-600 dark:text-green-400">{{ fmt(offline ? offline.total_income : 0) }} &euro;</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Dividends &amp; coupons</div>
+      </div>
       <!-- XIRR — needs market data -->
       <div class="bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-200 dark:border-gray-800" data-info="xirr">
         <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">XIRR (p.a.)</div>
         <template v-if="summary">
           <div class="text-2xl font-semibold mt-1" :class="pnlColor(summary.xirr)">{{ summary.xirr != null ? fmtSigned(summary.xirr) + '%' : 'N/A' }}</div>
-          <div v-if="offline && offline.total_income > 0" class="text-xs text-gray-500 dark:text-gray-400 mt-1">Income: {{ fmt(offline.total_income) }} &euro;</div>
         </template>
         <div v-else class="text-sm text-gray-400 dark:text-gray-500 mt-1">No market data</div>
       </div>
