@@ -19,10 +19,13 @@ def get_cached_price(ticker, isin=None, instrument_type=None):
     return _price_cache[ticker]
 
 
-def get_cached_daily_change(ticker):
+def get_cached_daily_change(ticker, instrument_type=None):
     """Fetch daily price change percentage with caching."""
     if ticker not in _daily_change_cache:
-        _daily_change_cache[ticker] = _calc_daily_change(ticker)
+        if instrument_type == "Bond":
+            _daily_change_cache[ticker] = None  # Bonds don't have daily change from Yahoo
+        else:
+            _daily_change_cache[ticker] = _calc_daily_change(ticker)
     return _daily_change_cache[ticker]
 
 

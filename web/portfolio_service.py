@@ -65,7 +65,7 @@ def load_portfolio_data(config_path, transactions_path):
             data=data,
             analysis=analysis,
         ))
-        daily_changes[security] = get_cached_daily_change(ticker)
+        daily_changes[security] = get_cached_daily_change(ticker, instrument_type=instrument.get("type"))
 
     summary = analyze_portfolio(results, instruments) if results else None
     return results, daily_changes, summary, config, failed_instruments
