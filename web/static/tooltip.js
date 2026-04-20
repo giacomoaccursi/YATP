@@ -4,8 +4,10 @@
  */
 (function () {
   var definitions = {
+    'cost-basis': 'Total amount invested across all instruments, net of accrued interest for bonds.',
     'market-value': 'Total current value of all holdings at today\'s market prices.',
-    'total-pnl': 'Total profit or loss: unrealized (current holdings) + realized (from past sales) + income (dividends, coupons).',
+    'total-pnl': 'Total profit or loss: unrealized (current holdings) + realized (from past sales). Income shown separately.',
+    'income': 'Total dividends and bond coupons received since inception.',
     'simple-return': 'Percentage gain or loss relative to total cost basis. Does not account for timing of cash flows.',
     'xirr': 'Annualized money-weighted return (XIRR). Accounts for the timing and size of each cash flow.',
     'twr': 'Time-Weighted Return. Measures portfolio performance independent of cash flow timing.',
