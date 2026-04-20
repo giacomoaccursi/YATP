@@ -15,13 +15,11 @@ def build_portfolio(df):
         realized_pnl = 0.0
         total_income = 0.0
         cashflows = []
-        twr_txns = []
 
         for _, row in group.iterrows():
             tx_type = row["Type"].strip().lower()
             shares = row["Shares"]
             net_value = row["Net Transaction Value"]
-            quote = row["Quote"]
             date = row["Date"].to_pydatetime()
 
             if tx_type == "buy":
@@ -42,8 +40,6 @@ def build_portfolio(df):
                 print(f"⚠️  Unknown transaction type: '{tx_type}' for {security} on {date}")
                 continue
 
-            twr_txns.append((date, tx_type, quote))
-
         avg_cost = total_cost / shares_held if shares_held > 0 else 0
 
         portfolio[security] = InstrumentData(
@@ -53,7 +49,6 @@ def build_portfolio(df):
             realized_pnl=realized_pnl,
             total_income=total_income,
             cashflows=cashflows,
-            twr_txns=twr_txns,
         )
 
     return portfolio

@@ -1,13 +1,18 @@
-"""Return analysis: per-instrument and aggregate portfolio calculations."""
+"""Return analysis: per-instrument and aggregate portfolio calculations.
+
+Market value, P&L, tax, and allocation calculations.
+TWR is not computed here — use PortfolioEngine for time-weighted returns.
+XIRR is computed from cashflows (same data the engine uses).
+"""
 
 from datetime import datetime
-from portfolio.returns import calc_xirr, calc_twr, calc_simple_return, calc_estimated_tax
+from portfolio.returns import calc_xirr, calc_simple_return, calc_estimated_tax
 from portfolio.allocation import calc_allocation, calc_allocation_by_asset_class
 from portfolio.models import InstrumentAnalysis, PortfolioSummary, InstrumentData
 
 
 def analyze_instrument(data: InstrumentData, current_price, capital_gains_rate):
-    """Calculate all returns for a single instrument."""
+    """Calculate returns for a single instrument."""
     market_value = current_price * data.shares_held
     unrealized_pnl = market_value - data.cost_basis
     estimated_tax = calc_estimated_tax(unrealized_pnl, capital_gains_rate)
@@ -17,13 +22,11 @@ def analyze_instrument(data: InstrumentData, current_price, capital_gains_rate):
         unrealized_pnl=unrealized_pnl,
         total_pnl=unrealized_pnl + data.realized_pnl,
         simple_return=calc_simple_return(unrealized_pnl + data.realized_pnl, data.cost_basis),
-        twr=calc_twr(data.twr_txns, current_price),
+        twr=None,
         xirr=calc_xirr(data.cashflows + [(datetime.now(), market_value)]),
         estimated_tax=estimated_tax,
         net_after_tax=unrealized_pnl - estimated_tax,
         total_income=data.total_income,
-        yield_on_cost=(data.total_income / data.cost_basis * 100) if data.cost_basis > 0 else 0,
-        total_return=unrealized_pnl + data.realized_pnl + data.total_income,
     )
 
 

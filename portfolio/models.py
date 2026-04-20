@@ -13,7 +13,6 @@ class InstrumentData:
     realized_pnl: float
     total_income: float = 0.0
     cashflows: list = field(default_factory=list)
-    twr_txns: list = field(default_factory=list)
 
 
 @dataclass
@@ -28,8 +27,6 @@ class InstrumentAnalysis:
     estimated_tax: float
     net_after_tax: float
     total_income: float = 0.0
-    yield_on_cost: float = 0.0
-    total_return: float = 0.0
 
 
 @dataclass

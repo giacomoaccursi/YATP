@@ -10,7 +10,6 @@ def _make_data(shares=10, avg_cost=100, cost_basis=1000, realized_pnl=0):
         shares_held=shares, avg_cost_per_share=avg_cost, cost_basis=cost_basis,
         realized_pnl=realized_pnl,
         cashflows=[(datetime(2025, 1, 1), -cost_basis)],
-        twr_txns=[(datetime(2025, 1, 1), "buy", avg_cost)],
     )
 
 
@@ -47,9 +46,10 @@ class TestAnalyzeInstrument:
         result = analyze_instrument(_make_data(shares=10), current_price=120, capital_gains_rate=0.26)
         assert result.xirr is not None
 
-    def test_twr_is_calculated(self):
+    def test_twr_is_none(self):
+        """TWR is not computed by analyze_instrument — use PortfolioEngine instead."""
         result = analyze_instrument(_make_data(shares=10), current_price=120, capital_gains_rate=0.26)
-        assert result.twr is not None
+        assert result.twr is None
 
 
 class TestAnalyzePortfolio:
