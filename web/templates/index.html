@@ -84,6 +84,9 @@
             <span class="text-gray-400 dark:text-gray-600"> · </span>
             <span :class="pnlColor(summary.realized)">Real: {{ fmtSigned(summary.realized) }}</span>
           </div>
+          <div v-if="offline && offline.total_income > 0" class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+            incl. income: {{ fmtSigned(summary.total_pnl + offline.total_income) }} &euro;
+          </div>
         </template>
         <div v-else class="text-sm text-gray-400 dark:text-gray-500 mt-1">No market data</div>
       </div>
