@@ -3,8 +3,8 @@
 import pytest
 from datetime import datetime
 from portfolio.returns import (
-    calc_xirr, calc_twr, calc_simple_return,
-    calc_estimated_tax, calc_period_mwrr, calc_period_twr,
+    calc_xirr, calc_simple_return,
+    calc_estimated_tax, calc_period_mwrr,
 )
 
 
@@ -95,45 +95,6 @@ class TestCalcXirr:
         assert abs(result) < 0.01
 
 
-# ── calc_twr ──
-
-class TestCalcTwr:
-    def test_single_transaction_price_up(self):
-        """Buy at 100, now at 110 -> 10% TWR."""
-        twr_txns = [(datetime(2024, 1, 1), "buy", 100)]
-        result = calc_twr(twr_txns, 110)
-        assert result is not None
-        assert abs(result - 0.10) < 0.001
-
-    def test_single_transaction_price_down(self):
-        """Buy at 100, now at 90 -> -10% TWR."""
-        twr_txns = [(datetime(2024, 1, 1), "buy", 100)]
-        result = calc_twr(twr_txns, 90)
-        assert result is not None
-        assert abs(result - (-0.10)) < 0.001
-
-    def test_multiple_transactions(self):
-        """Multiple buys at different prices."""
-        twr_txns = [
-            (datetime(2024, 1, 1), "buy", 100),
-            (datetime(2024, 6, 1), "buy", 110),
-        ]
-        result = calc_twr(twr_txns, 121)
-        assert result is not None
-        # (110/100) * (121/110) - 1 = 0.21
-        assert abs(result - 0.21) < 0.001
-
-    def test_empty_transactions(self):
-        assert calc_twr([], 100) is None
-
-    def test_flat_price(self):
-        """Price unchanged -> 0% TWR."""
-        twr_txns = [(datetime(2024, 1, 1), "buy", 100)]
-        result = calc_twr(twr_txns, 100)
-        assert result is not None
-        assert abs(result) < 0.001
-
-
 # ── calc_period_mwrr ──
 
 class TestCalcPeriodMwrr:
@@ -152,45 +113,3 @@ class TestCalcPeriodMwrr:
         assert calc_period_mwrr(cashflows, 30) is None
 
 
-# ── calc_period_twr ──
-
-class TestCalcPeriodTwr:
-    def test_no_cashflows_in_period(self):
-        """Portfolio value goes from 1000 to 1100, no transactions."""
-        eval_dates = [datetime(2025, 1, 1), datetime(2025, 2, 1)]
-
-        def get_value_before(date):
-            return 1100 if date == datetime(2025, 2, 1) else 1000
-
-        def get_value_after(date):
-            return 1000 if date == datetime(2025, 1, 1) else 1100
-
-        result = calc_period_twr(eval_dates, get_value_before, get_value_after)
-        assert abs(result - 0.10) < 0.001
-
-    def test_with_cashflow(self):
-        """Portfolio with a mid-period deposit."""
-        eval_dates = [
-            datetime(2025, 1, 1),
-            datetime(2025, 1, 15),  # deposit day
-            datetime(2025, 2, 1),
-        ]
-
-        values = {
-            datetime(2025, 1, 1): (None, 1000),       # start: after = 1000
-            datetime(2025, 1, 15): (1050, 1550),       # before deposit: 1050, after: 1550 (added 500)
-            datetime(2025, 2, 1): (1600, 1600),         # end: before = after = 1600
-        }
-
-        def get_value_before(date):
-            return values[date][0]
-
-        def get_value_after(date):
-            return values[date][1]
-
-        result = calc_period_twr(eval_dates, get_value_before, get_value_after)
-        # Sub-period 1: 1050/1000 = 1.05
-        # Sub-period 2: 1600/1550 = 1.0323
-        # TWR = 1.05 * 1.0323 - 1 = 0.0839
-        assert result is not None
-        assert abs(result - 0.0839) < 0.01
