@@ -23,6 +23,8 @@ def calc_xirr(cashflows):
 def calc_twr(twr_txns, current_price):
     """TWR: time-weighted return."""
     txns = sorted(twr_txns, key=lambda x: x[0])
+    # Filter out entries with zero price (coupons, dividends)
+    txns = [t for t in txns if t[2] > 0]
     if not txns:
         return None
 
