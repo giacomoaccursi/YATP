@@ -243,6 +243,7 @@ def register_api_routes(app):
             "Amount": data.get("amount", ""),
             "Fees": data.get("fees", ""),
             "Taxes": data.get("taxes", ""),
+            "Accrued Interest": data.get("accrued_interest", ""),
             "Net Transaction Value": data.get("net_transaction_value", ""),
         }
 
@@ -279,6 +280,7 @@ def register_api_routes(app):
         df.at[row_index, "Amount"] = data.get("amount", "")
         df.at[row_index, "Fees"] = data.get("fees", "")
         df.at[row_index, "Taxes"] = data.get("taxes", "")
+        df.at[row_index, "Accrued Interest"] = data.get("accrued_interest", "")
         df.at[row_index, "Net Transaction Value"] = data.get("net_transaction_value", "")
 
         df.to_csv(csv_path, index=False)

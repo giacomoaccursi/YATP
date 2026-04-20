@@ -56,7 +56,7 @@ class PortfolioEngine:
 
             while transaction_index < len(tx_events) and tx_events[transaction_index][0] <= date:
                 has_transaction = True
-                _, security, tx_type, shares, net_value = tx_events[transaction_index]
+                _, security, tx_type, shares, net_value, accrued = tx_events[transaction_index]
 
                 if security not in cost_state:
                     cost_state[security] = {"shares": 0.0, "cost": 0.0}
@@ -64,11 +64,11 @@ class PortfolioEngine:
                 if tx_type == "buy":
                     holdings[security] = holdings.get(security, 0.0) + shares
                     cost_state[security]["shares"] += shares
-                    cost_state[security]["cost"] += net_value
+                    cost_state[security]["cost"] += net_value - accrued
                     total_invested += net_value
                     cashflows.append((date.to_pydatetime(), -net_value))
                 elif tx_type == "sell":
-                    self._apply_sell(holdings, cost_state, security, shares, net_value)
+                    self._apply_sell(holdings, cost_state, security, shares, net_value, accrued)
                     cumulative_realized_pnl += self._last_sell_realized
                     cashflows.append((date.to_pydatetime(), net_value))
                 elif tx_type in ("dividend", "coupon"):
@@ -88,14 +88,15 @@ class PortfolioEngine:
 
         self._cashflows = cashflows
 
-    def _apply_sell(self, holdings, cost_state, security, shares, net_value):
+    def _apply_sell(self, holdings, cost_state, security, shares, net_value, accrued=0.0):
         """Apply a sell transaction. Sets self._last_sell_realized."""
         holdings[security] = holdings.get(security, 0.0) - shares
         self._last_sell_realized = 0.0
+        sell_proceeds_clean = net_value - accrued
         if cost_state[security]["shares"] > 0:
             avg_cost_per_share = cost_state[security]["cost"] / cost_state[security]["shares"]
             cost_of_sold = avg_cost_per_share * shares
-            self._last_sell_realized = net_value - cost_of_sold
+            self._last_sell_realized = sell_proceeds_clean - cost_of_sold
             cost_state[security]["cost"] -= cost_of_sold
         cost_state[security]["shares"] -= shares
         if holdings.get(security, 0) <= 1e-9:
@@ -104,7 +105,7 @@ class PortfolioEngine:
 
     @staticmethod
     def _parse_transactions(df):
-        """Parse DataFrame into sorted list of (date, security, type, shares, net_value)."""
+        """Parse DataFrame into sorted list of (date, security, type, shares, net_value, accrued)."""
         events = []
         for _, row in df.iterrows():
             events.append((
@@ -113,6 +114,7 @@ class PortfolioEngine:
                 row["Type"].strip().lower(),
                 row["Shares"],
                 row["Net Transaction Value"],
+                row["Accrued Interest"] if "Accrued Interest" in row.index else 0.0,
             ))
         events.sort(key=lambda e: e[0])
         return events

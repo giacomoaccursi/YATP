@@ -50,6 +50,7 @@
               <th class="px-5 py-3 text-right"><span class="tip" data-tip="Total profit or loss: unrealized + realized + income.">P&amp;L</span></th>
               <th class="px-5 py-3 text-right"><span class="tip" data-tip="Percentage gain or loss relative to cost basis.">Return</span></th>
               <th class="px-5 py-3 text-right"><span class="tip" data-tip="Annualized money-weighted return. Accounts for timing and size of cash flows.">XIRR</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Total dividends and coupons received.">Income</span></th>
               <th class="px-5 py-3 text-right"><span class="tip" data-tip="Estimated capital gains tax on unrealized profits.">Est. Tax</span></th>
             </tr>
           </thead>
@@ -76,6 +77,7 @@
               <td class="px-5 py-3 text-right" :class="pnlColor(inst.total_pnl)">{{ fmtSigned(inst.total_pnl) }} &euro;</td>
               <td class="px-5 py-3 text-right" :class="pnlColor(inst.simple_return)">{{ fmtSigned(inst.simple_return) }}%</td>
               <td class="px-5 py-3 text-right" :class="pnlColor(inst.xirr)">{{ inst.xirr != null ? fmtSigned(inst.xirr) + '% p.a.' : 'N/A' }}</td>
+              <td class="px-5 py-3 text-right">{{ fmt(inst.total_income) }} &euro;</td>
               <td class="px-5 py-3 text-right">{{ fmt(inst.estimated_tax) }} &euro;</td>
             </tr>
           </tbody>

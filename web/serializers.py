@@ -64,6 +64,7 @@ def transaction_row_to_dict(idx, row):
         "quote": safe_float(row["Quote"]),
         "fees": safe_float(row.get("Fees", 0)),
         "taxes": safe_float(row.get("Taxes", 0)),
+        "accrued_interest": safe_float(row.get("Accrued Interest", 0)),
         "net_transaction_value": safe_float(row["Net Transaction Value"]),
     }
 

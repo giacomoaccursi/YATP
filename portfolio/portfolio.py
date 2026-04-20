@@ -23,13 +23,16 @@ def build_portfolio(df):
             date = row["Date"].to_pydatetime()
 
             if tx_type == "buy":
-                total_cost += net_value
+                accrued = row.get("Accrued Interest", 0) or 0
+                total_cost += net_value - accrued
                 shares_held += shares
                 cashflows.append((date, -net_value))
             elif tx_type == "sell":
+                accrued = row.get("Accrued Interest", 0) or 0
+                sell_proceeds_clean = net_value - accrued
                 avg_cost_at_sell = total_cost / shares_held if shares_held > 0 else 0
                 cost_of_sold = avg_cost_at_sell * shares
-                realized_pnl += net_value - cost_of_sold
+                realized_pnl += sell_proceeds_clean - cost_of_sold
                 total_cost -= cost_of_sold
                 shares_held -= shares
                 cashflows.append((date, net_value))
