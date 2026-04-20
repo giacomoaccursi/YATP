@@ -414,7 +414,7 @@ class TestLoadPortfolioHistoryEdgeCases:
         }
         mock_txns.return_value = _make_df(TWO_INSTRUMENTS)
 
-        def side_effect(ticker, start, end, instrument_type=None):
+        def side_effect(ticker, start, end, instrument_type=None, isin=None):
             if ticker == "ETF.A":
                 return _make_price_series({"2025-01-02": 100, "2025-01-03": 110})
             return _make_price_series({"2025-01-02": 80, "2025-01-03": 85})
@@ -522,7 +522,7 @@ class TestLoadPortfolioDailyChangeEdgeCases:
         }
         mock_txns.return_value = _make_df(TWO_INSTRUMENTS)
 
-        def side_effect(ticker, start, end, instrument_type=None):
+        def side_effect(ticker, start, end, instrument_type=None, isin=None):
             if ticker == "ETF.A":
                 return _make_price_series({"2025-01-02": 100, "2025-01-03": 105})
             return _make_price_series({"2025-01-02": 80, "2025-01-03": 82})

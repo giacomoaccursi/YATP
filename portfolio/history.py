@@ -31,7 +31,10 @@ def build_history(df, instruments, price_histories=None):
             instrument = instruments.get(security.strip())
             if not instrument:
                 continue
-            prices = fetch_price_history(instrument["ticker"], first_date, today, instrument_type=instrument.get("type"))
+            prices = fetch_price_history(
+                instrument["ticker"], first_date, today,
+                instrument_type=instrument.get("type"), isin=instrument.get("isin"),
+            )
             if prices is not None:
                 price_histories[security] = prices
 
