@@ -34,6 +34,7 @@ createApp({
 
     // Data from API (ready to render, no transformations needed)
     let apiData = {};
+    const risk = ref(null);
 
     // Toggle: include realized gains
     const includeRealized = ref(false);
@@ -205,6 +206,9 @@ createApp({
       // Heatmap comes pre-computed from the API
       var heatmap = apiData.heatmap || { years: [], cells: {}, year_totals: {} };
       heatmapData.value = { years: heatmap.years || [], cells: heatmap.cells || {}, yearTotals: heatmap.year_totals || {} };
+
+      // Risk metrics from API
+      risk.value = apiData.risk || null;
     }
 
     function renderReturnChart(dates, returnPcts, twrPcts) {
@@ -349,7 +353,7 @@ createApp({
       instrumentNames, selectedSet, allSelected,
       selectAll, toggleChip, selectOnly,
       compareChart, returnChart, valueCostChart, drawdownChart,
-      includeRealized,
+      includeRealized, risk,
       activePreset, customFrom, customTo, presets,
       selectPreset, applyCustomRange,
       heatmapMonths, heatmapData, heatmapCellStyle,

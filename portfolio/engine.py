@@ -313,6 +313,83 @@ class PortfolioEngine:
         cashflows_with_final = self._cashflows + [(self._dates[-1].to_pydatetime(), final_value)]
         return calc_xirr(cashflows_with_final)
 
+    # ── Risk metrics ──
+
+    def volatility(self, annualize=True):
+        """Annualized volatility (standard deviation of daily TWR returns).
+
+        Returns float (percentage) or None if insufficient data.
+        """
+        daily_returns = self._daily_twr_returns()
+        if len(daily_returns) < 2:
+            return None
+        import math
+        mean = sum(daily_returns) / len(daily_returns)
+        variance = sum((r - mean) ** 2 for r in daily_returns) / (len(daily_returns) - 1)
+        daily_vol = math.sqrt(variance)
+        if annualize:
+            return round(daily_vol * math.sqrt(252) * 100, 2)
+        return round(daily_vol * 100, 2)
+
+    def sharpe_ratio(self, risk_free_annual=0.0):
+        """Sharpe ratio: (annualized return - risk free rate) / annualized volatility.
+
+        Args:
+            risk_free_annual: annual risk-free rate as decimal (e.g. 0.03 for 3%)
+
+        Returns float or None.
+        """
+        vol = self.volatility()
+        if vol is None or vol == 0:
+            return None
+        twr_pcts = self.cumulative_twr()
+        if not twr_pcts:
+            return None
+        cumulative_return = twr_pcts[-1] / 100
+        days = len(self._dates)
+        if days <= 1:
+            return None
+        annualized_return = (1 + cumulative_return) ** (252 / days) - 1
+        return round((annualized_return - risk_free_annual) / (vol / 100), 2)
+
+    def sortino_ratio(self, risk_free_annual=0.0):
+        """Sortino ratio: like Sharpe but only penalizes downside volatility.
+
+        Args:
+            risk_free_annual: annual risk-free rate as decimal (e.g. 0.03 for 3%)
+
+        Returns float or None.
+        """
+        daily_returns = self._daily_twr_returns()
+        if len(daily_returns) < 2:
+            return None
+        import math
+        downside_returns = [r for r in daily_returns if r < 0]
+        if not downside_returns:
+            return None  # No downside — ratio is infinite
+        downside_variance = sum(r ** 2 for r in downside_returns) / len(daily_returns)
+        downside_vol = math.sqrt(downside_variance) * math.sqrt(252)
+        if downside_vol == 0:
+            return None
+        twr_pcts = self.cumulative_twr()
+        cumulative_return = twr_pcts[-1] / 100
+        days = len(self._dates)
+        annualized_return = (1 + cumulative_return) ** (252 / days) - 1
+        return round((annualized_return - risk_free_annual) / downside_vol, 2)
+
+    def _daily_twr_returns(self):
+        """Compute daily returns from TWR series. Used by risk metrics."""
+        twr_pcts = self.cumulative_twr()
+        if len(twr_pcts) < 2:
+            return []
+        returns = []
+        for i in range(1, len(twr_pcts)):
+            prev_factor = 1 + twr_pcts[i - 1] / 100
+            curr_factor = 1 + twr_pcts[i] / 100
+            if prev_factor > 0:
+                returns.append(curr_factor / prev_factor - 1)
+        return returns
+
     # ── Period metrics ──
 
     def period_twr(self, start_date, end_date):
@@ -429,6 +506,12 @@ class PortfolioEngine:
             "twr_pcts": twr_pcts,
             "drawdown_pcts": drawdown_pcts,
             "heatmap": self.monthly_returns_heatmap(twr_pcts=self.cumulative_twr()),
+            "risk": {
+                "volatility": self.volatility(),
+                "sharpe_ratio": self.sharpe_ratio(),
+                "sortino_ratio": self.sortino_ratio(),
+                "max_drawdown": round(min(drawdown_pcts), 2) if drawdown_pcts else 0,
+            },
         }
 
     def full_instrument_history(self, start_date=None, end_date=None):

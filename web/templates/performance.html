@@ -54,6 +54,30 @@
       </button>
     </div>
 
+    <!-- Risk Metrics Cards -->
+    <section v-if="risk" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800" data-info="volatility">
+        <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Volatility</div>
+        <div class="text-xl font-semibold mt-1">{{ risk.volatility != null ? risk.volatility + '%' : 'N/A' }}</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Annualized</div>
+      </div>
+      <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800" data-info="sharpe-ratio">
+        <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Sharpe Ratio</div>
+        <div class="text-xl font-semibold mt-1" :class="risk.sharpe_ratio != null && risk.sharpe_ratio >= 1 ? 'text-green-600 dark:text-green-400' : ''">{{ risk.sharpe_ratio != null ? risk.sharpe_ratio : 'N/A' }}</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Return / risk</div>
+      </div>
+      <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800" data-info="sortino-ratio">
+        <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Sortino Ratio</div>
+        <div class="text-xl font-semibold mt-1">{{ risk.sortino_ratio != null ? risk.sortino_ratio : 'N/A' }}</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Return / downside risk</div>
+      </div>
+      <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800" data-info="max-drawdown">
+        <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Max Drawdown</div>
+        <div class="text-xl font-semibold mt-1 text-red-600 dark:text-red-400">{{ risk.max_drawdown != null ? risk.max_drawdown + '%' : 'N/A' }}</div>
+        <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Worst peak-to-trough</div>
+      </div>
+    </section>
+
     <!-- Period Returns Table -->
     <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-visible">
       <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-800 flex items-center justify-between">

@@ -19,6 +19,10 @@
     'daily-change': 'Change in portfolio market value compared to the previous trading day.',
     'market-gain': 'Change in portfolio value due to market price movements (excludes new money added).',
     'cumulative-return': 'Percentage P&L relative to cost basis at each point in time.',
+    'volatility': 'Annualized standard deviation of daily returns. Measures how much returns fluctuate. Lower is more stable.',
+    'sharpe-ratio': 'Return per unit of risk. Above 1 is good, above 2 is excellent. Compares return to volatility.',
+    'sortino-ratio': 'Like Sharpe but only penalizes downside volatility. Higher is better.',
+    'max-drawdown': 'Largest peak-to-trough decline. Shows the worst loss you would have experienced.',
   };
 
   var style = document.createElement('style');
