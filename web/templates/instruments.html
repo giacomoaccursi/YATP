@@ -46,6 +46,7 @@
               <th class="px-5 py-3 text-left">Security</th>
               <th class="px-5 py-3 text-right">Shares</th>
               <th class="px-5 py-3 text-right"><span class="tip" data-tip="Weighted average purchase price per share, adjusted as you buy more.">Avg Cost</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Percentage of total portfolio market value.">Weight</span></th>
               <th class="px-5 py-3 text-right"><span class="tip" data-tip="Total current value of all holdings at today's market prices.">Market Value</span></th>
               <th class="px-5 py-3 text-right"><span class="tip" data-tip="Total profit or loss: unrealized + realized + income.">P&amp;L</span></th>
               <th class="px-5 py-3 text-right"><span class="tip" data-tip="Percentage gain or loss relative to cost basis.">Return</span></th>
@@ -73,6 +74,7 @@
               </td>
               <td class="px-5 py-3 text-right">{{ inst.shares_held }}</td>
               <td class="px-5 py-3 text-right">{{ fmt(inst.avg_cost_per_share) }} &euro;</td>
+              <td class="px-5 py-3 text-right text-gray-500 dark:text-gray-400">{{ inst.weight != null ? inst.weight.toFixed(1) + '%' : '' }}</td>
               <td class="px-5 py-3 text-right">{{ fmt(inst.market_value) }} &euro;</td>
               <td class="px-5 py-3 text-right" :class="pnlColor(inst.total_pnl)">{{ fmtSigned(inst.total_pnl) }} &euro;</td>
               <td class="px-5 py-3 text-right" :class="pnlColor(inst.simple_return)">{{ fmtSigned(inst.simple_return) }}%</td>

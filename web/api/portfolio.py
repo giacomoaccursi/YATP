@@ -28,7 +28,13 @@ def api_portfolio():
     }
     try:
         results, daily_changes, summary, _, failed = load_portfolio_data(config_path, transactions_path)
-        response["instruments"] = [instrument_to_dict(r, daily_changes.get(r.security)) for r in results]
+        total_market_value = sum(r.analysis.market_value for r in results)
+        instrument_dicts = []
+        for r in results:
+            d = instrument_to_dict(r, daily_changes.get(r.security))
+            d["weight"] = round(r.analysis.market_value / total_market_value * 100, 1) if total_market_value > 0 else 0
+            instrument_dicts.append(d)
+        response["instruments"] = instrument_dicts
         response["summary"] = summary_to_dict(summary) if summary else None
         response["daily_change"] = load_portfolio_daily_change(config_path, transactions_path)
         if failed:

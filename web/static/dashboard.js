@@ -24,9 +24,12 @@ createApp({
     const allocChart = ref(null);
     const classChart = ref(null);
     const valueChart = ref(null);
+    const incomeChart = ref(null);
+    const incomeMonths = ref([]);
     let allocChartInstance = null;
     let classChartInstance = null;
     let valueChartInstance = null;
+    let incomeChartInstance = null;
     let historyData = null;
 
     function renderDoughnut(canvas, labels, data, existing) {
@@ -115,6 +118,38 @@ createApp({
     function reRenderAll() {
       renderCharts();
       if (historyData) renderValueChart(historyData.dates, historyData.values);
+      if (incomeMonths.value.length) renderIncomeChart(incomeMonths.value);
+    }
+
+    function renderIncomeChart(months) {
+      if (!incomeChart.value || !months.length) return;
+      if (incomeChartInstance) incomeChartInstance.destroy();
+
+      var labels = months.map(function (m) { return m.month; });
+      var amounts = months.map(function (m) { return m.amount; });
+
+      incomeChartInstance = new Chart(incomeChart.value, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Income',
+            data: amounts,
+            backgroundColor: 'rgba(34, 197, 94, 0.6)',
+            borderColor: '#22c55e',
+            borderWidth: 1,
+            borderRadius: 4,
+          }],
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: chartTooltip({ label: function (ctx) { return fmt(ctx.parsed.y) + ' €'; } }),
+          },
+          scales: chartScales({ xGrid: false, yFormat: function (v) { return fmt(v) + ' €'; } }),
+        },
+      });
     }
 
     async function fetchData() {
@@ -135,6 +170,7 @@ createApp({
         await nextTick();
         renderCharts();
         fetchHistory();
+        fetchIncome();
         if (window.__updateNavTimestamp) window.__updateNavTimestamp();
       } catch (err) {
         console.error('Failed to fetch data:', err);
@@ -163,6 +199,18 @@ createApp({
       }
     }
 
+    async function fetchIncome() {
+      try {
+        var res = await fetch('/api/income/history');
+        var data = await res.json();
+        incomeMonths.value = data.months || [];
+        await nextTick();
+        renderIncomeChart(incomeMonths.value);
+      } catch (err) {
+        console.error('Failed to fetch income history:', err);
+      }
+    }
+
     function onThemeChange() { nextTick(reRenderAll); }
 
     onMounted(function () {
@@ -173,8 +221,8 @@ createApp({
 
     return {
       loading, historyLoading, historyError, marketError, failedInstruments,
-      summary, offline, dailyChange,
-      allocChart, classChart, valueChart,
+      summary, offline, dailyChange, incomeMonths,
+      allocChart, classChart, valueChart, incomeChart,
       fmt, fmtSigned, pnlColor,
     };
   },

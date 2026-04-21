@@ -64,6 +64,39 @@ def load_summary_data(transactions_path):
     return build_summary(df)
 
 
+def load_income_history(transactions_path):
+    """Load monthly income (dividends + coupons) grouped by month.
+
+    Returns list of {month: "YYYY-MM", amount: float, details: [{security, type, amount}]}.
+    """
+    df = load_transactions(transactions_path)
+    income_df = df[df["Type"].str.strip().str.lower().isin(["dividend", "coupon"])]
+
+    if income_df.empty:
+        return []
+
+    income_df = income_df.copy()
+    income_df["Month"] = income_df["Date"].dt.to_period("M").astype(str)
+
+    months = {}
+    for _, row in income_df.iterrows():
+        month = row["Month"]
+        if month not in months:
+            months[month] = {"month": month, "amount": 0.0, "details": []}
+        months[month]["amount"] += row["Net Transaction Value"]
+        months[month]["details"].append({
+            "security": row["Security"].strip(),
+            "type": row["Type"].strip(),
+            "amount": round(row["Net Transaction Value"], 2),
+            "date": row["Date"].strftime("%Y-%m-%d"),
+        })
+
+    result = sorted(months.values(), key=lambda entry: entry["month"])
+    for entry in result:
+        entry["amount"] = round(entry["amount"], 2)
+    return result
+
+
 def load_instrument_names(config_path):
     """Load list of configured instrument names."""
     config = load_config(config_path)

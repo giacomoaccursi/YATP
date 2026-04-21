@@ -6,7 +6,7 @@ import pandas as pd
 from flask import Blueprint, jsonify, request, current_app
 
 from web.transaction_service import (
-    load_summary_data, simulate_sell, compute_net_transaction_value,
+    load_summary_data, load_income_history, simulate_sell, compute_net_transaction_value,
 )
 from web.serializers import transaction_row_to_dict, instrument_summary_to_dict
 from portfolio.loader import load_transactions
@@ -26,6 +26,13 @@ def api_summary():
         "net_invested": summary.net_invested,
         "instruments": [instrument_summary_to_dict(i) for i in summary.instruments],
     })
+
+
+@transactions_bp.route("/api/income/history")
+def api_income_history():
+    """Return monthly income (dividends + coupons)."""
+    data = load_income_history(current_app.config["TRANSACTIONS_PATH"])
+    return jsonify({"months": data})
 
 
 @transactions_bp.route("/api/simulate/sell", methods=["POST"])
