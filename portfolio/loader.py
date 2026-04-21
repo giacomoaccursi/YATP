@@ -2,40 +2,40 @@
 
 import pandas as pd
 import json
-import sys
 
 
 def load_config(path):
-    """Load the JSON configuration file."""
+    """Load the JSON configuration file.
+
+    Raises FileNotFoundError or ValueError on failure.
+    """
     try:
         with open(path) as f:
             return json.load(f)
     except FileNotFoundError:
-        print(f"❌ Config file not found: {path}")
-        sys.exit(1)
+        raise FileNotFoundError(f"Config file not found: {path}")
     except json.JSONDecodeError as error:
-        print(f"❌ Error parsing {path}: {error}")
-        sys.exit(1)
+        raise ValueError(f"Error parsing {path}: {error}")
 
 
 def load_transactions(path):
-    """Read the transactions CSV and convert column types."""
+    """Read the transactions CSV and convert column types.
+
+    Raises FileNotFoundError or ValueError on failure.
+    """
     try:
         df = pd.read_csv(path)
     except FileNotFoundError:
-        print(f"❌ Transactions file not found: {path}")
-        sys.exit(1)
+        raise FileNotFoundError(f"Transactions file not found: {path}")
     except pd.errors.ParserError as error:
-        print(f"❌ Error parsing CSV {path}: {error}")
-        sys.exit(1)
+        raise ValueError(f"Error parsing CSV {path}: {error}")
 
     df.columns = df.columns.str.strip()
 
     required_columns = ["Date", "Type", "Security", "Shares", "Quote", "Net Transaction Value"]
     missing = [col for col in required_columns if col not in df.columns]
     if missing:
-        print(f"❌ Missing columns in CSV: {', '.join(missing)}")
-        sys.exit(1)
+        raise ValueError(f"Missing columns in CSV: {', '.join(missing)}")
 
     df["Date"] = pd.to_datetime(df["Date"])
     for col in ["Shares", "Quote", "Net Transaction Value"]:

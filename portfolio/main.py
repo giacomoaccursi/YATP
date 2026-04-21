@@ -27,17 +27,28 @@ def parse_args():
 def main():
     args = parse_args()
 
-    config = load_config(args.config)
+    try:
+        config = load_config(args.config)
+    except (FileNotFoundError, ValueError) as error:
+        print(f"❌ {error}")
+        return
+
     tax_info = config["tax"]
     instruments = config["instruments"]
-    df = load_transactions(args.transactions)
-    portfolio = build_portfolio(df)
+
+    try:
+        df = load_transactions(args.transactions)
+    except (FileNotFoundError, ValueError) as error:
+        print(f"❌ {error}")
+        return
 
     # Web UI mode
     if args.ui:
         from web.app import launch
         launch(args.config, args.transactions)
         return
+
+    portfolio = build_portfolio(df)
 
     # Summary mode: no market data needed
     if args.summary:

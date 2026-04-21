@@ -1,6 +1,13 @@
-"""Return calculations: XIRR, TWR, simple return, tax estimation."""
+"""Return calculations: XIRR, simple return, tax estimation, cumulative TWR.
+
+All functions are pure (no side effects) and work with cashflows or portfolio snapshots.
+"""
 
 from scipy.optimize import brentq
+
+XIRR_MIN_RATE = -0.99
+XIRR_MAX_RATE = 10.0
+DAYS_PER_YEAR = 365.25
 
 
 def calc_xirr(cashflows):
@@ -9,13 +16,13 @@ def calc_xirr(cashflows):
         return None
     dates, amounts = zip(*cashflows)
     first_date = min(dates)
-    years = [(date - first_date).days / 365.25 for date in dates]
+    years = [(date - first_date).days / DAYS_PER_YEAR for date in dates]
 
     def npv(rate):
         return sum(amount / (1 + rate) ** year for amount, year in zip(amounts, years))
 
     try:
-        return brentq(npv, -0.99, 10.0)
+        return brentq(npv, XIRR_MIN_RATE, XIRR_MAX_RATE)
     except ValueError:
         return None
 
@@ -39,7 +46,7 @@ def calc_period_mwrr(cashflows, days):
     xirr_annual = calc_xirr(cashflows)
     if xirr_annual is None:
         return None
-    years_fraction = days / 365.25
+    years_fraction = days / DAYS_PER_YEAR
     return ((1 + xirr_annual) ** years_fraction - 1) * 100
 
 

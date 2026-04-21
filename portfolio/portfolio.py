@@ -2,6 +2,12 @@
 
 from portfolio.models import InstrumentData
 
+TX_BUY = "buy"
+TX_SELL = "sell"
+TX_DIVIDEND = "dividend"
+TX_COUPON = "coupon"
+INCOME_TYPES = (TX_DIVIDEND, TX_COUPON)
+
 
 def build_portfolio(df):
     """Process transactions chronologically for each instrument."""
@@ -22,12 +28,12 @@ def build_portfolio(df):
             net_value = row["Net Transaction Value"]
             date = row["Date"].to_pydatetime()
 
-            if tx_type == "buy":
+            if tx_type == TX_BUY:
                 accrued = row.get("Accrued Interest", 0) or 0
                 total_cost += net_value - accrued
                 shares_held += shares
                 cashflows.append((date, -net_value))
-            elif tx_type == "sell":
+            elif tx_type == TX_SELL:
                 accrued = row.get("Accrued Interest", 0) or 0
                 sell_proceeds_clean = net_value - accrued
                 avg_cost_at_sell = total_cost / shares_held if shares_held > 0 else 0
@@ -36,7 +42,7 @@ def build_portfolio(df):
                 total_cost -= cost_of_sold
                 shares_held -= shares
                 cashflows.append((date, net_value))
-            elif tx_type in ("dividend", "coupon"):
+            elif tx_type in INCOME_TYPES:
                 total_income += net_value
                 cashflows.append((date, net_value))
             else:
@@ -82,12 +88,12 @@ def _replay_transactions(past_df):
         cost = 0.0
         for _, row in group.sort_values("Date").iterrows():
             tx_type = row["Type"].strip().lower()
-            if tx_type == "buy":
+            if tx_type == TX_BUY:
                 shares += row["Shares"]
                 cost += row["Net Transaction Value"]
-            elif tx_type == "sell":
-                avg = cost / shares if shares > 0 else 0
-                cost -= avg * row["Shares"]
+            elif tx_type == TX_SELL:
+                avg_cost_per_share = cost / shares if shares > 0 else 0
+                cost -= avg_cost_per_share * row["Shares"]
                 shares -= row["Shares"]
             # dividend/coupon don't affect shares or cost
         state[security] = {"shares": shares, "cost": cost}
@@ -129,9 +135,9 @@ def get_cashflows_between(start_date, end_date, transactions_df):
     for _, row in period_df.iterrows():
         tx_type = row["Type"].strip().lower()
         date = row["Date"].to_pydatetime()
-        if tx_type == "buy":
+        if tx_type == TX_BUY:
             cashflows.append((date, -row["Net Transaction Value"]))
-        elif tx_type in ("sell", "dividend", "coupon"):
+        elif tx_type in (TX_SELL, TX_DIVIDEND, TX_COUPON):
             cashflows.append((date, row["Net Transaction Value"]))
     return cashflows
 
@@ -141,8 +147,8 @@ def get_net_new_money_between(start_date, end_date, transactions_df):
     period_df = _get_transactions_between(start_date, end_date, transactions_df)
     buys = sum(row["Net Transaction Value"]
                for _, row in period_df.iterrows()
-               if row["Type"].strip().lower() == "buy")
+               if row["Type"].strip().lower() == TX_BUY)
     sells = sum(row["Net Transaction Value"]
                 for _, row in period_df.iterrows()
-                if row["Type"].strip().lower() == "sell")
+                if row["Type"].strip().lower() == TX_SELL)
     return buys - sells  # dividends/coupons are not new money

@@ -32,13 +32,13 @@ class TestLoadConfig:
         assert config["tax"]["country"] == "IT"
 
     def test_missing_file(self):
-        with pytest.raises(SystemExit):
+        with pytest.raises(FileNotFoundError):
             load_config("nonexistent.json")
 
     def test_invalid_json(self, tmp_path):
         path = tmp_path / "bad.json"
         path.write_text("{invalid json")
-        with pytest.raises(SystemExit):
+        with pytest.raises(ValueError):
             load_config(str(path))
 
 
@@ -50,13 +50,13 @@ class TestLoadTransactions:
         assert df["Shares"].dtype in ["float64", "int64"]
 
     def test_missing_file(self):
-        with pytest.raises(SystemExit):
+        with pytest.raises(FileNotFoundError):
             load_transactions("nonexistent.csv")
 
     def test_missing_columns(self, tmp_path):
         path = tmp_path / "bad.csv"
         path.write_text("Date,Type\n2025-01-01,Buy")
-        with pytest.raises(SystemExit):
+        with pytest.raises(ValueError):
             load_transactions(str(path))
 
     def test_column_stripping(self, tmp_path):

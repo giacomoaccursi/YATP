@@ -28,8 +28,10 @@ def print_instrument(result: InstrumentResult, tax_info):
         print(f"   XIRR (Money-Weighted):  {analysis.xirr * 100:+.2f}% p.a.")
     if analysis.total_income > 0:
         print(f"   Dividends/Coupons:      €{analysis.total_income:+.2f}")
-        print(f"   Yield on cost:          {analysis.yield_on_cost:+.2f}%")
-        print(f"   Total return:           €{analysis.total_return:+.2f}")
+        yield_on_cost = (analysis.total_income / data.cost_basis * 100) if data.cost_basis > 0 else 0
+        total_return = analysis.unrealized_pnl + data.realized_pnl + analysis.total_income
+        print(f"   Yield on cost:          {yield_on_cost:+.2f}%")
+        print(f"   Total return:           €{total_return:+.2f}")
     print()
     print(f"   💸 TAX ESTIMATE (if sold today):")
     print(f"   Rate:                   {result.capital_gains_rate * 100:.0f}% ({tax_info['country']} - {tax_info['regime']})")

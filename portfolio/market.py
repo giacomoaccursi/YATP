@@ -6,6 +6,7 @@ Each provider has a consistent interface:
 """
 
 import yfinance as yf
+import pandas as pd
 from datetime import timedelta
 from portfolio.borsa_italiana import Bond, clear_cache as clear_bi_cache
 
@@ -18,7 +19,7 @@ def fetch_current_price(ticker_symbol, isin=None, instrument_type=None):
     """
     if instrument_type == "Bond":
         if not isin:
-            print(f"⚠️  Bond {ticker_symbol} has no ISIN — cannot fetch from Borsa Italiana")
+            print(f"⚠️  Bond '{ticker_symbol}' has no ISIN configured. Add 'isin' to config.json.")
             return None
         return Bond(isin).current_price()
 
@@ -39,7 +40,7 @@ def fetch_price_history(ticker_symbol, start_date, end_date, instrument_type=Non
     """
     if instrument_type == "Bond":
         if not isin:
-            print(f"⚠️  Bond {ticker_symbol} has no ISIN — cannot fetch history from Borsa Italiana")
+            print(f"⚠️  Bond '{ticker_symbol}' has no ISIN configured. Add 'isin' to config.json for history.")
             return None
         return Bond(isin).history(start=start_date, end=end_date)
 
@@ -71,7 +72,10 @@ def _fetch_yahoo_price(ticker_symbol):
         hist = ticker.history(period="5d")
         if hist.empty:
             return None
-        return hist["Close"].iloc[-1]
+        price = hist["Close"].iloc[-1]
+        if pd.isna(price):
+            return None
+        return float(price)
     except Exception as error:
         print(f"⚠️  Yahoo Finance error for {ticker_symbol}: {error}")
         return None
