@@ -31,7 +31,7 @@
     <div class="text-gray-500 dark:text-gray-400">Loading instruments...</div>
   </div>
 
-  <main v-else class="max-w-7xl mx-auto px-6 py-8 space-y-6">
+  <main v-else class="max-w-screen-2xl mx-auto px-6 py-8 space-y-6">
 
     <div>
       <h2 class="text-xl font-semibold">Instruments</h2>
@@ -40,19 +40,19 @@
 
     <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-visible">
       <div class="overflow-x-auto">
-        <table class="w-full text-xs overflow-visible whitespace-nowrap">
+        <table class="w-full text-sm overflow-visible whitespace-nowrap">
           <thead class="text-xs text-gray-500 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-900/50" style="overflow: visible;">
             <tr>
-              <th class="px-3 py-3 text-left">Security</th>
-              <th class="px-3 py-3 text-right">Shares</th>
-              <th class="px-3 py-3 text-right"><span class="tip" data-tip="Weighted average purchase price per share, adjusted as you buy more.">Avg Cost</span></th>
-              <th class="px-3 py-3 text-right"><span class="tip" data-tip="Percentage of total portfolio market value.">Weight</span></th>
-              <th class="px-3 py-3 text-right"><span class="tip" data-tip="Total current value of all holdings at today's market prices.">Mkt Value</span></th>
-              <th class="px-3 py-3 text-right"><span class="tip" data-tip="Total profit or loss: unrealized + realized.">P&amp;L</span></th>
-              <th class="px-3 py-3 text-right"><span class="tip" data-tip="Percentage gain or loss relative to cost basis.">Return</span></th>
-              <th class="px-3 py-3 text-right"><span class="tip" data-tip="Annualized money-weighted return. Accounts for timing and size of cash flows.">XIRR</span></th>
-              <th class="px-3 py-3 text-right"><span class="tip" data-tip="Total dividends and coupons received.">Income</span></th>
-              <th class="px-3 py-3 text-right"><span class="tip" data-tip="Estimated capital gains tax on unrealized profits.">Tax</span></th>
+              <th class="px-5 py-3 text-left">Security</th>
+              <th class="px-5 py-3 text-right">Shares</th>
+              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Weighted average purchase price per share, adjusted as you buy more.">Avg Cost</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Percentage of total portfolio market value.">Weight</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Total current value of all holdings at today's market prices.">Market Value</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Total profit or loss: unrealized + realized.">P&amp;L</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Percentage gain or loss relative to cost basis.">Return</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Annualized money-weighted return. Accounts for timing and size of cash flows.">XIRR</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Total dividends and coupons received.">Income</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Estimated capital gains tax on unrealized profits.">Est. Tax</span></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
@@ -60,10 +60,10 @@
                 class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition cursor-pointer"
                 :class="{ 'bg-indigo-50 dark:bg-gray-800/30 ring-1 ring-indigo-500/30': selected === inst.security }"
                 @click="selectInstrument(inst.security)">
-              <td class="px-3 py-2.5">
+              <td class="px-5 py-3">
                 <div class="flex items-center gap-2">
                   <div>
-                    <div class="text-sm font-medium">{{ inst.security }}</div>
+                    <div class="font-medium">{{ inst.security }}</div>
                     <div class="text-xs text-gray-500 dark:text-gray-400">{{ inst.ticker }}</div>
                   </div>
                   <span v-if="inst.daily_change != null" class="text-xs font-medium ml-auto md:ml-2"
@@ -72,15 +72,15 @@
                   </span>
                 </div>
               </td>
-              <td class="px-3 py-2.5 text-right">{{ inst.shares_held }}</td>
-              <td class="px-3 py-2.5 text-right">{{ fmt(inst.avg_cost_per_share) }}&nbsp;&euro;</td>
-              <td class="px-3 py-2.5 text-right text-gray-500 dark:text-gray-400">{{ inst.weight != null ? inst.weight.toFixed(1) + '%' : '' }}</td>
-              <td class="px-3 py-2.5 text-right">{{ fmt(inst.market_value) }}&nbsp;&euro;</td>
-              <td class="px-3 py-2.5 text-right" :class="pnlColor(inst.total_pnl)">{{ fmtSigned(inst.total_pnl) }}&nbsp;&euro;</td>
-              <td class="px-3 py-2.5 text-right" :class="pnlColor(inst.simple_return)">{{ fmtSigned(inst.simple_return) }}%</td>
-              <td class="px-3 py-2.5 text-right" :class="pnlColor(inst.xirr)">{{ inst.xirr != null ? fmtSigned(inst.xirr) + '%' : 'N/A' }}</td>
-              <td class="px-3 py-2.5 text-right">{{ fmt(inst.total_income) }}&nbsp;&euro;</td>
-              <td class="px-3 py-2.5 text-right">{{ fmt(inst.estimated_tax) }}&nbsp;&euro;</td>
+              <td class="px-5 py-3 text-right">{{ inst.shares_held }}</td>
+              <td class="px-5 py-3 text-right">{{ fmt(inst.avg_cost_per_share) }}&nbsp;&euro;</td>
+              <td class="px-5 py-3 text-right text-gray-500 dark:text-gray-400">{{ inst.weight != null ? inst.weight.toFixed(1) + '%' : '' }}</td>
+              <td class="px-5 py-3 text-right">{{ fmt(inst.market_value) }}&nbsp;&euro;</td>
+              <td class="px-5 py-3 text-right" :class="pnlColor(inst.total_pnl)">{{ fmtSigned(inst.total_pnl) }}&nbsp;&euro;</td>
+              <td class="px-5 py-3 text-right" :class="pnlColor(inst.simple_return)">{{ fmtSigned(inst.simple_return) }}%</td>
+              <td class="px-5 py-3 text-right" :class="pnlColor(inst.xirr)">{{ inst.xirr != null ? fmtSigned(inst.xirr) + '% p.a.' : 'N/A' }}</td>
+              <td class="px-5 py-3 text-right">{{ fmt(inst.total_income) }}&nbsp;&euro;</td>
+              <td class="px-5 py-3 text-right">{{ fmt(inst.estimated_tax) }}&nbsp;&euro;</td>
             </tr>
           </tbody>
         </table>
