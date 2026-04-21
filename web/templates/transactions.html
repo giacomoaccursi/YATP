@@ -68,6 +68,7 @@
               <th class="px-5 py-3 text-right">Quote</th>
               <th class="px-5 py-3 text-right">Fees</th>
               <th class="px-5 py-3 text-right">Taxes</th>
+              <th class="px-5 py-3 text-right">Accrued Int.</th>
               <th class="px-5 py-3 text-right">Net Value</th>
               <th class="px-5 py-3 w-20"></th>
             </tr>
@@ -83,6 +84,7 @@
               <td class="px-5 py-3 text-right">{{ tx.quote > 0 ? tx.quote.toFixed(2) + ' &euro;' : '&mdash;' }}</td>
               <td class="px-5 py-3 text-right text-gray-500 dark:text-gray-400">{{ tx.fees > 0 ? tx.fees.toFixed(2) + ' &euro;' : '&mdash;' }}</td>
               <td class="px-5 py-3 text-right text-gray-500 dark:text-gray-400">{{ tx.taxes > 0 ? tx.taxes.toFixed(2) + ' &euro;' : '&mdash;' }}</td>
+              <td class="px-5 py-3 text-right text-gray-500 dark:text-gray-400">{{ tx.accrued_interest > 0 ? tx.accrued_interest.toFixed(2) + ' &euro;' : '&mdash;' }}</td>
               <td class="px-5 py-3 text-right font-medium">{{ tx.net_transaction_value.toFixed(2) }} &euro;</td>
               <td class="px-5 py-3 text-right flex justify-end gap-1">
                 <button @click="openEditForm(tx)" class="p-1.5 rounded-lg text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-blue-500/10 transition" title="Edit">
@@ -98,7 +100,7 @@
               </td>
             </tr>
             <tr v-if="!filteredTransactions.length">
-              <td colspan="9" class="px-5 py-8 text-center text-gray-500 dark:text-gray-400">No transactions found</td>
+              <td colspan="10" class="px-5 py-8 text-center text-gray-500 dark:text-gray-400">No transactions found</td>
             </tr>
           </tbody>
         </table>
@@ -173,6 +175,10 @@
         <div v-if="form.type !== 'Buy'">
           <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Taxes</label>
           <input v-model="form.taxes" type="number" step="any" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div v-if="(form.type === 'Buy' || form.type === 'Sell') && isSelectedBond">
+          <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Accrued Interest</label>
+          <input v-model="form.accrued_interest" type="number" step="any" placeholder="0" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
         </div>
         <div>
           <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Net Value</label>

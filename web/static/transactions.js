@@ -9,6 +9,7 @@ createApp({
   setup() {
     const transactions = ref([]);
     const availableInstruments = ref([]);
+    const instrumentTypes = ref({});
     const filters = ref({ security: '', type: '', dateFrom: '', dateTo: '' });
 
     // Transaction form
@@ -32,6 +33,9 @@ createApp({
     const securities = computed(function () { return [...new Set(transactions.value.map(function (t) { return t.security; }))].sort(); });
     const hasFilters = computed(function () { return Object.values(filters.value).some(function (v) { return v; }); });
     const isEditing = computed(function () { return editIndex.value !== null; });
+    const isSelectedBond = computed(function () {
+      return instrumentTypes.value[form.value.security] === 'Bond';
+    });
 
     const filteredTransactions = computed(function () {
       return transactions.value.filter(function (tx) {
@@ -86,6 +90,7 @@ createApp({
         quote: tx.quote > 0 ? String(tx.quote) : '',
         fees: tx.fees > 0 ? String(tx.fees) : '',
         taxes: tx.taxes > 0 ? String(tx.taxes) : '',
+        accrued_interest: tx.accrued_interest > 0 ? String(tx.accrued_interest) : '',
         net_transaction_value: String(tx.net_transaction_value),
       };
       computedNetValue.value = String(tx.net_transaction_value);
@@ -107,7 +112,9 @@ createApp({
     async function fetchData() {
       var responses = await Promise.all([fetch('/api/transactions/list'), fetch('/api/instruments')]);
       transactions.value = (await responses[0].json()).transactions;
-      availableInstruments.value = (await responses[1].json()).instruments;
+      var instData = await responses[1].json();
+      availableInstruments.value = instData.instruments;
+      instrumentTypes.value = instData.instrument_types || {};
       if (!form.value.security && availableInstruments.value.length) {
         form.value.security = availableInstruments.value[0];
       }
@@ -135,6 +142,7 @@ createApp({
             form.value.quote = '';
             form.value.fees = '';
             form.value.taxes = '';
+            form.value.accrued_interest = '';
             form.value.net_transaction_value = '';
             computedNetValue.value = '0.00';
           } else {
@@ -208,10 +216,10 @@ createApp({
     onMounted(fetchData);
 
     return {
-      transactions, availableInstruments, filters, securities,
+      transactions, availableInstruments, instrumentTypes, filters, securities,
       hasFilters, filteredTransactions, clearFilters, typeBadge,
       showAddForm, form, formMessage, formError,
-      computedNetValue, saveTransaction, isEditing,
+      computedNetValue, saveTransaction, isEditing, isSelectedBond,
       openAddForm, openEditForm,
       showNewInstrument, newInstrument, newInstrumentError, saveNewInstrument,
       deleteIndex, confirmDelete, executeDelete,

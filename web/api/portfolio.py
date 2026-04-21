@@ -47,9 +47,12 @@ def api_portfolio():
 
 @portfolio_bp.route("/api/instruments")
 def api_instruments():
-    """Return list of configured instruments (for form dropdowns)."""
-    names = load_instrument_names(current_app.config["CONFIG_PATH"])
-    return jsonify({"instruments": names})
+    """Return list of configured instruments with their types."""
+    instrument_types = load_instrument_names(current_app.config["CONFIG_PATH"])
+    return jsonify({
+        "instruments": list(instrument_types.keys()),
+        "instrument_types": instrument_types,
+    })
 
 
 @portfolio_bp.route("/api/instruments", methods=["POST"])

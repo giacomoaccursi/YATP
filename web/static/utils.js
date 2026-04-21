@@ -95,6 +95,7 @@ function createEmptyForm() {
     quote: '',
     fees: '',
     taxes: '',
+    accrued_interest: '',
     net_transaction_value: '',
   };
 }
