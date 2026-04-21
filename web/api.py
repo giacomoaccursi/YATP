@@ -250,11 +250,14 @@ def register_api_routes(app):
         csv_path = app.config["TRANSACTIONS_PATH"]
         file_exists = os.path.exists(csv_path)
 
-        with open(csv_path, "a", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=row.keys())
-            if not file_exists:
-                writer.writeheader()
-            writer.writerow(row)
+        try:
+            with open(csv_path, "a", newline="") as f:
+                writer = csv.DictWriter(f, fieldnames=row.keys())
+                if not file_exists:
+                    writer.writeheader()
+                writer.writerow(row)
+        except OSError as e:
+            return jsonify({"error": f"Failed to write transaction: {e}"}), 500
 
         return jsonify({"success": True})
 
@@ -262,7 +265,11 @@ def register_api_routes(app):
     def api_update_transaction(row_index):
         """Update a transaction by its row index."""
         csv_path = app.config["TRANSACTIONS_PATH"]
-        df = pd.read_csv(csv_path)
+        try:
+            df = pd.read_csv(csv_path)
+        except Exception as e:
+            return jsonify({"error": f"Failed to read transactions: {e}"}), 500
+
         if row_index < 0 or row_index >= len(df):
             return jsonify({"error": "Invalid row index"}), 400
 
@@ -283,18 +290,28 @@ def register_api_routes(app):
         df.at[row_index, "Accrued Interest"] = data.get("accrued_interest", "")
         df.at[row_index, "Net Transaction Value"] = data.get("net_transaction_value", "")
 
-        df.to_csv(csv_path, index=False)
+        try:
+            df.to_csv(csv_path, index=False)
+        except OSError as e:
+            return jsonify({"error": f"Failed to save transaction: {e}"}), 500
         return jsonify({"success": True})
 
     @app.route("/api/transactions/<int:row_index>", methods=["DELETE"])
     def api_delete_transaction(row_index):
         """Delete a transaction by its row index."""
         csv_path = app.config["TRANSACTIONS_PATH"]
-        df = pd.read_csv(csv_path)
+        try:
+            df = pd.read_csv(csv_path)
+        except Exception as e:
+            return jsonify({"error": f"Failed to read transactions: {e}"}), 500
+
         if row_index < 0 or row_index >= len(df):
             return jsonify({"error": "Invalid row index"}), 400
         df = df.drop(index=row_index).reset_index(drop=True)
-        df.to_csv(csv_path, index=False)
+        try:
+            df.to_csv(csv_path, index=False)
+        except OSError as e:
+            return jsonify({"error": f"Failed to save transaction: {e}"}), 500
         return jsonify({"success": True})
 
     @app.route("/api/refresh", methods=["POST"])

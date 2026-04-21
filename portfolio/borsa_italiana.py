@@ -163,6 +163,7 @@ def _parse_history(history_data):
                 continue
 
     if not dates:
+        print("⚠️  Borsa Italiana: no valid price data in API response")
         return None
 
     return pd.Series(prices, index=pd.DatetimeIndex(dates))

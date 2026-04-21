@@ -16,7 +16,10 @@ def fetch_current_price(ticker_symbol, isin=None, instrument_type=None):
     Bonds go directly to Borsa Italiana. Everything else uses Yahoo Finance,
     with Borsa Italiana as fallback when ISIN is available.
     """
-    if instrument_type == "Bond" and isin:
+    if instrument_type == "Bond":
+        if not isin:
+            print(f"⚠️  Bond {ticker_symbol} has no ISIN — cannot fetch from Borsa Italiana")
+            return None
         return Bond(isin).current_price()
 
     price = _fetch_yahoo_price(ticker_symbol)
@@ -34,7 +37,10 @@ def fetch_price_history(ticker_symbol, start_date, end_date, instrument_type=Non
 
     Bonds use Borsa Italiana chart API. Everything else uses Yahoo Finance.
     """
-    if instrument_type == "Bond" and isin:
+    if instrument_type == "Bond":
+        if not isin:
+            print(f"⚠️  Bond {ticker_symbol} has no ISIN — cannot fetch history from Borsa Italiana")
+            return None
         return Bond(isin).history(start=start_date, end=end_date)
 
     try:

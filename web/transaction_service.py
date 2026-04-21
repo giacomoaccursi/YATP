@@ -37,6 +37,7 @@ def simulate_sell(config_path, transactions_path, security, shares_to_sell):
 
     capital_gains_rate = instrument.get("capital_gains_rate", 0.26)
     gross_proceeds = shares_to_sell * current_price
+    # avg_cost_per_share already excludes accrued interest (clean price basis)
     cost_of_sold = shares_to_sell * instrument_data.avg_cost_per_share
     gain = gross_proceeds - cost_of_sold
     tax = max(0, gain) * capital_gains_rate
