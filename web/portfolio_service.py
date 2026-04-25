@@ -43,7 +43,7 @@ def load_portfolio_data(config_path, transactions_path):
     daily_changes = {}
     failed_instruments = []
 
-    for security, data in portfolio.items():
+    for security, instrument_data in portfolio.items():
         instrument = instruments.get(security.strip())
         if not instrument:
             continue
@@ -51,18 +51,18 @@ def load_portfolio_data(config_path, transactions_path):
         ticker = instrument["ticker"]
         current_price = get_cached_price(ticker, isin=instrument.get("isin"), instrument_type=instrument.get("type"))
         if current_price is None:
-            if data.shares_held > 0:
+            if instrument_data.shares_held > 0:
                 failed_instruments.append(security)
             continue
 
         capital_gains_rate = instrument.get("capital_gains_rate", 0.26)
-        analysis = analyze_instrument(data, current_price, capital_gains_rate)
+        analysis = analyze_instrument(instrument_data, current_price, capital_gains_rate)
         results.append(InstrumentResult(
             security=security,
             ticker=ticker,
             isin=instrument.get("isin"),
             capital_gains_rate=capital_gains_rate,
-            data=data,
+            data=instrument_data,
             analysis=analysis,
         ))
         daily_changes[security] = get_cached_daily_change(ticker, instrument_type=instrument.get("type"))

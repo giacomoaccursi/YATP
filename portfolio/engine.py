@@ -178,7 +178,7 @@ class PortfolioEngine:
 
     def date_strings(self):
         """List of date strings."""
-        return [d.strftime("%Y-%m-%d") for d in self._dates]
+        return [date.strftime("%Y-%m-%d") for date in self._dates]
 
     # ── Daily series ──
 
@@ -576,10 +576,10 @@ class PortfolioEngine:
         """Find start (inclusive) and end (exclusive) indices for a date range."""
         start_idx = 0
         end_idx = len(dates)
-        for i, d in enumerate(dates):
-            if d <= start_str:
+        for i, date_str in enumerate(dates):
+            if date_str <= start_str:
                 start_idx = i
-            if d <= end_str:
+            if date_str <= end_str:
                 end_idx = i + 1
         return start_idx, end_idx
 

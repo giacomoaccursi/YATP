@@ -122,26 +122,26 @@ def print_summary(summary):
     print(f"📋 TRANSACTION SUMMARY")
     print(f"{'═' * 60}")
 
-    for inst in summary.instruments:
+    for instrument_summary in summary.instruments:
         print(f"\n{'─' * 60}")
-        print(f"📌 {inst.security}")
+        print(f"📌 {instrument_summary.security}")
         print(f"{'─' * 60}")
-        print(f"   Period:                 {inst.first_transaction.strftime('%Y-%m-%d')} → {inst.last_transaction.strftime('%Y-%m-%d')}")
-        print(f"   Transactions:           {inst.total_buys} buys, {inst.total_sells} sells", end="")
-        if inst.total_dividends > 0:
-            print(f", {inst.total_dividends} dividends", end="")
-        if inst.total_coupons > 0:
-            print(f", {inst.total_coupons} coupons", end="")
+        print(f"   Period:                 {instrument_summary.first_transaction.strftime('%Y-%m-%d')} → {instrument_summary.last_transaction.strftime('%Y-%m-%d')}")
+        print(f"   Transactions:           {instrument_summary.total_buys} buys, {instrument_summary.total_sells} sells", end="")
+        if instrument_summary.total_dividends > 0:
+            print(f", {instrument_summary.total_dividends} dividends", end="")
+        if instrument_summary.total_coupons > 0:
+            print(f", {instrument_summary.total_coupons} coupons", end="")
         print()
-        print(f"   Total invested:         €{inst.total_invested:,.2f}")
-        if inst.total_sold > 0:
-            print(f"   Total sold:             €{inst.total_sold:,.2f}")
-        if inst.total_income > 0:
-            print(f"   Total income:           €{inst.total_income:,.2f}")
-        print(f"   Net invested:           €{inst.net_invested:,.2f}")
-        print(f"   Shares held:            {inst.shares_held:.4f}")
-        if inst.shares_held > 0:
-            print(f"   Avg cost per share:     €{inst.avg_cost_per_share:.2f}")
+        print(f"   Total invested:         €{instrument_summary.total_invested:,.2f}")
+        if instrument_summary.total_sold > 0:
+            print(f"   Total sold:             €{instrument_summary.total_sold:,.2f}")
+        if instrument_summary.total_income > 0:
+            print(f"   Total income:           €{instrument_summary.total_income:,.2f}")
+        print(f"   Net invested:           €{instrument_summary.net_invested:,.2f}")
+        print(f"   Shares held:            {instrument_summary.shares_held:.4f}")
+        if instrument_summary.shares_held > 0:
+            print(f"   Avg cost per share:     €{instrument_summary.avg_cost_per_share:.2f}")
 
     print(f"\n{'═' * 60}")
     print(f"📌 TOTAL")

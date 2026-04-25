@@ -121,7 +121,7 @@ def load_filtered_performance_periods(config_path, transactions_path, securities
     if not filtered_prices:
         return None
 
-    filtered_instruments = {sec: inst for sec, inst in instruments.items() if sec.strip() in securities}
+    filtered_instruments = {sec: instrument_config for sec, instrument_config in instruments.items() if sec.strip() in securities}
     return build_history(filtered_df, filtered_instruments, filtered_prices)
 
 

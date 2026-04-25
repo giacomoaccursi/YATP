@@ -100,7 +100,7 @@ def load_income_history(transactions_path):
 def load_instrument_names(config_path):
     """Load list of configured instrument names with their types."""
     config = load_config(config_path)
-    return {name: inst.get("type", "ETF") for name, inst in config["instruments"].items()}
+    return {name: instrument_config.get("type", "ETF") for name, instrument_config in config["instruments"].items()}
 
 
 def add_instrument_to_config(config_path, security, ticker, instrument_type, capital_gains_rate, isin=None):

@@ -59,8 +59,8 @@ def build_summary(df):
                 shares_held += row["Shares"]
                 total_cost += row["Net Transaction Value"]
             elif tx_type == "sell":
-                avg = total_cost / shares_held if shares_held > 0 else 0
-                total_cost -= avg * row["Shares"]
+                avg_cost_per_share = total_cost / shares_held if shares_held > 0 else 0
+                total_cost -= avg_cost_per_share * row["Shares"]
                 shares_held -= row["Shares"]
 
         avg_cost = total_cost / shares_held if shares_held > 0 else 0

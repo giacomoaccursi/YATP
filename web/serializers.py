@@ -6,8 +6,8 @@ import math
 def safe_float(value, decimals=2):
     """Safely convert a value to a rounded float. Returns 0 for NaN/None/invalid."""
     try:
-        val = float(value)
-        return round(val, decimals) if not math.isnan(val) else 0
+        numeric_value = float(value)
+        return round(numeric_value, decimals) if not math.isnan(numeric_value) else 0
     except (ValueError, TypeError):
         return 0
 
@@ -69,17 +69,17 @@ def transaction_row_to_dict(idx, row):
     }
 
 
-def instrument_summary_to_dict(inst):
+def instrument_summary_to_dict(instrument_summary):
     """Convert InstrumentSummary to API response dict."""
     return {
-        "security": inst.security,
-        "total_buys": inst.total_buys,
-        "total_sells": inst.total_sells,
-        "total_invested": round(inst.total_invested, 2),
-        "total_sold": round(inst.total_sold, 2),
-        "total_income": round(inst.total_income, 2),
-        "shares_held": round(inst.shares_held, 4),
-        "avg_cost_per_share": round(inst.avg_cost_per_share, 2),
+        "security": instrument_summary.security,
+        "total_buys": instrument_summary.total_buys,
+        "total_sells": instrument_summary.total_sells,
+        "total_invested": round(instrument_summary.total_invested, 2),
+        "total_sold": round(instrument_summary.total_sold, 2),
+        "total_income": round(instrument_summary.total_income, 2),
+        "shares_held": round(instrument_summary.shares_held, 4),
+        "avg_cost_per_share": round(instrument_summary.avg_cost_per_share, 2),
     }
 
 
