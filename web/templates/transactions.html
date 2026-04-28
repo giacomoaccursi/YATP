@@ -22,6 +22,8 @@
   <style>
     [v-cloak] { display: none; }
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    tbody tr:nth-child(even) { background: rgba(99, 102, 241, 0.03); }
+    .dark tbody tr:nth-child(even) { background: rgba(99, 102, 241, 0.05); }
   </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 min-h-screen">
@@ -39,7 +41,6 @@
     </div>
 
     <section class="flex flex-wrap gap-3 items-center">
-      <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mr-1">Filters</div>
       <select v-model="filters.security" class="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
         <option value="">All instruments</option>
         <option v-for="sec in securities" :key="sec" :value="sec">{{ sec }}</option>
@@ -61,21 +62,21 @@
       <div class="ml-auto text-sm text-gray-500 dark:text-gray-400">{{ filteredTransactions.length }} transactions</div>
     </section>
 
-    <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-      <div class="overflow-x-auto">
+    <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
+      <div class="max-h-[70vh] overflow-y-auto">
         <table class="w-full text-sm">
-          <thead class="text-xs text-gray-500 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-900/50">
-            <tr>
-              <th class="px-5 py-3 text-left">Date</th>
-              <th class="px-5 py-3 text-left">Type</th>
-              <th class="px-5 py-3 text-left">Security</th>
-              <th class="px-5 py-3 text-right">Shares</th>
-              <th class="px-5 py-3 text-right">Quote</th>
-              <th class="px-5 py-3 text-right">Fees</th>
-              <th class="px-5 py-3 text-right">Taxes</th>
-              <th class="px-5 py-3 text-right">Accrued Int.</th>
-              <th class="px-5 py-3 text-right">Net Value</th>
-              <th class="px-5 py-3 w-20"></th>
+          <thead class="text-xs text-gray-800 dark:text-gray-200 uppercase tracking-wider sticky top-0 z-10">
+            <tr class="bg-gray-100 dark:bg-gray-800 border-b-2 border-indigo-500/20">
+              <th class="px-5 py-4 text-left">Date</th>
+              <th class="px-5 py-4 text-left">Type</th>
+              <th class="px-5 py-4 text-left">Security</th>
+              <th class="px-5 py-4 text-right">Shares</th>
+              <th class="px-5 py-4 text-right">Quote</th>
+              <th class="px-5 py-4 text-right">Fees</th>
+              <th class="px-5 py-4 text-right">Taxes</th>
+              <th class="px-5 py-4 text-right">Accrued Int.</th>
+              <th class="px-5 py-4 text-right">Net Value</th>
+              <th class="px-5 py-4 w-20"></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-gray-800">

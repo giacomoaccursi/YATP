@@ -21,6 +21,8 @@
     .tip:hover::after { display: block; }
     .dark .tip::after { background: #1f2937; color: #d1d5db; border: 1px solid #374151; }
     html:not(.dark) .tip::after { background: #fff; color: #374151; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    tbody tr:nth-child(even) { background: rgba(99, 102, 241, 0.03); }
+    .dark tbody tr:nth-child(even) { background: rgba(99, 102, 241, 0.05); }
   </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 min-h-screen">
@@ -41,7 +43,7 @@
     <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-visible">
       <div class="overflow-visible">
         <table class="w-full text-sm whitespace-nowrap">
-          <thead class="text-xs text-gray-500 dark:text-gray-400 uppercase bg-gray-50 dark:bg-gray-900/50" style="overflow: visible;">
+          <thead class="text-xs text-gray-800 dark:text-gray-200 uppercase tracking-wider bg-gray-100 dark:bg-gray-800 border-b-2 border-indigo-500/20">
             <tr>
               <th class="px-5 py-3 text-left">Security</th>
               <th class="px-5 py-3 text-right">Shares</th>

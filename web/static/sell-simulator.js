@@ -10,7 +10,7 @@ createApp({
     const loading = ref(true);
     const instruments = ref([]);
     const selectedSecurity = ref('');
-    const sharesToSell = ref(0);
+    const sharesToSell = ref(null);
     const result = ref(null);
     const error = ref(null);
     let debounceTimer = null;
