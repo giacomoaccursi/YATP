@@ -50,7 +50,9 @@
     <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 space-y-4">
       <div class="flex items-center justify-between">
         <h2 class="text-lg font-medium">Target Allocation</h2>
-        <div class="text-sm" :class="totalTarget === 100 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+        <div class="text-sm font-medium flex items-center gap-1.5" :class="totalTarget === 100 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+          <svg v-if="totalTarget === 100" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          <svg v-else class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M3.5 19h17a1.5 1.5 0 001.3-2.25l-8.5-14.5a1.5 1.5 0 00-2.6 0l-8.5 14.5A1.5 1.5 0 003.5 19z"/></svg>
           Total: {{ totalTarget }}%
         </div>
       </div>
@@ -74,7 +76,8 @@
 
     <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
       <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-800">
-        <h2 class="text-lg font-medium">Actions</h2>
+        <h2 class="text-lg font-medium">What to do</h2>
+        <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Buy or sell to reach your target allocation</p>
       </div>
       <div class="overflow-x-auto">
         <table class="w-full text-sm">

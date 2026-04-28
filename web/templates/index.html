@@ -15,6 +15,13 @@
   <style>
     [v-cloak] { display: none; }
     body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    .card-gain { border-left: 3px solid #6366f1 !important; }
+    .card-loss { border-left: 3px solid #6366f1 !important; }
+    .card-accent-blue { border-left: 3px solid #6366f1 !important; }
+    .card-accent-green { border-left: 3px solid #6366f1 !important; }
+    .card-accent-amber { border-left: 3px solid #6366f1 !important; }
+    @keyframes pulse-arrow { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    .arrow-pulse { animation: pulse-arrow 2s ease-in-out infinite; }
   </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 min-h-screen">
@@ -57,25 +64,27 @@
 
     <!-- Overview Cards -->
     <section class="grid grid-cols-2 md:grid-cols-5 gap-4">
-      <!-- Invested — always available from CSV -->
-      <div class="bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-200 dark:border-gray-800" data-info="cost-basis">
+      <!-- Invested -->
+      <div class="bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-200 dark:border-gray-800 card-accent-blue" data-info="cost-basis">
         <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Invested</div>
         <div class="text-2xl font-semibold mt-1">{{ fmt(offline ? offline.cost_basis : 0) }} &euro;</div>
         <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">{{ offline ? offline.transaction_count : 0 }} transactions</div>
       </div>
-      <!-- Market Value — needs market data -->
-      <div class="bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-200 dark:border-gray-800" data-info="market-value">
+      <!-- Market Value -->
+      <div class="bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-200 dark:border-gray-800 card-accent-blue" data-info="market-value">
         <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Market Value</div>
         <template v-if="summary">
           <div class="text-2xl font-semibold mt-1">{{ fmt(summary.market_value) }} &euro;</div>
-          <div v-if="dailyChange" class="text-xs mt-1 font-medium" :class="pnlColor(dailyChange.amount)">
-            {{ dailyChange.amount >= 0 ? '▲' : '▼' }} {{ fmtSigned(dailyChange.amount) }} &euro; ({{ fmtSigned(dailyChange.pct) }}%) today
+          <div v-if="dailyChange" class="text-xs mt-1 font-medium flex items-center gap-1" :class="pnlColor(dailyChange.amount)">
+            <span class="arrow-pulse">{{ dailyChange.amount >= 0 ? '▲' : '▼' }}</span>
+            {{ fmtSigned(dailyChange.amount) }} &euro; ({{ fmtSigned(dailyChange.pct) }}%) today
           </div>
         </template>
         <div v-else class="text-sm text-gray-400 dark:text-gray-500 mt-1">No market data</div>
       </div>
-      <!-- Total P&L — needs market data -->
-      <div class="bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-200 dark:border-gray-800" data-info="total-pnl">
+      <!-- Total P&L — colored background -->
+      <div class="bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-200 dark:border-gray-800"
+           :class="summary ? (summary.total_pnl >= 0 ? 'card-gain' : 'card-loss') : ''" data-info="total-pnl">
         <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Total P&amp;L</div>
         <template v-if="summary">
           <div class="text-2xl font-semibold mt-1" :class="pnlColor(summary.total_pnl)">{{ fmtSigned(summary.total_pnl) }} &euro;</div>
@@ -90,17 +99,20 @@
         </template>
         <div v-else class="text-sm text-gray-400 dark:text-gray-500 mt-1">No market data</div>
       </div>
-      <!-- Income — always available from CSV -->
-      <div class="bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-200 dark:border-gray-800" data-info="income">
+      <!-- Income -->
+      <div class="bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-200 dark:border-gray-800 card-accent-green" data-info="income">
         <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Income</div>
         <div class="text-2xl font-semibold mt-1 text-green-600 dark:text-green-400">{{ fmt(offline ? offline.total_income : 0) }} &euro;</div>
         <div class="text-xs text-gray-500 dark:text-gray-400 mt-1">Dividends &amp; coupons</div>
       </div>
-      <!-- XIRR — needs market data -->
-      <div class="bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-200 dark:border-gray-800" data-info="xirr">
+      <!-- XIRR -->
+      <div class="bg-white dark:bg-gray-900 rounded-xl p-5 border border-gray-200 dark:border-gray-800 card-accent-amber" data-info="xirr">
         <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">XIRR (p.a.)</div>
-        <template v-if="summary">
-          <div class="text-2xl font-semibold mt-1" :class="pnlColor(summary.xirr)">{{ summary.xirr != null ? fmtSigned(summary.xirr) + '%' : 'N/A' }}</div>
+        <template v-if="summary && summary.xirr != null">
+          <div class="text-2xl font-semibold mt-1" :class="pnlColor(summary.xirr)">{{ fmtSigned(summary.xirr) }}%</div>
+        </template>
+        <template v-else-if="summary">
+          <div class="text-2xl font-semibold mt-1 text-gray-400">N/A</div>
         </template>
         <div v-else class="text-sm text-gray-400 dark:text-gray-500 mt-1">No market data</div>
       </div>

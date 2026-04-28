@@ -38,7 +38,7 @@
         <div>
           <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1">Instrument</label>
           <select v-model="selectedSecurity" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
-            <option value="">Select...</option>
+            <option value="" disabled>Choose an instrument...</option>
             <option v-for="inst in instruments" :key="inst.security" :value="inst.security">
               {{ inst.security }} ({{ inst.shares_held }} shares)
             </option>
@@ -49,14 +49,16 @@
           <div class="flex gap-2">
             <input v-model.number="sharesToSell" type="number" step="any" min="0"
                    :max="selectedInstrument ? selectedInstrument.shares_held : 0"
+                   :placeholder="selectedInstrument ? 'Max ' + selectedInstrument.shares_held : '0'"
                    class="flex-1 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
             <button v-if="selectedInstrument" @click="sharesToSell = selectedInstrument.shares_held"
-                    class="px-3 py-2 text-xs bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-700 rounded-lg transition">
-              All
+                    class="px-3 py-2 text-xs bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-700 rounded-lg transition font-medium">
+              Sell All
             </button>
           </div>
         </div>
       </div>
+      <p v-if="!selectedSecurity" class="text-xs text-gray-500 dark:text-gray-400">Select an instrument to simulate a sale and see estimated proceeds and taxes.</p>
     </section>
 
     <!-- Error -->

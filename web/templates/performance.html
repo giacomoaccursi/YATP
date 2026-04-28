@@ -20,7 +20,10 @@
     .tip:hover::after { display: block; }
     .dark .tip::after { background: #1f2937; color: #d1d5db; border: 1px solid #374151; }
     html:not(.dark) .tip::after { background: #fff; color: #374151; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-    .heatmap-cell { min-width: 48px; text-align: center; font-size: 11px; padding: 6px 4px; border-radius: 4px; }
+    .heatmap-cell { min-width: 48px; text-align: center; font-size: 11px; padding: 6px 4px; border-radius: 6px; }
+    .risk-card { border-left: 3px solid #6366f1 !important; }
+    .period-row:nth-child(even) { background: rgba(99, 102, 241, 0.03); }
+    .dark .period-row:nth-child(even) { background: rgba(99, 102, 241, 0.05); }
   </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 min-h-screen">
@@ -34,46 +37,65 @@
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Returns analysis with period filters</p>
     </div>
 
-    <!-- Instrument Chips -->
-    <div v-if="instrumentNames.length" class="flex flex-wrap items-center gap-2">
-      <button @click="selectAll"
-              class="px-3 py-1.5 text-xs font-medium rounded-lg transition"
-              :class="allSelected
-                ? 'bg-indigo-600 text-white'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'">
-        All
-      </button>
-      <button v-for="name in instrumentNames" :key="name"
-              @click="toggleChip(name)" @dblclick="selectOnly(name)"
-              class="px-3 py-1.5 text-xs font-medium rounded-lg transition"
-              :class="selectedSet.has(name)
-                ? 'bg-indigo-600/80 text-white'
-                : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'"
-              :title="'Double-click to view only ' + name">
-        {{ name }}
-      </button>
+    <!-- Instrument Filter -->
+    <div v-if="instrumentNames.length" class="space-y-2">
+      <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Filter instruments</div>
+      <div class="flex flex-wrap items-center gap-2">
+        <button @click="selectAll"
+                class="px-3 py-1.5 text-xs font-medium rounded-lg transition flex items-center gap-1.5"
+                :class="allSelected
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'">
+          <svg v-if="allSelected" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          All
+        </button>
+        <button v-for="name in instrumentNames" :key="name"
+                @click="toggleChip(name)"
+                class="group px-3 py-1.5 text-xs font-medium rounded-lg transition flex items-center gap-1.5"
+                :class="selectedSet.has(name)
+                  ? 'bg-indigo-600/80 text-white'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-700'">
+          <svg v-if="selectedSet.has(name)" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          {{ name }}
+          <span v-if="selectedSet.size > 1 && selectedSet.has(name)"
+                @click.stop="selectOnly(name)"
+                class="hidden group-hover:inline-flex ml-1 px-1.5 py-0.5 text-[10px] rounded bg-white/20 hover:bg-white/30 transition">only</span>
+        </button>
+      </div>
     </div>
 
     <!-- Risk Metrics Cards -->
     <section v-if="risk" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-      <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800" data-info="volatility">
-        <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Volatility</div>
-        <div class="text-xl font-semibold mt-1">{{ risk.volatility != null ? risk.volatility + '%' : 'N/A' }}</div>
+      <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800 risk-card" data-info="volatility">
+        <div class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+          <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Volatility</div>
+        </div>
+        <div class="text-xl font-semibold mt-2">{{ risk.volatility != null ? risk.volatility + '%' : 'N/A' }}</div>
         <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Annualized</div>
       </div>
-      <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800" data-info="sharpe-ratio">
-        <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Sharpe Ratio</div>
-        <div class="text-xl font-semibold mt-1" :class="risk.sharpe_ratio != null && risk.sharpe_ratio >= 1 ? 'text-green-600 dark:text-green-400' : ''">{{ risk.sharpe_ratio != null ? risk.sharpe_ratio : 'N/A' }}</div>
+      <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800 risk-card" data-info="sharpe-ratio">
+        <div class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Sharpe Ratio</div>
+        </div>
+        <div class="text-xl font-semibold mt-2" :class="risk.sharpe_ratio != null && risk.sharpe_ratio >= 1 ? 'text-green-600 dark:text-green-400' : ''">{{ risk.sharpe_ratio != null ? risk.sharpe_ratio : 'N/A' }}</div>
         <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Return / risk</div>
       </div>
-      <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800" data-info="sortino-ratio">
-        <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Sortino Ratio</div>
-        <div class="text-xl font-semibold mt-1">{{ risk.sortino_ratio != null ? risk.sortino_ratio : 'N/A' }}</div>
+      <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800 risk-card" data-info="sortino-ratio">
+        <div class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M3.5 19h17a1.5 1.5 0 001.3-2.25l-8.5-14.5a1.5 1.5 0 00-2.6 0l-8.5 14.5A1.5 1.5 0 003.5 19z"/></svg>
+          <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Sortino Ratio</div>
+        </div>
+        <div class="text-xl font-semibold mt-2">{{ risk.sortino_ratio != null ? risk.sortino_ratio : 'N/A' }}</div>
         <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Return / downside risk</div>
       </div>
-      <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800" data-info="max-drawdown">
-        <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Max Drawdown</div>
-        <div class="text-xl font-semibold mt-1 text-red-600 dark:text-red-400">{{ risk.max_drawdown != null ? risk.max_drawdown + '%' : 'N/A' }}</div>
+      <div class="bg-white dark:bg-gray-900 rounded-xl p-4 border border-gray-200 dark:border-gray-800 risk-card" data-info="max-drawdown">
+        <div class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/></svg>
+          <div class="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Max Drawdown</div>
+        </div>
+        <div class="text-xl font-semibold mt-2 text-red-600 dark:text-red-400">{{ risk.max_drawdown != null ? risk.max_drawdown + '%' : 'N/A' }}</div>
         <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Worst peak-to-trough</div>
       </div>
     </section>
@@ -95,7 +117,7 @@
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
-            <tr v-for="p in periods" :key="p.period">
+            <tr v-for="p in periods" :key="p.period" class="period-row">
               <td class="px-5 py-3 font-medium">{{ p.period }}</td>
               <template v-if="p.available">
                 <td class="px-5 py-3 text-right" :class="pnlColor(p.market_gain)">{{ fmtSigned(p.market_gain) }} &euro;</td>
@@ -120,18 +142,9 @@
 
     <!-- Cumulative Return Chart with Filters -->
     <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 space-y-4">
-      <div class="flex items-center justify-between">
-        <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Cumulative Return</h3>
-        <div class="flex items-center gap-3">
-          <label class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 cursor-pointer">
-            <input type="checkbox" v-model="includeRealized" class="rounded">
-            Include realized
-          </label>
-          <div v-if="historyLoading" class="text-xs text-gray-500 dark:text-gray-400">Loading...</div>
-        </div>
-      </div>
+      <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400">Cumulative Return</h3>
 
-      <!-- Period Filters -->
+      <!-- Period Filters + Toggle -->
       <div class="flex flex-wrap items-center gap-2">
         <button v-for="preset in presets" :key="preset.key"
                 @click="selectPreset(preset.key)"
@@ -147,6 +160,16 @@
           <input v-model="customTo" type="date" class="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-2 py-1.5 text-xs">
           <button @click="applyCustomRange" class="px-3 py-1.5 text-xs bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition">Apply</button>
         </div>
+        <button @click="includeRealized = !includeRealized"
+                class="ml-auto px-3 py-1.5 text-xs rounded-lg transition flex items-center gap-1.5"
+                :class="includeRealized
+                  ? 'bg-indigo-600 text-white'
+                  : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'">
+          <svg v-if="!includeRealized" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6"/></svg>
+          <svg v-else class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 12H6"/></svg>
+          {{ includeRealized ? 'Exclude' : 'Include' }} realized P&amp;L
+        </button>
+        <div v-if="historyLoading" class="text-xs text-gray-500 dark:text-gray-400">Loading...</div>
       </div>
 
       <canvas ref="returnChart" height="80"></canvas>

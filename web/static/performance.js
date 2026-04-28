@@ -219,9 +219,15 @@ createApp({
         label: 'Unrealized Return',
         data: returnPcts,
         borderColor: '#6366f1',
-        backgroundColor: function (ctx) {
-          if (!ctx.raw && ctx.raw !== 0) return 'transparent';
-          return ctx.raw >= 0 ? 'rgba(99, 102, 241, 0.1)' : 'rgba(239, 68, 68, 0.1)';
+        backgroundColor: function (context) {
+          var chart = context.chart;
+          var ctx = chart.ctx;
+          var area = chart.chartArea;
+          if (!area) return 'rgba(99, 102, 241, 0.1)';
+          var gradient = ctx.createLinearGradient(0, area.top, 0, area.bottom);
+          gradient.addColorStop(0, 'rgba(99, 102, 241, 0.25)');
+          gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
+          return gradient;
         },
         fill: true, tension: 0.3, pointRadius: 0, pointHitRadius: 10, borderWidth: 2,
       }];
@@ -259,7 +265,16 @@ createApp({
         data: {
           labels: dates,
           datasets: [
-            { label: 'Market Value', data: values, borderColor: '#6366f1', backgroundColor: 'rgba(99, 102, 241, 0.08)', fill: true, tension: 0.3, pointRadius: 0, pointHitRadius: 10, borderWidth: 2 },
+            { label: 'Market Value', data: values, borderColor: '#6366f1', backgroundColor: function (context) {
+              var chart = context.chart;
+              var ctx = chart.ctx;
+              var area = chart.chartArea;
+              if (!area) return 'rgba(99, 102, 241, 0.08)';
+              var gradient = ctx.createLinearGradient(0, area.top, 0, area.bottom);
+              gradient.addColorStop(0, 'rgba(99, 102, 241, 0.2)');
+              gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
+              return gradient;
+            }, fill: true, tension: 0.3, pointRadius: 0, pointHitRadius: 10, borderWidth: 2 },
             { label: 'Cost Basis', data: costs, borderColor: '#f59e0b', borderDash: [6, 3], fill: false, tension: 0.3, pointRadius: 0, pointHitRadius: 10, borderWidth: 2 },
           ],
         },
@@ -285,7 +300,16 @@ createApp({
           labels: dates,
           datasets: [{
             label: 'Drawdown', data: drawdownPcts, borderColor: '#ef4444',
-            backgroundColor: 'rgba(239, 68, 68, 0.15)',
+            backgroundColor: function (context) {
+              var chart = context.chart;
+              var ctx = chart.ctx;
+              var area = chart.chartArea;
+              if (!area) return 'rgba(239, 68, 68, 0.15)';
+              var gradient = ctx.createLinearGradient(0, area.top, 0, area.bottom);
+              gradient.addColorStop(0, 'rgba(239, 68, 68, 0.0)');
+              gradient.addColorStop(1, 'rgba(239, 68, 68, 0.3)');
+              return gradient;
+            },
             fill: true, tension: 0.3, pointRadius: 0, pointHitRadius: 10, borderWidth: 2,
           }],
         },

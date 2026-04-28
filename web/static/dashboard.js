@@ -99,7 +99,16 @@ createApp({
             label: 'Portfolio Value (€)',
             data: values,
             borderColor: '#6366f1',
-            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+            backgroundColor: function(context) {
+              var chart = context.chart;
+              var ctx = chart.ctx;
+              var area = chart.chartArea;
+              if (!area) return 'rgba(99, 102, 241, 0.1)';
+              var gradient = ctx.createLinearGradient(0, area.top, 0, area.bottom);
+              gradient.addColorStop(0, 'rgba(99, 102, 241, 0.3)');
+              gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
+              return gradient;
+            },
             fill: true, tension: 0.3, pointRadius: 0, pointHitRadius: 10, borderWidth: 2,
           }],
         },
@@ -211,7 +220,9 @@ createApp({
       }
     }
 
-    function onThemeChange() { nextTick(reRenderAll); }
+    function onThemeChange() {
+      nextTick(reRenderAll);
+    }
 
     onMounted(function () {
       fetchData();
