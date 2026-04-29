@@ -68,7 +68,15 @@ def load_instrument_history(config_path, transactions_path, security):
     all_dates = [date for date in all_dates if date <= today]
 
     engine = PortfolioEngine(instrument_df, price_histories, market_dates=all_dates)
-    return engine.full_instrument_history()
+    result = engine.full_instrument_history()
+
+    # Add buy transaction dates and amounts for DCA visualization
+    buy_transactions = instrument_df[instrument_df["Type"].str.strip().str.lower() == "buy"]
+    result["buy_dates"] = [date.strftime("%Y-%m-%d") for date in buy_transactions["Date"]]
+    result["buy_amounts"] = [round(row["Shares"] * (row["Net Transaction Value"] / row["Shares"] if row["Shares"] > 0 else 0), 2) for _, row in buy_transactions.iterrows()]
+    result["buy_prices"] = [round(row["Net Transaction Value"] / row["Shares"], 4) if row["Shares"] > 0 else 0 for _, row in buy_transactions.iterrows()]
+
+    return result
 
 
 def _empty_instrument_response():

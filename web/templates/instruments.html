@@ -100,14 +100,21 @@
 
       <div v-if="detailLoading" class="text-center py-8 text-gray-500 dark:text-gray-400">Loading chart data...</div>
 
-      <div v-else class="grid md:grid-cols-2 gap-4">
-        <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
-          <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">Price vs Avg Cost</h3>
-          <canvas ref="priceChart" height="200"></canvas>
+      <div v-else class="space-y-4">
+        <div class="grid md:grid-cols-2 gap-4">
+          <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">Price vs Avg Cost</h3>
+            <canvas ref="priceChart" height="200"></canvas>
+          </div>
+          <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">Unrealized P&amp;L</h3>
+            <canvas ref="pnlChart" height="200"></canvas>
+          </div>
         </div>
         <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
-          <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">Unrealized P&amp;L</h3>
-          <canvas ref="pnlChart" height="200"></canvas>
+          <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Average Cost Over Time</h3>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">How your cost basis per share evolved with each purchase</p>
+          <canvas ref="dcaChart" height="160"></canvas>
         </div>
       </div>
     </section>

@@ -12,8 +12,10 @@ createApp({
     const selected = ref(null);
     const priceChart = ref(null);
     const pnlChart = ref(null);
+    const dcaChart = ref(null);
     let priceChartInstance = null;
     let pnlChartInstance = null;
+    let dcaChartInstance = null;
     let lastDetailData = null;
 
     function makeLineChart(canvas, labels, datasets, existing, opts) {
@@ -43,14 +45,38 @@ createApp({
     function renderDetailCharts(data) {
       if (!data.dates.length) return;
 
+      // Build buy points for the price chart (scatter overlay)
+      var buyPointData = [];
+      if (data.buy_dates) {
+        data.buy_dates.forEach(function (buyDate, idx) {
+          var dateIdx = data.dates.indexOf(buyDate);
+          if (dateIdx >= 0 && data.buy_prices[idx]) {
+            buyPointData.push({ x: buyDate, y: data.buy_prices[idx] });
+          }
+        });
+      }
+
       if (priceChart.value) {
+        var datasets = [
+          { label: 'Price', data: data.prices, borderColor: '#6366f1', backgroundColor: 'rgba(99, 102, 241, 0.1)', fill: false, tension: 0.3, pointRadius: 0, pointHitRadius: 10, borderWidth: 2 },
+          { label: 'Avg Cost', data: data.cost_avg, borderColor: '#f59e0b', borderDash: [6, 3], fill: false, tension: 0.3, pointRadius: 0, pointHitRadius: 10, borderWidth: 2 },
+        ];
+
+        // Add buy markers as scatter points on the price line
+        if (buyPointData.length) {
+          var buyMarkerData = data.dates.map(function (date) {
+            var match = buyPointData.find(function (bp) { return bp.x === date; });
+            return match ? match.y : null;
+          });
+          datasets.push({
+            label: 'Buy', data: buyMarkerData, borderColor: '#22c55e', backgroundColor: '#22c55e',
+            pointRadius: 5, pointHoverRadius: 7, pointStyle: 'triangle',
+            showLine: false, fill: false,
+          });
+        }
+
         priceChartInstance = makeLineChart(
-          priceChart.value, data.dates,
-          [
-            { label: 'Price', data: data.prices, borderColor: '#6366f1', backgroundColor: 'rgba(99, 102, 241, 0.1)', fill: false, tension: 0.3, pointRadius: 0, pointHitRadius: 10, borderWidth: 2 },
-            { label: 'Avg Cost', data: data.cost_avg, borderColor: '#f59e0b', borderDash: [6, 3], fill: false, tension: 0.3, pointRadius: 0, pointHitRadius: 10, borderWidth: 2 },
-          ],
-          priceChartInstance,
+          priceChart.value, data.dates, datasets, priceChartInstance,
           { tooltipCallbacks: { label: function (ctx) { return ctx.dataset.label + ': ' + fmt(ctx.parsed.y) + ' €'; } }, yTickFormat: function (v) { return fmt(v) + ' €'; } },
         );
       }
@@ -65,6 +91,46 @@ createApp({
           }],
           pnlChartInstance,
           { beginAtZero: true, tooltipCallbacks: { label: function (ctx) { return fmtSigned(ctx.parsed.y) + ' €'; } }, yTickFormat: function (v) { return fmtSigned(v) + ' €'; } },
+        );
+      }
+
+      // DCA chart: avg cost over time with buy points highlighted
+      if (dcaChart.value && data.cost_avg) {
+        if (dcaChartInstance) dcaChartInstance.destroy();
+
+        var dcaDatasets = [
+          {
+            label: 'Avg Cost per Share', data: data.cost_avg, borderColor: '#f59e0b',
+            backgroundColor: function (context) {
+              var chart = context.chart;
+              var ctx = chart.ctx;
+              var area = chart.chartArea;
+              if (!area) return 'rgba(245, 158, 11, 0.1)';
+              var gradient = ctx.createLinearGradient(0, area.top, 0, area.bottom);
+              gradient.addColorStop(0, 'rgba(245, 158, 11, 0.2)');
+              gradient.addColorStop(1, 'rgba(245, 158, 11, 0.0)');
+              return gradient;
+            },
+            fill: true, tension: 0.3, pointRadius: 0, pointHitRadius: 10, borderWidth: 2,
+          },
+        ];
+
+        // Buy price scatter points
+        if (buyPointData.length) {
+          var buyPriceOnDates = data.dates.map(function (date) {
+            var match = buyPointData.find(function (bp) { return bp.x === date; });
+            return match ? match.y : null;
+          });
+          dcaDatasets.push({
+            label: 'Buy Price', data: buyPriceOnDates, borderColor: '#22c55e', backgroundColor: '#22c55e',
+            pointRadius: 6, pointHoverRadius: 8, pointStyle: 'circle',
+            showLine: false, fill: false,
+          });
+        }
+
+        dcaChartInstance = makeLineChart(
+          dcaChart.value, data.dates, dcaDatasets, null,
+          { tooltipCallbacks: { label: function (ctx) { return ctx.dataset.label + ': ' + fmt(ctx.parsed.y) + ' €'; } }, yTickFormat: function (v) { return fmt(v) + ' €'; } },
         );
       }
     }
@@ -110,7 +176,7 @@ createApp({
 
     return {
       loading, detailLoading, instruments, selected,
-      priceChart, pnlChart, selectInstrument,
+      priceChart, pnlChart, dcaChart, selectInstrument,
       fmt, fmtSigned, pnlColor,
     };
   },
