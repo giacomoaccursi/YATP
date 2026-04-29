@@ -13,9 +13,11 @@ createApp({
     const priceChart = ref(null);
     const pnlChart = ref(null);
     const dcaChart = ref(null);
+    const returnChart = ref(null);
     let priceChartInstance = null;
     let pnlChartInstance = null;
     let dcaChartInstance = null;
+    let returnChartInstance = null;
     let lastDetailData = null;
 
     function makeLineChart(canvas, labels, datasets, existing, opts) {
@@ -94,43 +96,52 @@ createApp({
         );
       }
 
-      // DCA chart: avg cost over time with buy points highlighted
-      if (dcaChart.value && data.cost_avg) {
+      // Value vs Cost chart
+      if (dcaChart.value && data.values && data.costs) {
         if (dcaChartInstance) dcaChartInstance.destroy();
 
-        var dcaDatasets = [
-          {
-            label: 'Avg Cost per Share', data: data.cost_avg, borderColor: '#f59e0b',
+        dcaChartInstance = makeLineChart(
+          dcaChart.value, data.dates,
+          [
+            { label: 'Market Value', data: data.values, borderColor: '#6366f1', backgroundColor: function (context) {
+              var chart = context.chart;
+              var ctx = chart.ctx;
+              var area = chart.chartArea;
+              if (!area) return 'rgba(99, 102, 241, 0.1)';
+              var gradient = ctx.createLinearGradient(0, area.top, 0, area.bottom);
+              gradient.addColorStop(0, 'rgba(99, 102, 241, 0.2)');
+              gradient.addColorStop(1, 'rgba(99, 102, 241, 0.0)');
+              return gradient;
+            }, fill: true, tension: 0.3, pointRadius: 0, pointHitRadius: 10, borderWidth: 2 },
+            { label: 'Cost Basis', data: data.costs, borderColor: '#f59e0b', borderDash: [6, 3], fill: false, tension: 0.3, pointRadius: 0, pointHitRadius: 10, borderWidth: 2 },
+          ],
+          null,
+          { tooltipCallbacks: { label: function (ctx) { return ctx.dataset.label + ': ' + fmt(ctx.parsed.y) + ' €'; } }, yTickFormat: function (v) { return fmt(v) + ' €'; } },
+        );
+      }
+
+      // Return % chart (TWR)
+      if (returnChart.value && data.twr_pcts) {
+        if (returnChartInstance) returnChartInstance.destroy();
+
+        returnChartInstance = makeLineChart(
+          returnChart.value, data.dates,
+          [{
+            label: 'TWR', data: data.twr_pcts, borderColor: '#22d3ee',
             backgroundColor: function (context) {
               var chart = context.chart;
               var ctx = chart.ctx;
               var area = chart.chartArea;
-              if (!area) return 'rgba(245, 158, 11, 0.1)';
+              if (!area) return 'rgba(34, 211, 238, 0.1)';
               var gradient = ctx.createLinearGradient(0, area.top, 0, area.bottom);
-              gradient.addColorStop(0, 'rgba(245, 158, 11, 0.2)');
-              gradient.addColorStop(1, 'rgba(245, 158, 11, 0.0)');
+              gradient.addColorStop(0, 'rgba(34, 211, 238, 0.2)');
+              gradient.addColorStop(1, 'rgba(34, 211, 238, 0.0)');
               return gradient;
             },
             fill: true, tension: 0.3, pointRadius: 0, pointHitRadius: 10, borderWidth: 2,
-          },
-        ];
-
-        // Buy price scatter points
-        if (buyPointData.length) {
-          var buyPriceOnDates = data.dates.map(function (date) {
-            var match = buyPointData.find(function (bp) { return bp.x === date; });
-            return match ? match.y : null;
-          });
-          dcaDatasets.push({
-            label: 'Buy Price', data: buyPriceOnDates, borderColor: '#22c55e', backgroundColor: '#22c55e',
-            pointRadius: 6, pointHoverRadius: 8, pointStyle: 'circle',
-            showLine: false, fill: false,
-          });
-        }
-
-        dcaChartInstance = makeLineChart(
-          dcaChart.value, data.dates, dcaDatasets, null,
-          { tooltipCallbacks: { label: function (ctx) { return ctx.dataset.label + ': ' + fmt(ctx.parsed.y) + ' €'; } }, yTickFormat: function (v) { return fmt(v) + ' €'; } },
+          }],
+          null,
+          { beginAtZero: true, tooltipCallbacks: { label: function (ctx) { return 'TWR: ' + fmtSigned(ctx.parsed.y) + '%'; } }, yTickFormat: function (v) { return fmtSigned(v) + '%'; } },
         );
       }
     }
@@ -176,7 +187,7 @@ createApp({
 
     return {
       loading, detailLoading, instruments, selected,
-      priceChart, pnlChart, dcaChart, selectInstrument,
+      priceChart, pnlChart, dcaChart, returnChart, selectInstrument,
       fmt, fmtSigned, pnlColor,
     };
   },

@@ -25,7 +25,7 @@
     .dark tbody tr:nth-child(even) { background: rgba(99, 102, 241, 0.05); }
   </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 min-h-screen">
+<body class="bg-gray-100 dark:bg-black text-gray-900 dark:text-gray-100 min-h-screen">
 
 <div id="app" v-cloak>
 
@@ -40,7 +40,7 @@
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Click on an instrument to see detailed charts</p>
     </div>
 
-    <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-visible">
+    <section class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 overflow-visible">
       <div class="overflow-visible">
         <table class="w-full text-sm whitespace-nowrap">
           <thead class="text-xs text-gray-800 dark:text-gray-200 uppercase tracking-wider bg-gray-100 dark:bg-gray-800 border-b-2 border-indigo-500/20">
@@ -57,7 +57,7 @@
               <th class="px-5 py-3 text-right"><span class="tip" data-tip="Estimated capital gains tax on unrealized profits.">Est. Tax</span></th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
+          <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
             <tr v-for="inst in instruments" :key="inst.security"
                 class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition cursor-pointer"
                 :class="{ 'bg-indigo-50 dark:bg-gray-800/30 ring-1 ring-indigo-500/30': selected === inst.security }"
@@ -100,21 +100,24 @@
 
       <div v-if="detailLoading" class="text-center py-8 text-gray-500 dark:text-gray-400">Loading chart data...</div>
 
-      <div v-else class="space-y-4">
-        <div class="grid md:grid-cols-2 gap-4">
-          <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
-            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">Price vs Avg Cost</h3>
-            <canvas ref="priceChart" height="200"></canvas>
-          </div>
-          <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
-            <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">Unrealized P&amp;L</h3>
-            <canvas ref="pnlChart" height="200"></canvas>
-          </div>
+      <div v-else class="grid md:grid-cols-2 gap-4">
+        <div class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+          <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">Price vs Avg Cost</h3>
+          <canvas ref="priceChart" height="180"></canvas>
         </div>
-        <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
-          <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Average Cost Over Time</h3>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">How your cost basis per share evolved with each purchase</p>
-          <canvas ref="dcaChart" height="160"></canvas>
+        <div class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+          <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">Unrealized P&amp;L</h3>
+          <canvas ref="pnlChart" height="180"></canvas>
+        </div>
+        <div class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+          <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Value vs Cost Basis</h3>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Market value vs total invested</p>
+          <canvas ref="dcaChart" height="180"></canvas>
+        </div>
+        <div class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5">
+          <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Return %</h3>
+          <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">TWR performance over time</p>
+          <canvas ref="returnChart" height="180"></canvas>
         </div>
       </div>
     </section>

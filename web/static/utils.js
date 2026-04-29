@@ -53,7 +53,7 @@ function chartScales(opts) {
   var t = chartTheme();
   return {
     x: {
-      ticks: { color: t.textMuted, maxTicksLimit: opts.xMaxTicks || 12 },
+      ticks: { color: t.textMuted, maxTicksLimit: opts.xMaxTicks || 12, maxRotation: 45, minRotation: 25 },
       grid: opts.xGrid === false ? { display: false } : { color: t.grid },
     },
     y: {

@@ -26,7 +26,7 @@
   var current = window.location.pathname;
 
   var nav = document.createElement('nav');
-  nav.className = 'border-b border-gray-200 dark:border-gray-800 px-6 py-2.5 flex items-center gap-1 bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm sticky top-0 z-50';
+  nav.className = 'border-b border-gray-200 dark:border-gray-700 px-6 py-2.5 flex items-center gap-1 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm sticky top-0 z-50';
   nav.id = 'main-nav';
 
   // Brand

@@ -21,7 +21,7 @@
     html:not(.dark) input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: #6366f1; cursor: pointer; }
   </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 min-h-screen">
+<body class="bg-gray-100 dark:bg-black text-gray-900 dark:text-gray-100 min-h-screen">
 
 <div id="app" v-cloak>
 
@@ -36,7 +36,7 @@
       <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Simulate investments and adjust target allocation</p>
     </div>
 
-    <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 space-y-4">
+    <section class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-4">
       <h2 class="text-lg font-medium">Simulate New Investment</h2>
       <div class="flex items-center gap-4">
         <label class="text-sm text-gray-500 dark:text-gray-400">Amount to invest</label>
@@ -47,7 +47,7 @@
       <p class="text-xs text-gray-500 dark:text-gray-400">Enter an amount to see how it would be distributed across asset classes to reach your target allocation.</p>
     </section>
 
-    <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5 space-y-4">
+    <section class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-4">
       <div class="flex items-center justify-between">
         <h2 class="text-lg font-medium">Target Allocation</h2>
         <div class="text-sm font-medium flex items-center gap-1.5" :class="totalTarget === 100 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
@@ -64,18 +64,18 @@
     </section>
 
     <section class="grid md:grid-cols-2 gap-4">
-      <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+      <div class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5">
         <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">Current Allocation</h3>
         <div style="height: 220px;"><canvas ref="currentChart"></canvas></div>
       </div>
-      <div class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-5">
+      <div class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5">
         <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">After Rebalance</h3>
         <div style="height: 220px;"><canvas ref="afterChart"></canvas></div>
       </div>
     </section>
 
-    <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 overflow-hidden">
-      <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-800">
+    <section class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
         <h2 class="text-lg font-medium">What to do</h2>
         <p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Buy or sell to reach your target allocation</p>
       </div>
@@ -91,7 +91,7 @@
               <th class="px-5 py-3 text-right">Action</th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
+          <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
             <tr v-for="row in simulatedActions" :key="row.asset_class">
               <td class="px-5 py-3 font-medium">{{ row.asset_class }}</td>
               <td class="px-5 py-3 text-right">{{ fmt(row.current_value) }} &euro;</td>

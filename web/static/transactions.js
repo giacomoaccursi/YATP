@@ -12,6 +12,25 @@ createApp({
     const instrumentTypes = ref({});
     const filters = ref({ security: '', type: '', dateFrom: '', dateTo: '' });
 
+    // Sorting
+    const sortKey = ref('');
+    const sortDir = ref('desc');
+
+    function toggleSort(key) {
+      if (sortKey.value === key) {
+        sortDir.value = sortDir.value === 'asc' ? 'desc' : 'asc';
+      } else {
+        sortKey.value = key;
+        sortDir.value = 'desc';
+      }
+    }
+
+    function sortIcon(key) {
+      if (sortKey.value !== key) return '<svg class="w-3 h-3 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"/></svg>';
+      if (sortDir.value === 'asc') return '<svg class="w-3 h-3 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/></svg>';
+      return '<svg class="w-3 h-3 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>';
+    }
+
     // Transaction form
     const showAddForm = ref(false);
     const formMessage = ref('');
@@ -38,13 +57,25 @@ createApp({
     });
 
     const filteredTransactions = computed(function () {
-      return transactions.value.filter(function (tx) {
+      var result = transactions.value.filter(function (tx) {
         if (filters.value.security && tx.security !== filters.value.security) return false;
         if (filters.value.type && tx.type !== filters.value.type) return false;
         if (filters.value.dateFrom && tx.date < filters.value.dateFrom) return false;
         if (filters.value.dateTo && tx.date > filters.value.dateTo) return false;
         return true;
       });
+      if (sortKey.value) {
+        var key = sortKey.value;
+        var dir = sortDir.value === 'asc' ? 1 : -1;
+        result = result.slice().sort(function (a, b) {
+          var va = a[key] || 0;
+          var vb = b[key] || 0;
+          if (va < vb) return -1 * dir;
+          if (va > vb) return 1 * dir;
+          return 0;
+        });
+      }
+      return result;
     });
 
     // Net value (debounced backend call)
@@ -218,6 +249,7 @@ createApp({
     return {
       transactions, availableInstruments, instrumentTypes, filters, securities,
       hasFilters, filteredTransactions, clearFilters, typeBadge,
+      sortKey, sortDir, toggleSort, sortIcon,
       showAddForm, form, formMessage, formError,
       computedNetValue, saveTransaction, isEditing, isSelectedBond,
       openAddForm, openEditForm,

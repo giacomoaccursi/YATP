@@ -26,7 +26,7 @@
     .dark tbody tr:nth-child(even) { background: rgba(99, 102, 241, 0.05); }
   </style>
 </head>
-<body class="bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-gray-100 min-h-screen">
+<body class="bg-gray-100 dark:bg-black text-gray-900 dark:text-gray-100 min-h-screen">
 
 <div id="app" v-cloak>
 
@@ -62,24 +62,38 @@
       <div class="ml-auto text-sm text-gray-500 dark:text-gray-400">{{ filteredTransactions.length }} transactions</div>
     </section>
 
-    <section class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800">
+    <section class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700">
       <div class="max-h-[70vh] overflow-y-auto">
         <table class="w-full text-sm">
           <thead class="text-xs text-gray-800 dark:text-gray-200 uppercase tracking-wider sticky top-0 z-10">
             <tr class="bg-gray-100 dark:bg-gray-800 border-b-2 border-indigo-500/20">
-              <th class="px-5 py-4 text-left">Date</th>
+              <th class="px-5 py-4 text-left cursor-pointer select-none hover:text-indigo-600 dark:hover:text-indigo-400 transition" @click="toggleSort('date')">
+                <span class="inline-flex items-center gap-1">Date <span v-html="sortIcon('date')"></span></span>
+              </th>
               <th class="px-5 py-4 text-left">Type</th>
               <th class="px-5 py-4 text-left">Security</th>
-              <th class="px-5 py-4 text-right">Shares</th>
-              <th class="px-5 py-4 text-right">Quote</th>
-              <th class="px-5 py-4 text-right">Fees</th>
-              <th class="px-5 py-4 text-right">Taxes</th>
-              <th class="px-5 py-4 text-right">Accrued Int.</th>
-              <th class="px-5 py-4 text-right">Net Value</th>
+              <th class="px-5 py-4 text-right cursor-pointer select-none hover:text-indigo-600 dark:hover:text-indigo-400 transition" @click="toggleSort('shares')">
+                <span class="inline-flex items-center gap-1 justify-end">Shares <span v-html="sortIcon('shares')"></span></span>
+              </th>
+              <th class="px-5 py-4 text-right cursor-pointer select-none hover:text-indigo-600 dark:hover:text-indigo-400 transition" @click="toggleSort('quote')">
+                <span class="inline-flex items-center gap-1 justify-end">Quote <span v-html="sortIcon('quote')"></span></span>
+              </th>
+              <th class="px-5 py-4 text-right cursor-pointer select-none hover:text-indigo-600 dark:hover:text-indigo-400 transition" @click="toggleSort('fees')">
+                <span class="inline-flex items-center gap-1 justify-end">Fees <span v-html="sortIcon('fees')"></span></span>
+              </th>
+              <th class="px-5 py-4 text-right cursor-pointer select-none hover:text-indigo-600 dark:hover:text-indigo-400 transition" @click="toggleSort('taxes')">
+                <span class="inline-flex items-center gap-1 justify-end">Taxes <span v-html="sortIcon('taxes')"></span></span>
+              </th>
+              <th class="px-5 py-4 text-right cursor-pointer select-none hover:text-indigo-600 dark:hover:text-indigo-400 transition" @click="toggleSort('accrued_interest')">
+                <span class="inline-flex items-center gap-1 justify-end">Accrued Int. <span v-html="sortIcon('accrued_interest')"></span></span>
+              </th>
+              <th class="px-5 py-4 text-right cursor-pointer select-none hover:text-indigo-600 dark:hover:text-indigo-400 transition" @click="toggleSort('net_transaction_value')">
+                <span class="inline-flex items-center gap-1 justify-end">Net Value <span v-html="sortIcon('net_transaction_value')"></span></span>
+              </th>
               <th class="px-5 py-4 w-20"></th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-gray-200 dark:divide-gray-800">
+          <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
             <tr v-for="tx in filteredTransactions" :key="tx.index" class="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition">
               <td class="px-5 py-3">{{ tx.date }}</td>
               <td class="px-5 py-3">
@@ -116,7 +130,7 @@
 
   <!-- Delete Modal -->
   <div v-if="deleteIndex !== null" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50" @click.self="deleteIndex = null">
-    <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 w-full max-w-sm space-y-4">
+    <div class="bg-white dark:bg-[#1a1f2e] rounded-2xl border border-gray-200 dark:border-gray-700 p-6 w-full max-w-sm space-y-4">
       <div class="flex items-center gap-3">
         <div class="p-2 bg-red-100 dark:bg-red-500/10 rounded-full">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500 dark:text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -135,7 +149,7 @@
 
   <!-- Add/Edit Modal -->
   <div v-if="showAddForm" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50" @click.self="showAddForm = false">
-    <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 w-full max-w-md space-y-4">
+    <div class="bg-white dark:bg-[#1a1f2e] rounded-2xl border border-gray-200 dark:border-gray-700 p-6 w-full max-w-md space-y-4">
       <h2 class="text-lg font-semibold">{{ isEditing ? 'Edit Transaction' : 'Add Transaction' }}</h2>
 
       <div class="grid grid-cols-2 gap-3">
@@ -206,7 +220,7 @@
   <!-- New Instrument Modal -->
   <Transition name="modal">
   <div v-if="showNewInstrument" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 transition-opacity duration-200" @click.self="showNewInstrument = false">
-    <div class="bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 w-full max-w-md space-y-4 transform transition-all duration-200 ease-out animate-modal-in">
+    <div class="bg-white dark:bg-[#1a1f2e] rounded-2xl border border-gray-200 dark:border-gray-700 p-6 w-full max-w-md space-y-4 transform transition-all duration-200 ease-out animate-modal-in">
       <h2 class="text-lg font-semibold">New Instrument</h2>
 
       <div>
