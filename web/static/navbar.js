@@ -43,7 +43,7 @@
     var isActive = (page.href === '/' && current === '/') || (page.href !== '/' && current.startsWith(page.href));
     a.className = isActive
       ? 'px-3 py-2 text-sm text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center gap-2'
-      : 'px-3 py-2 text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/50 dark:hover:bg-gray-800/50 rounded-lg transition flex items-center gap-2';
+      : 'px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/50 dark:hover:bg-gray-800/50 rounded-lg transition flex items-center gap-2';
     a.innerHTML = icons[page.icon] + '<span>' + page.label + '</span>';
     nav.appendChild(a);
   });
@@ -62,7 +62,7 @@
   refreshLabel.innerHTML = refreshIcon + ' Refresh Prices';
 
   var timestamp = document.createElement('span');
-  timestamp.className = 'text-[11px] text-gray-400 dark:text-gray-500 font-normal';
+  timestamp.className = 'text-[11px] text-gray-500 dark:text-gray-500 font-normal';
   timestamp.textContent = '';
 
   refreshBtn.appendChild(refreshLabel);
@@ -102,7 +102,7 @@
   var moonIcon = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg>';
 
   var themeBtn = document.createElement('button');
-  themeBtn.className = 'p-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition';
+  themeBtn.className = 'p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition';
   themeBtn.title = 'Toggle theme';
   function updateThemeIcon() {
     var isDark = document.documentElement.classList.contains('dark');

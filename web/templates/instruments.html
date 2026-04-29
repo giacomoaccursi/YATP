@@ -30,14 +30,14 @@
 <div id="app" v-cloak>
 
   <div v-if="loading" class="flex items-center justify-center h-96">
-    <div class="text-gray-500 dark:text-gray-400">Loading instruments...</div>
+    <div class="text-gray-600 dark:text-gray-400">Loading instruments...</div>
   </div>
 
   <main v-else class="max-w-screen-2xl mx-auto px-6 py-8 space-y-6">
 
     <div>
       <h2 class="text-xl font-semibold">Instruments</h2>
-      <p class="text-sm text-gray-500 dark:text-gray-400 mt-0.5">Click on an instrument to see detailed charts</p>
+      <p class="text-sm text-gray-600 dark:text-gray-400 mt-0.5">Click on an instrument to see detailed charts</p>
     </div>
 
     <section class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 overflow-visible">
@@ -66,7 +66,7 @@
                 <div class="flex items-center gap-2">
                   <div>
                     <div class="font-medium">{{ inst.security }}</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ inst.ticker }}</div>
+                    <div class="text-xs text-gray-600 dark:text-gray-400">{{ inst.ticker }}</div>
                   </div>
                   <span v-if="inst.daily_change != null" class="text-xs font-medium ml-auto md:ml-2"
                         :class="inst.daily_change >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
@@ -76,7 +76,7 @@
               </td>
               <td class="px-5 py-3 text-right">{{ inst.shares_held }}</td>
               <td class="px-5 py-3 text-right">{{ fmt(inst.avg_cost_per_share) }}&nbsp;&euro;</td>
-              <td class="px-5 py-3 text-right text-gray-500 dark:text-gray-400">{{ inst.weight != null ? inst.weight.toFixed(1) + '%' : '' }}</td>
+              <td class="px-5 py-3 text-right text-gray-600 dark:text-gray-400">{{ inst.weight != null ? inst.weight.toFixed(1) + '%' : '' }}</td>
               <td class="px-5 py-3 text-right">{{ fmt(inst.market_value) }}&nbsp;&euro;</td>
               <td class="px-5 py-3 text-right" :class="pnlColor(inst.total_pnl)">{{ fmtSigned(inst.total_pnl) }}&nbsp;&euro;</td>
               <td class="px-5 py-3 text-right" :class="pnlColor(inst.simple_return)">{{ fmtSigned(inst.simple_return) }}%</td>
@@ -93,30 +93,30 @@
       <div class="flex items-center justify-between">
         <div>
           <h2 class="text-lg font-medium">{{ selected }}</h2>
-          <p class="text-sm text-gray-500 dark:text-gray-400">Price history and unrealized P&amp;L</p>
+          <p class="text-sm text-gray-600 dark:text-gray-400">Price history and unrealized P&amp;L</p>
         </div>
-        <button @click="selected = null" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">&times; Close</button>
+        <button @click="selected = null" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">&times; Close</button>
       </div>
 
-      <div v-if="detailLoading" class="text-center py-8 text-gray-500 dark:text-gray-400">Loading chart data...</div>
+      <div v-if="detailLoading" class="text-center py-8 text-gray-600 dark:text-gray-400">Loading chart data...</div>
 
       <div v-else class="grid md:grid-cols-2 gap-4">
         <div class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-          <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">Price vs Avg Cost</h3>
+          <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4">Price vs Avg Cost</h3>
           <canvas ref="priceChart" height="180"></canvas>
         </div>
         <div class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-          <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-4">Unrealized P&amp;L</h3>
+          <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4">Unrealized P&amp;L</h3>
           <canvas ref="pnlChart" height="180"></canvas>
         </div>
         <div class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-          <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Value vs Cost Basis</h3>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">Market value vs total invested</p>
+          <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Value vs Cost Basis</h3>
+          <p class="text-xs text-gray-600 dark:text-gray-400 mb-3">Market value vs total invested</p>
           <canvas ref="dcaChart" height="180"></canvas>
         </div>
         <div class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-          <h3 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Return %</h3>
-          <p class="text-xs text-gray-500 dark:text-gray-400 mb-3">TWR performance over time</p>
+          <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Return %</h3>
+          <p class="text-xs text-gray-600 dark:text-gray-400 mb-3">TWR performance over time</p>
           <canvas ref="returnChart" height="180"></canvas>
         </div>
       </div>
