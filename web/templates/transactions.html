@@ -8,7 +8,9 @@
   <script>tailwind.config = { darkMode: 'class' }</script>
   <script src="/static/theme.js"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://unpkg.com/vue-i18n@9/dist/vue-i18n.global.prod.js"></script>
   <script src="/static/utils.js"></script>
+  <script src="/static/i18n.js"></script>
   <script src="/static/navbar.js" defer></script>
   <script src="/static/tooltip.js" defer></script>
   <script src="/static/alert-banner.js" defer></script>
@@ -34,32 +36,32 @@
 
     <div class="flex items-center justify-between">
       <div>
-        <h2 class="text-xl font-semibold">Transactions</h2>
-        <p class="text-sm text-gray-600 dark:text-gray-400 mt-0.5">View, add, edit and delete transactions</p>
+        <h2 class="text-xl font-semibold">{{ $t('transactions.title') }}</h2>
+        <p class="text-sm text-gray-600 dark:text-gray-400 mt-0.5">{{ $t('transactions.subtitle') }}</p>
       </div>
-      <button @click="openAddForm" class="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition">+ Add Transaction</button>
+      <button @click="openAddForm" class="px-3 py-1.5 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition">{{ $t('transactions.add') }}</button>
     </div>
 
     <section class="flex flex-wrap gap-3 items-center">
       <select v-model="filters.security" class="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
-        <option value="">All instruments</option>
+        <option value="">{{ $t('transactions.all_instruments') }}</option>
         <option v-for="sec in securities" :key="sec" :value="sec">{{ sec }}</option>
       </select>
       <select v-model="filters.type" class="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
-        <option value="">All types</option>
+        <option value="">{{ $t('transactions.all_types') }}</option>
         <option value="Buy">Buy</option>
         <option value="Sell">Sell</option>
         <option value="Dividend">Dividend</option>
         <option value="Coupon">Coupon</option>
       </select>
       <div class="flex items-center gap-1.5">
-        <span class="text-xs text-gray-600 dark:text-gray-400">from</span>
+        <span class="text-xs text-gray-600 dark:text-gray-400">{{ $t('transactions.from') }}</span>
         <input v-model="filters.dateFrom" type="date" class="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
-        <span class="text-xs text-gray-600 dark:text-gray-400">to</span>
+        <span class="text-xs text-gray-600 dark:text-gray-400">{{ $t('transactions.to') }}</span>
         <input v-model="filters.dateTo" type="date" class="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
       </div>
-      <button v-if="hasFilters" @click="clearFilters" class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-gray-800 rounded-lg transition">✕ Clear</button>
-      <div class="ml-auto text-sm text-gray-600 dark:text-gray-400">{{ filteredTransactions.length }} transactions</div>
+      <button v-if="hasFilters" @click="clearFilters" class="px-3 py-2 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-gray-800 rounded-lg transition">✕ {{ $t('transactions.clear') }}</button>
+      <div class="ml-auto text-sm text-gray-600 dark:text-gray-400">{{ $t('transactions.transactions_count', { count: filteredTransactions.length }) }}</div>
     </section>
 
     <section class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700">
@@ -68,27 +70,27 @@
           <thead class="text-xs text-gray-800 dark:text-gray-200 uppercase tracking-wider sticky top-0 z-10">
             <tr class="bg-gray-100 dark:bg-gray-800 border-b-2 border-indigo-500/20">
               <th class="px-5 py-4 text-left cursor-pointer select-none hover:text-indigo-600 dark:hover:text-indigo-400 transition" @click="toggleSort('date')">
-                <span class="inline-flex items-center gap-1">Date <span v-html="sortIcon('date')"></span></span>
+                <span class="inline-flex items-center gap-1">{{ $t('transactions.date') }} <span v-html="sortIcon('date')"></span></span>
               </th>
-              <th class="px-5 py-4 text-left">Type</th>
-              <th class="px-5 py-4 text-left">Security</th>
+              <th class="px-5 py-4 text-left">{{ $t('transactions.type') }}</th>
+              <th class="px-5 py-4 text-left">{{ $t('transactions.security') }}</th>
               <th class="px-5 py-4 text-right cursor-pointer select-none hover:text-indigo-600 dark:hover:text-indigo-400 transition" @click="toggleSort('shares')">
-                <span class="inline-flex items-center gap-1 justify-end">Shares <span v-html="sortIcon('shares')"></span></span>
+                <span class="inline-flex items-center gap-1 justify-end">{{ $t('transactions.shares') }} <span v-html="sortIcon('shares')"></span></span>
               </th>
               <th class="px-5 py-4 text-right cursor-pointer select-none hover:text-indigo-600 dark:hover:text-indigo-400 transition" @click="toggleSort('quote')">
-                <span class="inline-flex items-center gap-1 justify-end">Quote <span v-html="sortIcon('quote')"></span></span>
+                <span class="inline-flex items-center gap-1 justify-end">{{ $t('transactions.quote') }} <span v-html="sortIcon('quote')"></span></span>
               </th>
               <th class="px-5 py-4 text-right cursor-pointer select-none hover:text-indigo-600 dark:hover:text-indigo-400 transition" @click="toggleSort('fees')">
-                <span class="inline-flex items-center gap-1 justify-end">Fees <span v-html="sortIcon('fees')"></span></span>
+                <span class="inline-flex items-center gap-1 justify-end">{{ $t('transactions.fees') }} <span v-html="sortIcon('fees')"></span></span>
               </th>
               <th class="px-5 py-4 text-right cursor-pointer select-none hover:text-indigo-600 dark:hover:text-indigo-400 transition" @click="toggleSort('taxes')">
-                <span class="inline-flex items-center gap-1 justify-end">Taxes <span v-html="sortIcon('taxes')"></span></span>
+                <span class="inline-flex items-center gap-1 justify-end">{{ $t('transactions.taxes') }} <span v-html="sortIcon('taxes')"></span></span>
               </th>
               <th class="px-5 py-4 text-right cursor-pointer select-none hover:text-indigo-600 dark:hover:text-indigo-400 transition" @click="toggleSort('accrued_interest')">
-                <span class="inline-flex items-center gap-1 justify-end">Accrued Int. <span v-html="sortIcon('accrued_interest')"></span></span>
+                <span class="inline-flex items-center gap-1 justify-end">{{ $t('transactions.accrued_int') }} <span v-html="sortIcon('accrued_interest')"></span></span>
               </th>
               <th class="px-5 py-4 text-right cursor-pointer select-none hover:text-indigo-600 dark:hover:text-indigo-400 transition" @click="toggleSort('net_transaction_value')">
-                <span class="inline-flex items-center gap-1 justify-end">Net Value <span v-html="sortIcon('net_transaction_value')"></span></span>
+                <span class="inline-flex items-center gap-1 justify-end">{{ $t('transactions.net_value') }} <span v-html="sortIcon('net_transaction_value')"></span></span>
               </th>
               <th class="px-5 py-4 w-20"></th>
             </tr>
@@ -120,7 +122,7 @@
               </td>
             </tr>
             <tr v-if="!filteredTransactions.length">
-              <td colspan="10" class="px-5 py-8 text-center text-gray-600 dark:text-gray-400">No transactions found</td>
+              <td colspan="10" class="px-5 py-8 text-center text-gray-600 dark:text-gray-400">{{ $t('transactions.no_transactions') }}</td>
             </tr>
           </tbody>
         </table>
@@ -137,12 +139,12 @@
             <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
           </svg>
         </div>
-        <h3 class="text-lg font-semibold">Delete Transaction</h3>
+        <h3 class="text-lg font-semibold">{{ $t('transactions.delete_title') }}</h3>
       </div>
-      <p class="text-sm text-gray-600 dark:text-gray-400">Are you sure? This action cannot be undone.</p>
+      <p class="text-sm text-gray-600 dark:text-gray-400">{{ $t('transactions.delete_confirm') }}</p>
       <div class="flex justify-end gap-3 pt-2">
-        <button @click="deleteIndex = null" class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">Cancel</button>
-        <button @click="executeDelete" class="px-4 py-2 text-sm bg-red-600 hover:bg-red-500 text-white rounded-lg transition">Delete</button>
+        <button @click="deleteIndex = null" class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">{{ $t('transactions.cancel') }}</button>
+        <button @click="executeDelete" class="px-4 py-2 text-sm bg-red-600 hover:bg-red-500 text-white rounded-lg transition">{{ $t('transactions.delete') }}</button>
       </div>
     </div>
   </div>
@@ -150,15 +152,15 @@
   <!-- Add/Edit Modal -->
   <div v-if="showAddForm" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50" @click.self="showAddForm = false">
     <div class="bg-white dark:bg-[#1a1f2e] rounded-2xl border border-gray-200 dark:border-gray-700 p-6 w-full max-w-md space-y-4">
-      <h2 class="text-lg font-semibold">{{ isEditing ? 'Edit Transaction' : 'Add Transaction' }}</h2>
+      <h2 class="text-lg font-semibold">{{ isEditing ? $t('transactions.edit_title') : $t('transactions.add_title') }}</h2>
 
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Date</label>
+          <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">{{ $t('transactions.date') }}</label>
           <input v-model="form.date" type="date" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
         </div>
         <div>
-          <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Type</label>
+          <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">{{ $t('transactions.type') }}</label>
           <select v-model="form.type" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
             <option value="Buy">Buy</option>
             <option value="Sell">Sell</option>
@@ -169,48 +171,48 @@
       </div>
 
       <div>
-        <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Security</label>
+        <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">{{ $t('transactions.security') }}</label>
         <select v-model="form.security" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
           <option v-for="name in availableInstruments" :key="name" :value="name">{{ name }}</option>
-          <option value="__custom__">+ New instrument...</option>
+          <option value="__custom__">{{ $t('transactions.new_instrument') }}</option>
         </select>
       </div>
 
       <div class="grid grid-cols-2 gap-3" v-if="form.type === 'Buy' || form.type === 'Sell'">
         <div>
-          <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Shares</label>
+          <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">{{ $t('transactions.shares') }}</label>
           <input v-model="form.shares" type="number" step="any" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
         </div>
         <div>
-          <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Quote</label>
+          <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">{{ $t('transactions.quote') }}</label>
           <input v-model="form.quote" type="number" step="any" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
         </div>
       </div>
 
       <div class="grid grid-cols-3 gap-3">
         <div>
-          <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Fees</label>
+          <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">{{ $t('transactions.fees') }}</label>
           <input v-model="form.fees" type="number" step="any" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
         </div>
         <div v-if="form.type !== 'Buy'">
-          <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Taxes</label>
+          <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">{{ $t('transactions.taxes') }}</label>
           <input v-model="form.taxes" type="number" step="any" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
         </div>
         <div v-if="(form.type === 'Buy' || form.type === 'Sell') && isSelectedBond">
-          <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Accrued Interest</label>
+          <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">{{ $t('transactions.accrued_int') }}</label>
           <input v-model="form.accrued_interest" type="number" step="any" placeholder="0" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
         </div>
         <div>
-          <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Net Value</label>
+          <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">{{ $t('transactions.net_value_label') }}</label>
           <input v-if="form.type === 'Dividend' || form.type === 'Coupon'" v-model="form.net_transaction_value" type="number" step="any" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
           <input v-else :value="computedNetValue" readonly class="w-full bg-gray-200/50 dark:bg-gray-800/50 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-400 cursor-not-allowed">
         </div>
       </div>
 
       <div class="flex justify-end gap-3 pt-2">
-        <button @click="showAddForm = false" class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">Cancel</button>
-        <button v-if="!isEditing" @click="saveTransaction(true)" class="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition" title="Save and keep the form open for another entry">Save &amp; Add Another</button>
-        <button @click="saveTransaction(false)" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition">{{ isEditing ? 'Update' : 'Save' }}</button>
+        <button @click="showAddForm = false" class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">{{ $t('transactions.cancel') }}</button>
+        <button v-if="!isEditing" @click="saveTransaction(true)" class="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 rounded-lg transition" title="Save and keep the form open for another entry">{{ $t('transactions.save_another') }}</button>
+        <button @click="saveTransaction(false)" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition">{{ isEditing ? $t('transactions.update') : $t('transactions.save') }}</button>
       </div>
 
       <div v-if="formMessage" class="text-sm" :class="formError ? 'text-red-500 dark:text-red-400' : 'text-green-600 dark:text-green-400'">{{ formMessage }}</div>
@@ -221,15 +223,15 @@
   <Transition name="modal">
   <div v-if="showNewInstrument" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 transition-opacity duration-200" @click.self="showNewInstrument = false">
     <div class="bg-white dark:bg-[#1a1f2e] rounded-2xl border border-gray-200 dark:border-gray-700 p-6 w-full max-w-md space-y-4 transform transition-all duration-200 ease-out animate-modal-in">
-      <h2 class="text-lg font-semibold">New Instrument</h2>
+      <h2 class="text-lg font-semibold">{{ $t('transactions.new_instrument_title') }}</h2>
 
       <div>
-        <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Name</label>
+        <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">{{ $t('transactions.name') }}</label>
         <input v-model="newInstrument.name" type="text" placeholder="e.g. VANG FTSE AW USDA" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
       </div>
 
       <div>
-        <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Asset Type</label>
+        <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">{{ $t('transactions.asset_type') }}</label>
         <select v-model="newInstrument.type" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
           <option value="ETF">ETF</option>
           <option value="ETC">ETC</option>
@@ -245,29 +247,30 @@
       </div>
 
       <div v-if="newInstrument.type === 'Bond'">
-        <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">ISIN</label>
+        <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">{{ $t('transactions.isin') }}</label>
         <input v-model="newInstrument.isin" type="text" placeholder="e.g. IT0005517195" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
       </div>
 
       <div v-else>
-        <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Ticker</label>
+        <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">{{ $t('transactions.ticker') }}</label>
         <input v-model="newInstrument.ticker" type="text" placeholder="e.g. VWCE.DE" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
       </div>
 
       <div>
-        <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Capital Gains Tax Rate %</label>
+        <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">{{ $t('transactions.tax_rate_pct') }}</label>
         <input v-model.number="newInstrument.taxRate" type="number" step="0.1" min="0" max="100" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
       </div>
 
       <div v-if="newInstrumentError" class="text-sm text-red-500 dark:text-red-400">{{ newInstrumentError }}</div>
 
       <div class="flex justify-end gap-3 pt-2">
-        <button @click="showNewInstrument = false" class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">Cancel</button>
-        <button @click="saveNewInstrument" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition">Add Instrument</button>
+        <button @click="showNewInstrument = false" class="px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">{{ $t('transactions.cancel') }}</button>
+        <button @click="saveNewInstrument" class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-500 text-white rounded-lg transition">{{ $t('transactions.add_instrument') }}</button>
       </div>
     </div>
   </div>
   </Transition>
+</div>
 
 <script src="/static/transactions.js"></script>
 </body>

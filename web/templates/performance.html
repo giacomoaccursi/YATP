@@ -8,8 +8,10 @@
   <script>tailwind.config = { darkMode: 'class' }</script>
   <script src="/static/theme.js"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://unpkg.com/vue-i18n@9/dist/vue-i18n.global.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
   <script src="/static/utils.js"></script>
+  <script src="/static/i18n.js"></script>
   <script src="/static/navbar.js" defer></script>
   <script src="/static/tooltip.js" defer></script>
   <style>
@@ -33,13 +35,13 @@
   <main class="max-w-7xl mx-auto px-6 py-8 space-y-6">
 
     <div>
-      <h2 class="text-xl font-semibold">Performance</h2>
-      <p class="text-sm text-gray-600 dark:text-gray-400 mt-0.5">Returns analysis with period filters</p>
+      <h2 class="text-xl font-semibold">{{ $t('performance.title') }}</h2>
+      <p class="text-sm text-gray-600 dark:text-gray-400 mt-0.5">{{ $t('performance.subtitle') }}</p>
     </div>
 
     <!-- Instrument Filter -->
     <div v-if="instrumentNames.length" class="space-y-2">
-      <div class="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide">Filter instruments</div>
+      <div class="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide">{{ $t('performance.filter_instruments') }}</div>
       <div class="flex flex-wrap items-center gap-2">
         <button @click="selectAll"
                 class="px-3 py-1.5 text-xs font-medium rounded-lg transition flex items-center gap-1.5"
@@ -47,7 +49,7 @@
                   ? 'bg-indigo-600 text-white'
                   : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'">
           <svg v-if="allSelected" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-          All
+          {{ $t('performance.all') }}
         </button>
         <button v-for="name in instrumentNames" :key="name"
                 @click="toggleChip(name)"
@@ -59,7 +61,7 @@
           {{ name }}
           <span v-if="selectedSet.size > 1 && selectedSet.has(name)"
                 @click.stop="selectOnly(name)"
-                class="hidden group-hover:inline-flex ml-1 px-1.5 py-0.5 text-[10px] rounded bg-white/20 hover:bg-white/30 transition">only</span>
+                class="hidden group-hover:inline-flex ml-1 px-1.5 py-0.5 text-[10px] rounded bg-white/20 hover:bg-white/30 transition">{{ $t('performance.only') }}</span>
         </button>
       </div>
     </div>
@@ -69,51 +71,51 @@
       <div class="bg-white dark:bg-[#1a1f2e] rounded-xl p-4 border border-gray-200 dark:border-gray-700 risk-card" data-info="volatility">
         <div class="flex items-center gap-2">
           <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-          <div class="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide">Volatility</div>
+          <div class="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide">{{ $t('performance.volatility') }}</div>
         </div>
         <div class="text-xl font-semibold mt-2">{{ risk.volatility != null ? risk.volatility + '%' : 'N/A' }}</div>
-        <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Annualized</div>
+        <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{{ $t('performance.annualized') }}</div>
       </div>
       <div class="bg-white dark:bg-[#1a1f2e] rounded-xl p-4 border border-gray-200 dark:border-gray-700 risk-card" data-info="sharpe-ratio">
         <div class="flex items-center gap-2">
           <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-          <div class="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide">Sharpe Ratio</div>
+          <div class="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide">{{ $t('performance.sharpe_ratio') }}</div>
         </div>
         <div class="text-xl font-semibold mt-2" :class="risk.sharpe_ratio != null && risk.sharpe_ratio >= 1 ? 'text-green-600 dark:text-green-400' : ''">{{ risk.sharpe_ratio != null ? risk.sharpe_ratio : 'N/A' }}</div>
-        <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Return / risk</div>
+        <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{{ $t('performance.return_risk') }}</div>
       </div>
       <div class="bg-white dark:bg-[#1a1f2e] rounded-xl p-4 border border-gray-200 dark:border-gray-700 risk-card" data-info="sortino-ratio">
         <div class="flex items-center gap-2">
           <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M3.5 19h17a1.5 1.5 0 001.3-2.25l-8.5-14.5a1.5 1.5 0 00-2.6 0l-8.5 14.5A1.5 1.5 0 003.5 19z"/></svg>
-          <div class="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide">Sortino Ratio</div>
+          <div class="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide">{{ $t('performance.sortino_ratio') }}</div>
         </div>
         <div class="text-xl font-semibold mt-2">{{ risk.sortino_ratio != null ? risk.sortino_ratio : 'N/A' }}</div>
-        <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Return / downside risk</div>
+        <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{{ $t('performance.return_downside') }}</div>
       </div>
       <div class="bg-white dark:bg-[#1a1f2e] rounded-xl p-4 border border-gray-200 dark:border-gray-700 risk-card" data-info="max-drawdown">
         <div class="flex items-center gap-2">
           <svg class="w-4 h-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"/></svg>
-          <div class="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide">Max Drawdown</div>
+          <div class="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide">{{ $t('performance.max_drawdown') }}</div>
         </div>
         <div class="text-xl font-semibold mt-2 text-red-600 dark:text-red-400">{{ risk.max_drawdown != null ? risk.max_drawdown + '%' : 'N/A' }}</div>
-        <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Worst peak-to-trough</div>
+        <div class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{{ $t('performance.worst_peak') }}</div>
       </div>
     </section>
 
     <!-- Period Returns Table -->
     <section class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 overflow-visible">
       <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-        <h2 class="text-lg font-medium">Returns by Period</h2>
-        <div v-if="periodsLoading" class="text-xs text-gray-600 dark:text-gray-400">Loading...</div>
+        <h2 class="text-lg font-medium">{{ $t('performance.returns_by_period') }}</h2>
+        <div v-if="periodsLoading" class="text-xs text-gray-600 dark:text-gray-400">{{ $t('performance.loading') }}</div>
       </div>
       <div v-if="periods.length" class="overflow-visible">
         <table class="w-full text-sm">
           <thead class="text-xs text-gray-800 dark:text-gray-200 uppercase tracking-wider bg-gray-100 dark:bg-gray-800 border-b-2 border-indigo-500/20">
             <tr>
-              <th class="px-5 py-3 text-left">Period</th>
-              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Change in portfolio value due to market price movements.">Market Gain</span></th>
-              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Time-Weighted Return. Measures performance independent of cash flow timing.">TWR</span></th>
-              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Money-Weighted Return for the period. Reflects actual investor experience.">MWRR</span></th>
+              <th class="px-5 py-3 text-left">{{ $t('performance.period') }}</th>
+              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Change in portfolio value due to market price movements.">{{ $t('performance.market_gain') }}</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Time-Weighted Return. Measures performance independent of cash flow timing.">{{ $t('performance.twr') }}</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Money-Weighted Return for the period. Reflects actual investor experience.">{{ $t('performance.mwrr') }}</span></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -125,24 +127,24 @@
                 <td class="px-5 py-3 text-right" :class="pnlColor(p.mwrr)">{{ p.mwrr != null ? fmtSigned(p.mwrr) + '%' : 'N/A' }}</td>
               </template>
               <template v-else>
-                <td colspan="3" class="px-5 py-3 text-gray-600 dark:text-gray-400">Not enough data</td>
+                <td colspan="3" class="px-5 py-3 text-gray-600 dark:text-gray-400">{{ $t('performance.not_enough_data') }}</td>
               </template>
             </tr>
           </tbody>
         </table>
       </div>
-      <div v-else-if="!periodsLoading" class="px-5 py-8 text-center text-gray-600 dark:text-gray-400">No period data available</div>
+      <div v-else-if="!periodsLoading" class="px-5 py-8 text-center text-gray-600 dark:text-gray-400">{{ $t('performance.no_period_data') }}</div>
     </section>
 
     <!-- TWR vs MWRR Bar Chart -->
     <section v-if="periods.some(p => p.available)" class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-      <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4">TWR vs MWRR by Period</h3>
+      <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4">{{ $t('performance.twr_vs_mwrr') }}</h3>
       <canvas ref="compareChart" height="60"></canvas>
     </section>
 
     <!-- Cumulative Return Chart with Filters -->
     <section class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-4">
-      <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400">Cumulative Return</h3>
+      <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ $t('performance.cumulative_return') }}</h3>
 
       <!-- Period Filters + Toggle -->
       <div class="flex flex-wrap items-center gap-2">
@@ -167,9 +169,9 @@
                   : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'">
           <svg v-if="!includeRealized" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v12m6-6H6"/></svg>
           <svg v-else class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 12H6"/></svg>
-          {{ includeRealized ? 'Exclude' : 'Include' }} realized P&amp;L
+          {{ includeRealized ? $t('performance.exclude_realized') : $t('performance.include_realized') }}
         </button>
-        <div v-if="historyLoading" class="text-xs text-gray-600 dark:text-gray-400">Loading...</div>
+        <div v-if="historyLoading" class="text-xs text-gray-600 dark:text-gray-400">{{ $t('performance.loading') }}</div>
       </div>
 
       <canvas ref="returnChart" height="80"></canvas>
@@ -177,22 +179,22 @@
 
     <!-- Value vs Cost Chart -->
     <section class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-4">
-      <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400">Value vs Cost Basis</h3>
+      <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ $t('performance.value_vs_cost') }}</h3>
       <canvas ref="valueCostChart" height="80"></canvas>
     </section>
 
     <!-- Drawdown Chart -->
     <section class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-4">
       <div>
-        <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400">Drawdown from Peak</h3>
-        <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Decline from all-time high value</p>
+        <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ $t('performance.drawdown_title') }}</h3>
+        <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{{ $t('performance.drawdown_desc') }}</p>
       </div>
       <canvas ref="drawdownChart" height="80"></canvas>
     </section>
 
     <!-- Monthly Returns Heatmap -->
     <section class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-4">
-      <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400">Monthly Returns</h3>
+      <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400">{{ $t('performance.monthly_returns') }}</h3>
       <div v-if="heatmapData.years.length" class="overflow-x-auto">
         <table class="text-xs">
           <thead>
@@ -224,7 +226,7 @@
           </tbody>
         </table>
       </div>
-      <div v-else class="text-center py-4 text-sm text-gray-600 dark:text-gray-400">Not enough data for monthly breakdown</div>
+      <div v-else class="text-center py-4 text-sm text-gray-600 dark:text-gray-400">{{ $t('performance.not_enough_monthly') }}</div>
     </section>
 
   </main>

@@ -8,8 +8,10 @@
   <script>tailwind.config = { darkMode: 'class' }</script>
   <script src="/static/theme.js"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://unpkg.com/vue-i18n@9/dist/vue-i18n.global.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
   <script src="/static/utils.js"></script>
+  <script src="/static/i18n.js"></script>
   <script src="/static/navbar.js" defer></script>
   <script src="/static/tooltip.js" defer></script>
   <script src="/static/alert-banner.js" defer></script>
@@ -30,14 +32,14 @@
 <div id="app" v-cloak>
 
   <div v-if="loading" class="flex items-center justify-center h-96">
-    <div class="text-gray-600 dark:text-gray-400">Loading instruments...</div>
+    <div class="text-gray-600 dark:text-gray-400">{{ $t('instruments.loading') }}</div>
   </div>
 
   <main v-else class="max-w-screen-2xl mx-auto px-6 py-8 space-y-6">
 
     <div>
-      <h2 class="text-xl font-semibold">Instruments</h2>
-      <p class="text-sm text-gray-600 dark:text-gray-400 mt-0.5">Click on an instrument to see detailed charts</p>
+      <h2 class="text-xl font-semibold">{{ $t('instruments.title') }}</h2>
+      <p class="text-sm text-gray-600 dark:text-gray-400 mt-0.5">{{ $t('instruments.subtitle') }}</p>
     </div>
 
     <section class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 overflow-visible">
@@ -46,15 +48,15 @@
           <thead class="text-xs text-gray-800 dark:text-gray-200 uppercase tracking-wider bg-gray-100 dark:bg-gray-800 border-b-2 border-indigo-500/20">
             <tr>
               <th class="px-5 py-3 text-left">Security</th>
-              <th class="px-5 py-3 text-right">Shares</th>
-              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Weighted average purchase price per share, adjusted as you buy more.">Avg Cost</span></th>
-              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Percentage of total portfolio market value.">Weight</span></th>
-              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Total current value of all holdings at today's market prices.">Market Value</span></th>
-              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Total profit or loss: unrealized + realized.">P&amp;L</span></th>
-              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Percentage gain or loss relative to cost basis.">Return</span></th>
-              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Annualized money-weighted return. Accounts for timing and size of cash flows.">XIRR</span></th>
-              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Total dividends and coupons received.">Income</span></th>
-              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Estimated capital gains tax on unrealized profits.">Est. Tax</span></th>
+              <th class="px-5 py-3 text-right">{{ $t('instruments.shares') }}</th>
+              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Weighted average purchase price per share, adjusted as you buy more.">{{ $t('instruments.avg_cost') }}</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Percentage of total portfolio market value.">{{ $t('instruments.weight') }}</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Total current value of all holdings at today's market prices.">{{ $t('instruments.market_value') }}</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Total profit or loss: unrealized + realized.">{{ $t('instruments.pnl') }}</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Percentage gain or loss relative to cost basis.">{{ $t('instruments.return') }}</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Annualized money-weighted return. Accounts for timing and size of cash flows.">{{ $t('instruments.xirr') }}</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Total dividends and coupons received.">{{ $t('instruments.income') }}</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Estimated capital gains tax on unrealized profits.">{{ $t('instruments.est_tax') }}</span></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -95,28 +97,28 @@
           <h2 class="text-lg font-medium">{{ selected }}</h2>
           <p class="text-sm text-gray-600 dark:text-gray-400">Price history and unrealized P&amp;L</p>
         </div>
-        <button @click="selected = null" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">&times; Close</button>
+        <button @click="selected = null" class="text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition">&times; {{ $t('instruments.close') }}</button>
       </div>
 
-      <div v-if="detailLoading" class="text-center py-8 text-gray-600 dark:text-gray-400">Loading chart data...</div>
+      <div v-if="detailLoading" class="text-center py-8 text-gray-600 dark:text-gray-400">{{ $t('instruments.loading_chart') }}</div>
 
       <div v-else class="grid md:grid-cols-2 gap-4">
         <div class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-          <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4">Price vs Avg Cost</h3>
+          <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4">{{ $t('instruments.price_vs_avg') }}</h3>
           <canvas ref="priceChart" height="180"></canvas>
         </div>
         <div class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-          <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4">Unrealized P&amp;L</h3>
+          <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4">{{ $t('instruments.unrealized_pnl') }}</h3>
           <canvas ref="pnlChart" height="180"></canvas>
         </div>
         <div class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-          <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Value vs Cost Basis</h3>
-          <p class="text-xs text-gray-600 dark:text-gray-400 mb-3">Market value vs total invested</p>
+          <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">{{ $t('instruments.value_vs_cost') }}</h3>
+          <p class="text-xs text-gray-600 dark:text-gray-400 mb-3">{{ $t('instruments.value_vs_cost_desc') }}</p>
           <canvas ref="dcaChart" height="180"></canvas>
         </div>
         <div class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-          <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Return %</h3>
-          <p class="text-xs text-gray-600 dark:text-gray-400 mb-3">TWR performance over time</p>
+          <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">{{ $t('instruments.return_pct') }}</h3>
+          <p class="text-xs text-gray-600 dark:text-gray-400 mb-3">{{ $t('instruments.return_pct_desc') }}</p>
           <canvas ref="returnChart" height="180"></canvas>
         </div>
       </div>

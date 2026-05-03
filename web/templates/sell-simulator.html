@@ -8,7 +8,9 @@
   <script>tailwind.config = { darkMode: 'class' }</script>
   <script src="/static/theme.js"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://unpkg.com/vue-i18n@9/dist/vue-i18n.global.prod.js"></script>
   <script src="/static/utils.js"></script>
+  <script src="/static/i18n.js"></script>
   <script src="/static/navbar.js" defer></script>
   <script src="/static/tooltip.js" defer></script>
   <script src="/static/alert-banner.js" defer></script>
@@ -22,30 +24,30 @@
 <div id="app" v-cloak>
 
   <div v-if="loading" class="flex items-center justify-center h-96">
-    <div class="text-gray-600 dark:text-gray-400">Loading instruments...</div>
+    <div class="text-gray-600 dark:text-gray-400">{{ $t('sell_sim.loading') }}</div>
   </div>
 
   <main v-else class="max-w-3xl mx-auto px-6 py-8 space-y-6">
 
     <div>
-      <h2 class="text-xl font-semibold">Sell Simulator</h2>
-      <p class="text-sm text-gray-600 dark:text-gray-400 mt-0.5">Estimate proceeds, taxes and net gain before selling</p>
+      <h2 class="text-xl font-semibold">{{ $t('sell_sim.title') }}</h2>
+      <p class="text-sm text-gray-600 dark:text-gray-400 mt-0.5">{{ $t('sell_sim.subtitle') }}</p>
     </div>
 
     <!-- Input -->
     <section class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-4">
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Instrument</label>
+          <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">{{ $t('sell_sim.instrument') }}</label>
           <select v-model="selectedSecurity" class="w-full bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
-            <option value="" disabled>Choose an instrument...</option>
+            <option value="" disabled>{{ $t('sell_sim.choose') }}</option>
             <option v-for="inst in instruments" :key="inst.security" :value="inst.security">
               {{ inst.security }} ({{ inst.shares_held }} shares)
             </option>
           </select>
         </div>
         <div>
-          <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">Shares to sell</label>
+          <label class="block text-xs text-gray-600 dark:text-gray-400 mb-1">{{ $t('sell_sim.shares_to_sell') }}</label>
           <div class="flex gap-2">
             <input v-model.number="sharesToSell" type="number" step="any" min="0"
                    :max="selectedInstrument ? selectedInstrument.shares_held : 0"
@@ -53,12 +55,12 @@
                    class="flex-1 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
             <button v-if="selectedInstrument" @click="sharesToSell = selectedInstrument.shares_held"
                     class="px-3 py-2 text-xs bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-700 rounded-lg transition font-medium">
-              Sell All
+              {{ $t('sell_sim.sell_all') }}
             </button>
           </div>
         </div>
       </div>
-      <p v-if="!selectedSecurity" class="text-xs text-gray-600 dark:text-gray-400">Select an instrument to simulate a sale and see estimated proceeds and taxes.</p>
+      <p v-if="!selectedSecurity" class="text-xs text-gray-600 dark:text-gray-400">{{ $t('sell_sim.select_hint') }}</p>
     </section>
 
     <!-- Error -->
@@ -69,44 +71,44 @@
     <!-- Results -->
     <section v-if="result" class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
       <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-        <h2 class="text-lg font-medium">Simulation Result</h2>
-        <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Read-only estimate — no transaction is created</p>
+        <h2 class="text-lg font-medium">{{ $t('sell_sim.result_title') }}</h2>
+        <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{{ $t('sell_sim.result_desc') }}</p>
       </div>
       <div class="divide-y divide-gray-200 dark:divide-gray-700">
         <div class="px-5 py-3 flex justify-between text-sm">
-          <span class="text-gray-600 dark:text-gray-400">Shares to sell</span>
+          <span class="text-gray-600 dark:text-gray-400">{{ $t('sell_sim.shares_to_sell') }}</span>
           <span class="font-medium">{{ result.shares_to_sell }} of {{ result.shares_held }}</span>
         </div>
         <div class="px-5 py-3 flex justify-between text-sm">
-          <span class="text-gray-600 dark:text-gray-400">Current price</span>
+          <span class="text-gray-600 dark:text-gray-400">{{ $t('sell_sim.current_price') }}</span>
           <span class="font-medium">{{ fmt(result.current_price) }} &euro;</span>
         </div>
         <div class="px-5 py-3 flex justify-between text-sm">
-          <span class="text-gray-600 dark:text-gray-400">Avg cost per share</span>
+          <span class="text-gray-600 dark:text-gray-400">{{ $t('sell_sim.avg_cost_share') }}</span>
           <span class="font-medium">{{ fmt(result.avg_cost_per_share) }} &euro;</span>
         </div>
         <div class="px-5 py-3 flex justify-between text-sm">
-          <span class="text-gray-600 dark:text-gray-400">Gross proceeds</span>
+          <span class="text-gray-600 dark:text-gray-400">{{ $t('sell_sim.gross_proceeds') }}</span>
           <span class="font-medium">{{ fmt(result.gross_proceeds) }} &euro;</span>
         </div>
         <div class="px-5 py-3 flex justify-between text-sm">
-          <span class="text-gray-600 dark:text-gray-400">Cost of sold shares</span>
+          <span class="text-gray-600 dark:text-gray-400">{{ $t('sell_sim.cost_of_sold') }}</span>
           <span class="font-medium">{{ fmt(result.cost_of_sold) }} &euro;</span>
         </div>
         <div class="px-5 py-3 flex justify-between text-sm">
-          <span class="text-gray-600 dark:text-gray-400">Gain / Loss</span>
+          <span class="text-gray-600 dark:text-gray-400">{{ $t('sell_sim.gain_loss') }}</span>
           <span class="font-medium" :class="pnlColor(result.gain)">{{ fmtSigned(result.gain) }} &euro;</span>
         </div>
         <div class="px-5 py-3 flex justify-between text-sm">
-          <span class="text-gray-600 dark:text-gray-400">Tax rate</span>
+          <span class="text-gray-600 dark:text-gray-400">{{ $t('sell_sim.tax_rate') }}</span>
           <span class="font-medium">{{ (result.capital_gains_rate * 100).toFixed(1) }}%</span>
         </div>
         <div class="px-5 py-3 flex justify-between text-sm">
-          <span class="text-gray-600 dark:text-gray-400">Estimated tax</span>
+          <span class="text-gray-600 dark:text-gray-400">{{ $t('sell_sim.estimated_tax') }}</span>
           <span class="font-medium">{{ fmt(result.estimated_tax) }} &euro;</span>
         </div>
         <div class="px-5 py-4 flex justify-between text-base bg-gray-50 dark:bg-gray-800/50">
-          <span class="font-medium">Net proceeds</span>
+          <span class="font-medium">{{ $t('sell_sim.net_proceeds') }}</span>
           <span class="font-semibold" :class="pnlColor(result.net_proceeds - result.cost_of_sold)">{{ fmt(result.net_proceeds) }} &euro;</span>
         </div>
       </div>

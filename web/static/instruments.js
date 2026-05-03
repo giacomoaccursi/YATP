@@ -4,7 +4,10 @@
 
 const { createApp, ref, onMounted, onUnmounted, nextTick } = Vue;
 
-createApp({
+(async function () {
+  const i18n = await createI18nInstance();
+
+  const app = createApp({
   setup() {
     const loading = ref(true);
     const detailLoading = ref(false);
@@ -191,4 +194,8 @@ createApp({
       fmt, fmtSigned, pnlColor,
     };
   },
-}).mount('#app');
+  });
+
+  app.use(i18n);
+  app.mount('#app');
+})();

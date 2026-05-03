@@ -8,8 +8,10 @@
   <script>tailwind.config = { darkMode: 'class' }</script>
   <script src="/static/theme.js"></script>
   <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+  <script src="https://unpkg.com/vue-i18n@9/dist/vue-i18n.global.prod.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
   <script src="/static/utils.js"></script>
+  <script src="/static/i18n.js"></script>
   <script src="/static/navbar.js" defer></script>
   <script src="/static/tooltip.js" defer></script>
   <style>
@@ -26,30 +28,30 @@
 <div id="app" v-cloak>
 
   <div v-if="loading" class="flex items-center justify-center h-96">
-    <div class="text-gray-600 dark:text-gray-400">Loading rebalance data...</div>
+    <div class="text-gray-600 dark:text-gray-400">{{ $t('rebalance.loading') }}</div>
   </div>
 
   <main v-else class="max-w-7xl mx-auto px-6 py-8 space-y-6">
 
     <div>
-      <h2 class="text-xl font-semibold">Rebalance</h2>
-      <p class="text-sm text-gray-600 dark:text-gray-400 mt-0.5">Simulate investments and adjust target allocation</p>
+      <h2 class="text-xl font-semibold">{{ $t('rebalance.title') }}</h2>
+      <p class="text-sm text-gray-600 dark:text-gray-400 mt-0.5">{{ $t('rebalance.subtitle') }}</p>
     </div>
 
     <section class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-4">
-      <h2 class="text-lg font-medium">Simulate New Investment</h2>
+      <h2 class="text-lg font-medium">{{ $t('rebalance.simulate_title') }}</h2>
       <div class="flex items-center gap-4">
-        <label class="text-sm text-gray-600 dark:text-gray-400">Amount to invest</label>
+        <label class="text-sm text-gray-600 dark:text-gray-400">{{ $t('rebalance.amount_label') }}</label>
         <input v-model.number="newInvestment" type="number" step="100" min="0"
                class="w-40 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm">
         <span class="text-sm text-gray-600 dark:text-gray-400">&euro;</span>
       </div>
-      <p class="text-xs text-gray-600 dark:text-gray-400">Enter an amount to see how it would be distributed across asset classes to reach your target allocation.</p>
+      <p class="text-xs text-gray-600 dark:text-gray-400">{{ $t('rebalance.simulate_desc') }}</p>
     </section>
 
     <section class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5 space-y-4">
       <div class="flex items-center justify-between">
-        <h2 class="text-lg font-medium">Target Allocation</h2>
+        <h2 class="text-lg font-medium">{{ $t('rebalance.target_title') }}</h2>
         <div class="text-sm font-medium flex items-center gap-1.5" :class="totalTarget === 100 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
           <svg v-if="totalTarget === 100" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
           <svg v-else class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M3.5 19h17a1.5 1.5 0 001.3-2.25l-8.5-14.5a1.5 1.5 0 00-2.6 0l-8.5 14.5A1.5 1.5 0 003.5 19z"/></svg>
@@ -65,30 +67,30 @@
 
     <section class="grid md:grid-cols-2 gap-4">
       <div class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-        <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4">Current Allocation</h3>
+        <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4">{{ $t('rebalance.current_allocation') }}</h3>
         <div style="height: 220px;"><canvas ref="currentChart"></canvas></div>
       </div>
       <div class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5">
-        <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4">After Rebalance</h3>
+        <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4">{{ $t('rebalance.after_rebalance') }}</h3>
         <div style="height: 220px;"><canvas ref="afterChart"></canvas></div>
       </div>
     </section>
 
     <section class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
       <div class="px-5 py-4 border-b border-gray-200 dark:border-gray-700">
-        <h2 class="text-lg font-medium">What to do</h2>
-        <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">Buy or sell to reach your target allocation</p>
+        <h2 class="text-lg font-medium">{{ $t('rebalance.what_to_do') }}</h2>
+        <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">{{ $t('rebalance.what_to_do_desc') }}</p>
       </div>
       <div class="overflow-x-auto">
         <table class="w-full text-sm">
           <thead class="text-xs text-gray-800 dark:text-gray-200 uppercase tracking-wider bg-gray-100 dark:bg-gray-800 border-b-2 border-indigo-500/20">
             <tr>
-              <th class="px-5 py-3 text-left">Asset Class</th>
-              <th class="px-5 py-3 text-right">Current Value</th>
-              <th class="px-5 py-3 text-right">Current %</th>
-              <th class="px-5 py-3 text-right">Target %</th>
-              <th class="px-5 py-3 text-right">Target Value</th>
-              <th class="px-5 py-3 text-right">Action</th>
+              <th class="px-5 py-3 text-left">{{ $t('rebalance.asset_class') }}</th>
+              <th class="px-5 py-3 text-right">{{ $t('rebalance.current_value') }}</th>
+              <th class="px-5 py-3 text-right">{{ $t('rebalance.current_pct') }}</th>
+              <th class="px-5 py-3 text-right">{{ $t('rebalance.target_pct') }}</th>
+              <th class="px-5 py-3 text-right">{{ $t('rebalance.target_value') }}</th>
+              <th class="px-5 py-3 text-right">{{ $t('rebalance.action') }}</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
@@ -99,7 +101,7 @@
               <td class="px-5 py-3 text-right">{{ row.target_weight.toFixed(1) }}%</td>
               <td class="px-5 py-3 text-right">{{ fmt(row.target_value) }} &euro;</td>
               <td class="px-5 py-3 text-right font-medium" :class="row.difference > 0 ? 'text-green-600 dark:text-green-400' : row.difference < 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-400'">
-                {{ row.difference > 0 ? 'Buy' : row.difference < 0 ? 'Sell' : 'On target' }}
+                {{ row.difference > 0 ? $t('rebalance.buy') : row.difference < 0 ? $t('rebalance.sell') : $t('rebalance.on_target') }}
                 {{ row.difference !== 0 ? fmt(Math.abs(row.difference)) + ' €' : '' }}
               </td>
             </tr>
