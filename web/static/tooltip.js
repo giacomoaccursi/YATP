@@ -1,29 +1,37 @@
 /**
  * Info tooltip definitions. Maps field keys to explanations.
  * Renders a ? icon in the top-right corner of the parent element.
+ * Language-aware: reads from localStorage.
  */
 (function () {
-  var definitions = {
+  var lang = localStorage.getItem('lang') || navigator.language.slice(0, 2) || 'en';
+  if (lang !== 'en' && lang !== 'it') lang = 'en';
+
+  var definitions_en = {
     'cost-basis': 'Total amount invested across all instruments, net of accrued interest for bonds.',
     'market-value': 'Total current value of all holdings at today\'s market prices.',
     'total-pnl': 'Total profit or loss: unrealized (current holdings) + realized (from past sales). Income shown separately.',
     'income': 'Total dividends and bond coupons received since inception.',
-    'simple-return': 'Percentage gain or loss relative to total cost basis. Does not account for timing of cash flows.',
     'xirr': 'Annualized money-weighted return (XIRR). Accounts for the timing and size of each cash flow.',
-    'twr': 'Time-Weighted Return. Measures portfolio performance independent of cash flow timing.',
-    'mwrr': 'Money-Weighted Return for the period. Reflects the actual return experienced by the investor.',
-    'unrealized': 'Gain or loss on positions you still hold. Only realized when you sell.',
-    'est-tax': 'Estimated capital gains tax on unrealized profits at your configured tax rate.',
-    'net-after-tax': 'Market value minus estimated tax on unrealized gains.',
-    'avg-cost': 'Weighted average purchase price per share, adjusted as you buy more.',
-    'daily-change': 'Change in portfolio market value compared to the previous trading day.',
-    'market-gain': 'Change in portfolio value due to market price movements (excludes new money added).',
-    'cumulative-return': 'Percentage P&L relative to cost basis at each point in time.',
-    'volatility': 'Annualized standard deviation of daily returns. Measures how much returns fluctuate. Lower is more stable.',
-    'sharpe-ratio': 'Return per unit of risk. Above 1 is good, above 2 is excellent. Compares return to volatility.',
+    'volatility': 'Annualized standard deviation of daily returns. Measures how much returns fluctuate.',
+    'sharpe-ratio': 'Return per unit of risk. Above 1 is good, above 2 is excellent.',
     'sortino-ratio': 'Like Sharpe but only penalizes downside volatility. Higher is better.',
     'max-drawdown': 'Largest peak-to-trough decline. Shows the worst loss you would have experienced.',
   };
+
+  var definitions_it = {
+    'cost-basis': 'Importo totale investito in tutti gli strumenti, al netto del rateo per le obbligazioni.',
+    'market-value': 'Valore attuale di tutte le posizioni ai prezzi di mercato odierni.',
+    'total-pnl': 'Profitto o perdita totale: non realizzato (posizioni aperte) + realizzato (vendite passate). Rendite mostrate separatamente.',
+    'income': 'Totale dividendi e cedole obbligazionarie ricevuti dall\'inizio.',
+    'xirr': 'Rendimento annualizzato ponderato per il denaro (XIRR). Tiene conto dei tempi e dell\'entità di ogni flusso.',
+    'volatility': 'Deviazione standard annualizzata dei rendimenti giornalieri. Misura la variabilità.',
+    'sharpe-ratio': 'Rendimento per unità di rischio. Sopra 1 è buono, sopra 2 è eccellente.',
+    'sortino-ratio': 'Come Sharpe ma penalizza solo la volatilità al ribasso. Più alto è meglio.',
+    'max-drawdown': 'Maggior calo dal picco al minimo. Mostra la peggior perdita che avresti subito.',
+  };
+
+  var definitions = lang === 'it' ? definitions_it : definitions_en;
 
   var style = document.createElement('style');
   style.textContent = [

@@ -49,14 +49,14 @@
             <tr>
               <th class="px-5 py-3 text-left">Security</th>
               <th class="px-5 py-3 text-right">{{ $t('instruments.shares') }}</th>
-              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Weighted average purchase price per share, adjusted as you buy more.">{{ $t('instruments.avg_cost') }}</span></th>
-              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Percentage of total portfolio market value.">{{ $t('instruments.weight') }}</span></th>
-              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Total current value of all holdings at today's market prices.">{{ $t('instruments.market_value') }}</span></th>
-              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Total profit or loss: unrealized + realized.">{{ $t('instruments.pnl') }}</span></th>
-              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Percentage gain or loss relative to cost basis.">{{ $t('instruments.return') }}</span></th>
-              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Annualized money-weighted return. Accounts for timing and size of cash flows.">{{ $t('instruments.xirr') }}</span></th>
-              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Total dividends and coupons received.">{{ $t('instruments.income') }}</span></th>
-              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Estimated capital gains tax on unrealized profits.">{{ $t('instruments.est_tax') }}</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" :data-tip="$t('tooltips.avg_cost')">{{ $t('instruments.avg_cost') }}</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" :data-tip="$t('tooltips.weight')">{{ $t('instruments.weight') }}</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" :data-tip="$t('tooltips.market_value')">{{ $t('instruments.market_value') }}</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" :data-tip="$t('tooltips.pnl')">{{ $t('instruments.pnl') }}</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" :data-tip="$t('tooltips.return')">{{ $t('instruments.return') }}</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" :data-tip="$t('tooltips.xirr')">{{ $t('instruments.xirr') }}</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" :data-tip="$t('tooltips.income_col')">{{ $t('instruments.income') }}</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" :data-tip="$t('tooltips.est_tax')">{{ $t('instruments.est_tax') }}</span></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-gray-700">

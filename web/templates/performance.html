@@ -113,9 +113,9 @@
           <thead class="text-xs text-gray-800 dark:text-gray-200 uppercase tracking-wider bg-gray-100 dark:bg-gray-800 border-b-2 border-indigo-500/20">
             <tr>
               <th class="px-5 py-3 text-left">{{ $t('performance.period') }}</th>
-              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Change in portfolio value due to market price movements.">{{ $t('performance.market_gain') }}</span></th>
-              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Time-Weighted Return. Measures performance independent of cash flow timing.">{{ $t('performance.twr') }}</span></th>
-              <th class="px-5 py-3 text-right"><span class="tip" data-tip="Money-Weighted Return for the period. Reflects actual investor experience.">{{ $t('performance.mwrr') }}</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" :data-tip="$t('tooltips.market_gain')">{{ $t('performance.market_gain') }}</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" :data-tip="$t('tooltips.twr')">{{ $t('performance.twr') }}</span></th>
+              <th class="px-5 py-3 text-right"><span class="tip" :data-tip="$t('tooltips.mwrr')">{{ $t('performance.mwrr') }}</span></th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
