@@ -5,7 +5,7 @@
  */
 (function () {
   var lang = localStorage.getItem('lang') || navigator.language.slice(0, 2) || 'en';
-  if (lang !== 'en' && lang !== 'it') lang = 'en';
+  if (!['en', 'it', 'es'].includes(lang)) lang = 'en';
 
   var definitions_en = {
     'cost-basis': 'Total amount invested across all instruments, net of accrued interest for bonds.',
@@ -31,7 +31,19 @@
     'max-drawdown': 'Maggior calo dal picco al minimo. Mostra la peggior perdita che avresti subito.',
   };
 
-  var definitions = lang === 'it' ? definitions_it : definitions_en;
+  var definitions_es = {
+    'cost-basis': 'Monto total invertido en todos los instrumentos, neto de intereses devengados para bonos.',
+    'market-value': 'Valor actual total de todas las posiciones a precios de mercado de hoy.',
+    'total-pnl': 'Ganancia o pérdida total: no realizada (posiciones actuales) + realizada (ventas pasadas). Ingresos mostrados por separado.',
+    'income': 'Total de dividendos y cupones de bonos recibidos desde el inicio.',
+    'xirr': 'Rendimiento anualizado ponderado por dinero (XIRR). Considera el momento y tamaño de cada flujo.',
+    'volatility': 'Desviación estándar anualizada de los rendimientos diarios. Mide cuánto fluctúan.',
+    'sharpe-ratio': 'Rendimiento por unidad de riesgo. Por encima de 1 es bueno, por encima de 2 es excelente.',
+    'sortino-ratio': 'Similar al Sharpe pero solo penaliza la volatilidad a la baja. Cuanto más alto, mejor.',
+    'max-drawdown': 'Mayor caída desde el máximo hasta el mínimo. Muestra la peor pérdida que habrías experimentado.',
+  };
+
+  var definitions = lang === 'it' ? definitions_it : lang === 'es' ? definitions_es : definitions_en;
 
   var style = document.createElement('style');
   style.textContent = [

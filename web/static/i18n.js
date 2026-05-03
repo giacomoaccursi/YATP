@@ -17,14 +17,15 @@ var _i18nReady = false;
 
 async function createI18nInstance() {
   var savedLang = localStorage.getItem('lang') || navigator.language.slice(0, 2) || 'en';
-  if (savedLang !== 'en' && savedLang !== 'it') savedLang = 'en';
+  if (!['en', 'it', 'es'].includes(savedLang)) savedLang = 'en';
 
   if (!_i18nReady) {
-    var [en, it] = await Promise.all([
+    var [en, it, es] = await Promise.all([
       fetch('/static/i18n/en.json').then(function (r) { return r.json(); }),
       fetch('/static/i18n/it.json').then(function (r) { return r.json(); }),
+      fetch('/static/i18n/es.json').then(function (r) { return r.json(); }),
     ]);
-    _i18nMessages = { en: en, it: it };
+    _i18nMessages = { en: en, it: it, es: es };
     _i18nReady = true;
   }
 

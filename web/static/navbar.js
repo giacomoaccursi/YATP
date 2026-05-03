@@ -15,15 +15,15 @@
   var refreshIcon = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>';
 
   var currentLang = localStorage.getItem('lang') || navigator.language.slice(0, 2) || 'en';
-  if (currentLang !== 'en' && currentLang !== 'it') currentLang = 'en';
+  if (!['en', 'it', 'es'].includes(currentLang)) currentLang = 'en';
 
   var pages = [
-    { href: '/', label: currentLang === 'it' ? 'Dashboard' : 'Dashboard', icon: 'dashboard' },
-    { href: '/instruments', label: currentLang === 'it' ? 'Strumenti' : 'Instruments', icon: 'instruments' },
-    { href: '/performance', label: currentLang === 'it' ? 'Performance' : 'Performance', icon: 'performance' },
-    { href: '/rebalance', label: currentLang === 'it' ? 'Ribilanciamento' : 'Rebalance', icon: 'rebalance' },
-    { href: '/sell-simulator', label: currentLang === 'it' ? 'Sim. Vendita' : 'Sell Simulator', icon: 'sellsim' },
-    { href: '/transactions', label: currentLang === 'it' ? 'Transazioni' : 'Transactions', icon: 'transactions' },
+    { href: '/', label: currentLang === 'it' ? 'Dashboard' : currentLang === 'es' ? 'Panel' : 'Dashboard', icon: 'dashboard' },
+    { href: '/instruments', label: currentLang === 'it' ? 'Strumenti' : currentLang === 'es' ? 'Instrumentos' : 'Instruments', icon: 'instruments' },
+    { href: '/performance', label: currentLang === 'it' ? 'Performance' : currentLang === 'es' ? 'Rendimiento' : 'Performance', icon: 'performance' },
+    { href: '/rebalance', label: currentLang === 'it' ? 'Ribilanciamento' : currentLang === 'es' ? 'Rebalanceo' : 'Rebalance', icon: 'rebalance' },
+    { href: '/sell-simulator', label: currentLang === 'it' ? 'Sim. Vendita' : currentLang === 'es' ? 'Sim. Venta' : 'Sell Simulator', icon: 'sellsim' },
+    { href: '/transactions', label: currentLang === 'it' ? 'Transazioni' : currentLang === 'es' ? 'Transacciones' : 'Transactions', icon: 'transactions' },
   ];
 
   var current = window.location.pathname;
@@ -62,7 +62,7 @@
 
   var refreshLabel = document.createElement('span');
   refreshLabel.className = 'flex items-center gap-1.5';
-  refreshLabel.innerHTML = refreshIcon + (currentLang === 'it' ? ' Aggiorna Prezzi' : ' Refresh Prices');
+  refreshLabel.innerHTML = refreshIcon + (currentLang === 'it' ? ' Aggiorna Prezzi' : currentLang === 'es' ? ' Actualizar Precios' : ' Refresh Prices');
 
   var timestamp = document.createElement('span');
   timestamp.className = 'text-[11px] text-gray-500 dark:text-gray-500 font-normal';
@@ -100,17 +100,44 @@
 
   nav.appendChild(refreshBtn);
 
-  // Language selector
+  // Language selector (dropdown with flags)
+  var langs = [
+    { code: 'en', flag: '🇬🇧', label: 'English' },
+    { code: 'it', flag: '🇮🇹', label: 'Italiano' },
+    { code: 'es', flag: '🇪🇸', label: 'Español' },
+  ];
+  var currentLangObj = langs.find(function (l) { return l.code === currentLang; }) || langs[0];
+
+  var langWrapper = document.createElement('div');
+  langWrapper.className = 'relative';
+
   var langBtn = document.createElement('button');
-  langBtn.className = 'px-2 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition uppercase';
-  langBtn.textContent = currentLang.toUpperCase();
-  langBtn.title = 'Switch language';
-  langBtn.addEventListener('click', function () {
-    var newLang = currentLang === 'it' ? 'en' : 'it';
-    localStorage.setItem('lang', newLang);
-    window.location.reload();
+  langBtn.className = 'px-2 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition flex items-center gap-1.5';
+  langBtn.innerHTML = '<span>' + currentLangObj.flag + '</span><span class="text-xs uppercase">' + currentLang + '</span>';
+
+  var langMenu = document.createElement('div');
+  langMenu.className = 'absolute right-0 top-full mt-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 hidden z-50 min-w-[140px]';
+
+  langs.forEach(function (lang) {
+    var item = document.createElement('button');
+    item.className = 'w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition' + (lang.code === currentLang ? ' font-medium text-indigo-600 dark:text-indigo-400' : ' text-gray-700 dark:text-gray-300');
+    item.innerHTML = '<span>' + lang.flag + '</span><span>' + lang.label + '</span>';
+    item.addEventListener('click', function () {
+      localStorage.setItem('lang', lang.code);
+      window.location.reload();
+    });
+    langMenu.appendChild(item);
   });
-  nav.appendChild(langBtn);
+
+  langBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    langMenu.classList.toggle('hidden');
+  });
+  document.addEventListener('click', function () { langMenu.classList.add('hidden'); });
+
+  langWrapper.appendChild(langBtn);
+  langWrapper.appendChild(langMenu);
+  nav.appendChild(langWrapper);
 
   // Theme toggle
   var sunIcon = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>';
