@@ -6,7 +6,7 @@ from portfolio.loader import load_config, load_transactions
 from portfolio.engine import PortfolioEngine
 from portfolio.history import build_history
 from web.portfolio_service import load_common
-from web.cache import get_cached_price_history
+from web.cache import get_cached_price_history, get_risk_free_rate
 
 
 def load_portfolio_history(config_path, transactions_path, start_date=None, end_date=None):
@@ -18,7 +18,7 @@ def load_portfolio_history(config_path, transactions_path, start_date=None, end_
         return empty_response
 
     all_dates = _build_date_index(price_histories, first_date, today)
-    engine = PortfolioEngine(df, price_histories, market_dates=all_dates)
+    engine = PortfolioEngine(df, price_histories, market_dates=all_dates, risk_free_annual=get_risk_free_rate())
     return engine.full_history(start_date=start_date, end_date=end_date)
 
 
@@ -67,7 +67,7 @@ def load_instrument_history(config_path, transactions_path, security):
     all_dates = sorted(prices.index.normalize().unique())
     all_dates = [date for date in all_dates if date <= today]
 
-    engine = PortfolioEngine(instrument_df, price_histories, market_dates=all_dates)
+    engine = PortfolioEngine(instrument_df, price_histories, market_dates=all_dates, risk_free_annual=get_risk_free_rate())
     result = engine.full_instrument_history()
 
     # Add buy transaction dates and amounts for DCA visualization
@@ -113,7 +113,7 @@ def load_filtered_history(config_path, transactions_path, securities, start_date
 
     first_date = filtered_df["Date"].min().normalize()
     all_dates = _build_date_index(filtered_prices, first_date, today)
-    engine = PortfolioEngine(filtered_df, filtered_prices, market_dates=all_dates)
+    engine = PortfolioEngine(filtered_df, filtered_prices, market_dates=all_dates, risk_free_annual=get_risk_free_rate())
     return engine.full_history(start_date=start_date, end_date=end_date)
 
 

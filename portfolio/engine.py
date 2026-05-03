@@ -16,9 +16,10 @@ from portfolio.returns import (
 class PortfolioEngine:
     """Stateful engine that replays transactions once and exposes metric methods."""
 
-    def __init__(self, df, price_histories, market_dates=None):
+    def __init__(self, df, price_histories, market_dates=None, risk_free_annual=0.03):
         self._price_histories = price_histories
         self._df = df
+        self._risk_free_annual = risk_free_annual
         self._replay(df, market_dates)
         self._cache_values()
 
@@ -508,8 +509,8 @@ class PortfolioEngine:
             "heatmap": self.monthly_returns_heatmap(twr_pcts=self.cumulative_twr()),
             "risk": {
                 "volatility": self.volatility(),
-                "sharpe_ratio": self.sharpe_ratio(),
-                "sortino_ratio": self.sortino_ratio(),
+                "sharpe_ratio": self.sharpe_ratio(self._risk_free_annual),
+                "sortino_ratio": self.sortino_ratio(self._risk_free_annual),
                 "max_drawdown": round(min(drawdown_pcts), 2) if drawdown_pcts else 0,
             },
         }
