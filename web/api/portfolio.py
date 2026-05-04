@@ -8,6 +8,7 @@ from web.portfolio_service import load_portfolio_data, load_offline_summary
 from web.history_service import load_portfolio_daily_change, load_instrument_history
 from web.transaction_service import load_instrument_names, add_instrument_to_config
 from web.serializers import instrument_to_dict, summary_to_dict, offline_summary_to_dict
+from web.validators import validate_instrument_input
 
 portfolio_bp = Blueprint("portfolio", __name__)
 
@@ -59,18 +60,12 @@ def api_instruments():
 @portfolio_bp.route("/api/instruments", methods=["POST"])
 def api_add_instrument():
     """Add a new instrument to the config."""
-    data = request.get_json()
-    security = data.get("security", "").strip()
-    ticker = data.get("ticker", "").strip()
-    instrument_type = data.get("type", "ETF").strip()
-    capital_gains_rate = float(data.get("capital_gains_rate", 0.26) or 0.26)
-    isin = (data.get("isin") or "").strip() or None
-
-    if not security or not ticker:
-        raise ValidationError("Security name and ticker are required")
+    cleaned = validate_instrument_input(request.get_json())
 
     added = add_instrument_to_config(
-        current_app.config["CONFIG_PATH"], security, ticker, instrument_type, capital_gains_rate, isin=isin,
+        current_app.config["CONFIG_PATH"],
+        cleaned["security"], cleaned["ticker"], cleaned["type"],
+        cleaned["capital_gains_rate"], isin=cleaned["isin"],
     )
     if not added:
         raise ConflictError("Instrument already exists")

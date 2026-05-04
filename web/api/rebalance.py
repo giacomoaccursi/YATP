@@ -4,6 +4,7 @@ from flask import Blueprint, jsonify, request, current_app
 
 from web.rebalance_service import load_rebalance_data, simulate_rebalance
 from web.serializers import rebalance_to_dict
+from web.validators import validate_rebalance_input
 
 rebalance_bp = Blueprint("rebalance", __name__)
 
@@ -20,9 +21,7 @@ def api_rebalance():
 @rebalance_bp.route("/api/rebalance/simulate", methods=["POST"])
 def api_rebalance_simulate():
     """Simulate rebalance with custom investment and targets."""
-    data = request.get_json()
-    new_investment = data.get("new_investment", 0)
-    custom_targets = data.get("targets", {})
+    new_investment, custom_targets = validate_rebalance_input(request.get_json())
     actions = simulate_rebalance(
         current_app.config["CONFIG_PATH"], current_app.config["TRANSACTIONS_PATH"],
         new_investment, custom_targets,

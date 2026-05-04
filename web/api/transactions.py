@@ -11,6 +11,7 @@ from web.transaction_service import (
     load_summary_data, load_income_history, simulate_sell, compute_net_transaction_value,
 )
 from web.serializers import transaction_row_to_dict, instrument_summary_to_dict, sell_simulation_to_dict
+from web.validators import validate_transaction_input, validate_sell_simulation_input
 from portfolio.loader import load_transactions
 
 transactions_bp = Blueprint("transactions", __name__)
@@ -40,9 +41,7 @@ def api_income_history():
 @transactions_bp.route("/api/simulate/sell", methods=["POST"])
 def api_simulate_sell():
     """Simulate selling shares of an instrument."""
-    data = request.get_json()
-    security = data.get("security", "")
-    shares = float(data.get("shares", 0) or 0)
+    security, shares = validate_sell_simulation_input(request.get_json())
     result = simulate_sell(
         current_app.config["CONFIG_PATH"], current_app.config["TRANSACTIONS_PATH"],
         security, shares,
@@ -79,23 +78,19 @@ def api_transactions_list():
 @transactions_bp.route("/api/transactions", methods=["POST"])
 def api_add_transaction():
     """Append a new transaction to the CSV file."""
-    data = request.get_json()
-    required = ["date", "type", "security"]
-    missing = [field for field in required if not data.get(field)]
-    if missing:
-        raise ValidationError(f"Missing fields: {', '.join(missing)}")
+    cleaned = validate_transaction_input(request.get_json())
 
     row = {
-        "Date": data["date"] + " 00:00:00",
-        "Type": data["type"],
-        "Security": data["security"],
-        "Shares": data.get("shares", ""),
-        "Quote": data.get("quote", ""),
-        "Amount": data.get("amount", ""),
-        "Fees": data.get("fees", ""),
-        "Taxes": data.get("taxes", ""),
-        "Accrued Interest": data.get("accrued_interest", ""),
-        "Net Transaction Value": data.get("net_transaction_value", ""),
+        "Date": cleaned["date"] + " 00:00:00",
+        "Type": cleaned["type"],
+        "Security": cleaned["security"],
+        "Shares": cleaned["shares"],
+        "Quote": cleaned["quote"],
+        "Amount": cleaned["amount"],
+        "Fees": cleaned["fees"],
+        "Taxes": cleaned["taxes"],
+        "Accrued Interest": cleaned["accrued_interest"],
+        "Net Transaction Value": cleaned["net_transaction_value"],
     }
 
     csv_path = current_app.config["TRANSACTIONS_PATH"]
