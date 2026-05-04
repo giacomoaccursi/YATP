@@ -1,8 +1,11 @@
 """Price caching layer. In-memory caches that persist while the server is running."""
 
 import time
+import logging
 import requests
 from portfolio.market import fetch_current_price, fetch_price_history, clear_bond_price_cache
+
+logger = logging.getLogger(__name__)
 
 PRICE_CACHE_TTL = 300  # 5 minutes
 
@@ -19,12 +22,16 @@ def get_cached_price(ticker, isin=None, instrument_type=None):
     """Fetch current price with in-memory caching. Expires after PRICE_CACHE_TTL seconds."""
     global _price_fetch_time, _price_cache_time
     if time.time() - _price_cache_time > PRICE_CACHE_TTL:
+        logger.info("Price cache expired, clearing")
         _price_cache.clear()
         _daily_change_cache.clear()
         _price_cache_time = time.time()
         _price_fetch_time = None
     if ticker not in _price_cache:
+        logger.info("Fetching price for %s", ticker)
         _price_cache[ticker] = fetch_current_price(ticker, isin=isin, instrument_type=instrument_type)
+        if _price_cache[ticker] is None:
+            logger.warning("Failed to fetch price for %s", ticker)
         if _price_fetch_time is None:
             from datetime import datetime
             _price_fetch_time = datetime.now().strftime("%H:%M")
@@ -109,9 +116,10 @@ def get_risk_free_rate():
                 fields = data_line.split(",")
                 obs_value = float(fields[9])
                 _risk_free_rate = obs_value / 100  # Convert from percentage to decimal
+                logger.info("ECB deposit facility rate: %.2f%%", obs_value)
                 return _risk_free_rate
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning("Failed to fetch ECB rate: %s. Using fallback 2.5%%", e)
 
     # Fallback: 2.5% (reasonable EUR risk-free estimate)
     _risk_free_rate = 0.025

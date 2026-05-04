@@ -10,12 +10,23 @@ from web.errors import register_error_handlers
 
 def create_app(config_path, transactions_path):
     """Create and configure the Flask app."""
+    import logging
+
     app = Flask(
         __name__,
         static_folder=os.path.join(os.path.dirname(__file__), "static"),
     )
     app.config["CONFIG_PATH"] = config_path
     app.config["TRANSACTIONS_PATH"] = transactions_path
+
+    # Configure logging
+    handler = logging.StreamHandler()
+    handler.setFormatter(logging.Formatter(
+        "[%(asctime)s] %(levelname)s %(name)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    ))
+    app.logger.addHandler(handler)
+    app.logger.setLevel(logging.INFO)
 
     templates_dir = os.path.join(os.path.dirname(__file__), "templates")
 
