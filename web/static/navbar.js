@@ -20,7 +20,7 @@
   var pages = [
     { href: '/', label: currentLang === 'it' ? 'Dashboard' : currentLang === 'es' ? 'Panel' : 'Dashboard', icon: 'dashboard' },
     { href: '/instruments', label: currentLang === 'it' ? 'Strumenti' : currentLang === 'es' ? 'Instrumentos' : 'Instruments', icon: 'instruments' },
-    { href: '/performance', label: currentLang === 'it' ? 'Performance' : currentLang === 'es' ? 'Rendimiento' : 'Performance', icon: 'performance' },
+    { href: '/performance', label: currentLang === 'it' ? 'Rendimenti' : currentLang === 'es' ? 'Rendimiento' : 'Performance', icon: 'performance' },
     { href: '/rebalance', label: currentLang === 'it' ? 'Ribilanciamento' : currentLang === 'es' ? 'Rebalanceo' : 'Rebalance', icon: 'rebalance' },
     { href: '/sell-simulator', label: currentLang === 'it' ? 'Sim. Vendita' : currentLang === 'es' ? 'Sim. Venta' : 'Sell Simulator', icon: 'sellsim' },
     { href: '/transactions', label: currentLang === 'it' ? 'Transazioni' : currentLang === 'es' ? 'Transacciones' : 'Transactions', icon: 'transactions' },

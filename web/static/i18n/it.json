@@ -3,7 +3,7 @@
     "portfolio": "Portafoglio",
     "dashboard": "Dashboard",
     "instruments": "Strumenti",
-    "performance": "Performance",
+    "performance": "Rendimenti",
     "rebalance": "Ribilanciamento",
     "sell_simulator": "Simulatore Vendita",
     "transactions": "Transazioni",
@@ -61,7 +61,7 @@
     "est_tax": "Imposte Stimate"
   },
   "performance": {
-    "title": "Performance",
+    "title": "Rendimenti",
     "subtitle": "Analisi dei rendimenti con filtri per periodo",
     "filter_instruments": "Filtra strumenti",
     "all": "Tutti",
