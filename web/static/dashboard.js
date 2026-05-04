@@ -27,7 +27,7 @@ const { createApp, ref, onMounted, onUnmounted, nextTick } = Vue;
     let classChartInstance = null;
     let valueChartInstance = null;
     let incomeChartInstance = null;
-    let historyData = null;
+    const historyData = ref(null);
 
     function renderDoughnut(canvas, labels, data, existing) {
       if (existing) existing.destroy();
@@ -92,7 +92,7 @@ const { createApp, ref, onMounted, onUnmounted, nextTick } = Vue;
 
     function reRenderAll() {
       renderCharts();
-      if (historyData) renderValueChart(historyData.dates, historyData.values);
+      if (historyData.value) renderValueChart(historyData.value.dates, historyData.value.values);
       if (incomeMonths.value.length) renderIncomeChart(incomeMonths.value);
     }
 
@@ -159,7 +159,7 @@ const { createApp, ref, onMounted, onUnmounted, nextTick } = Vue;
         var res = await fetch('/api/portfolio/history');
         var data = await res.json();
         if (data.dates && data.dates.length) {
-          historyData = data;
+          historyData.value = data;
           historyLoading.value = false;
           await nextTick();
           renderValueChart(data.dates, data.values);

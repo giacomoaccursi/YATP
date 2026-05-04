@@ -21,7 +21,7 @@ const { createApp, ref, onMounted, onUnmounted, nextTick } = Vue;
     let pnlChartInstance = null;
     let dcaChartInstance = null;
     let returnChartInstance = null;
-    let lastDetailData = null;
+    const lastDetailData = ref(null);
 
     function makeLineChart(canvas, labels, datasets, existing, opts) {
       return createLineChart(canvas, labels, datasets, existing, opts);
@@ -148,10 +148,10 @@ const { createApp, ref, onMounted, onUnmounted, nextTick } = Vue;
       detailLoading.value = true;
       try {
         var res = await fetch('/api/instruments/' + encodeURIComponent(security) + '/history');
-        lastDetailData = await res.json();
+        lastDetailData.value = await res.json();
         detailLoading.value = false;
         await nextTick();
-        renderDetailCharts(lastDetailData);
+        renderDetailCharts(lastDetailData.value);
       } catch (err) {
         console.error('Failed to fetch instrument history:', err);
         detailLoading.value = false;
@@ -159,7 +159,7 @@ const { createApp, ref, onMounted, onUnmounted, nextTick } = Vue;
     }
 
     function onThemeChange() {
-      if (lastDetailData) { nextTick(function () { renderDetailCharts(lastDetailData); }); }
+      if (lastDetailData.value) { nextTick(function () { renderDetailCharts(lastDetailData.value); }); }
     }
 
     onMounted(function () {

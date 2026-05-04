@@ -29,14 +29,14 @@ const { createApp, ref, computed, watch, onMounted, onUnmounted, nextTick } = Vu
     const valueCostChart = ref(null);
     const drawdownChart = ref(null);
 
-    // Chart instances
+    // Chart instances (not reactive — Chart.js objects)
     let compareChartInstance = null;
     let returnChartInstance = null;
     let valueCostChartInstance = null;
     let drawdownChartInstance = null;
 
-    // Data from API (ready to render, no transformations needed)
-    let apiData = {};
+    // Data from API
+    const apiData = ref({});
     const risk = ref(null);
 
     // Toggle: include realized gains
@@ -146,7 +146,7 @@ const { createApp, ref, computed, watch, onMounted, onUnmounted, nextTick } = Vu
             }),
           });
         }
-        apiData = await res.json();
+        apiData.value = await res.json();
         historyLoading.value = false;
         await nextTick();
         renderAllCharts();
@@ -193,25 +193,25 @@ const { createApp, ref, computed, watch, onMounted, onUnmounted, nextTick } = Vu
     // ── Render (pure rendering, no calculations) ──
 
     function renderAllCharts() {
-      var dates = apiData.dates || [];
-      var values = apiData.values || [];
-      var costs = apiData.costs || [];
+      var dates = apiData.value.dates || [];
+      var values = apiData.value.values || [];
+      var costs = apiData.value.costs || [];
       var returnPcts = includeRealized.value
-        ? (apiData.total_return_pcts || [])
-        : (apiData.return_pcts || []);
-      var twrPcts = apiData.twr_pcts || [];
-      var drawdownPcts = apiData.drawdown_pcts || [];
+        ? (apiData.value.total_return_pcts || [])
+        : (apiData.value.return_pcts || []);
+      var twrPcts = apiData.value.twr_pcts || [];
+      var drawdownPcts = apiData.value.drawdown_pcts || [];
 
       renderReturnChart(dates, returnPcts, twrPcts);
       renderValueCostChart(dates, values, costs);
       renderDrawdownChart(dates, drawdownPcts);
 
       // Heatmap comes pre-computed from the API
-      var heatmap = apiData.heatmap || { years: [], cells: {}, year_totals: {} };
+      var heatmap = apiData.value.heatmap || { years: [], cells: {}, year_totals: {} };
       heatmapData.value = { years: heatmap.years || [], cells: heatmap.cells || {}, yearTotals: heatmap.year_totals || {} };
 
       // Risk metrics from API
-      risk.value = apiData.risk || null;
+      risk.value = apiData.value.risk || null;
     }
 
     function renderReturnChart(dates, returnPcts, twrPcts) {
