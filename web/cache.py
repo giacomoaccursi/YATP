@@ -8,6 +8,7 @@ _daily_change_cache = {}
 _price_history_cache = {}
 _price_fetch_time = None
 _risk_free_rate = None
+_common_cache = None
 
 
 def get_cached_price(ticker, isin=None, instrument_type=None):
@@ -48,12 +49,30 @@ def get_price_fetch_time():
 
 def clear_all_caches():
     """Clear all price caches to force re-fetch."""
-    global _price_fetch_time
+    global _price_fetch_time, _common_cache
     _price_cache.clear()
     _daily_change_cache.clear()
     _price_history_cache.clear()
     _price_fetch_time = None
+    _common_cache = None
     clear_bond_price_cache()
+
+
+def invalidate_transaction_cache():
+    """Invalidate caches that depend on transaction data. Called after add/edit/delete."""
+    global _common_cache
+    _common_cache = None
+
+
+def get_common_cache():
+    """Return cached load_common() result, or None if not cached."""
+    return _common_cache
+
+
+def set_common_cache(value):
+    """Store load_common() result in cache."""
+    global _common_cache
+    _common_cache = value
 
 
 def get_risk_free_rate():

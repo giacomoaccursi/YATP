@@ -6,11 +6,15 @@ from portfolio.loader import load_config, load_transactions
 from portfolio.portfolio import build_portfolio
 from portfolio.analysis import analyze_instrument, analyze_portfolio
 from portfolio.models import InstrumentResult
-from web.cache import get_cached_price, get_cached_daily_change, get_cached_price_history
+from web.cache import get_cached_price, get_cached_daily_change, get_cached_price_history, get_common_cache, set_common_cache
 
 
 def load_common(config_path, transactions_path):
-    """Load config, transactions, and price histories. Shared by multiple services."""
+    """Load config, transactions, and price histories. Cached between requests until invalidated."""
+    cached = get_common_cache()
+    if cached is not None:
+        return cached
+
     config = load_config(config_path)
     instruments = config["instruments"]
     df = load_transactions(transactions_path)
@@ -28,7 +32,9 @@ def load_common(config_path, transactions_path):
         if prices is not None:
             price_histories[security] = prices
 
-    return config, instruments, df, price_histories, first_date, today
+    result = (config, instruments, df, price_histories, first_date, today)
+    set_common_cache(result)
+    return result
 
 
 def load_portfolio_data(config_path, transactions_path):

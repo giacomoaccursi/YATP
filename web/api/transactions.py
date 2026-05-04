@@ -5,6 +5,7 @@ import os
 import pandas as pd
 from flask import Blueprint, jsonify, request, current_app
 
+from web.cache import invalidate_transaction_cache
 from web.transaction_service import (
     load_summary_data, load_income_history, simulate_sell, compute_net_transaction_value,
 )
@@ -108,6 +109,7 @@ def api_add_transaction():
     except OSError as e:
         return jsonify({"error": f"Failed to write transaction: {e}"}), 500
 
+    invalidate_transaction_cache()
     return jsonify({"success": True})
 
 
@@ -144,6 +146,7 @@ def api_update_transaction(row_index):
         df.to_csv(csv_path, index=False)
     except OSError as e:
         return jsonify({"error": f"Failed to save transaction: {e}"}), 500
+    invalidate_transaction_cache()
     return jsonify({"success": True})
 
 
@@ -163,4 +166,5 @@ def api_delete_transaction(row_index):
         df.to_csv(csv_path, index=False)
     except OSError as e:
         return jsonify({"error": f"Failed to save transaction: {e}"}), 500
+    invalidate_transaction_cache()
     return jsonify({"success": True})
