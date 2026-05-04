@@ -1,5 +1,6 @@
 /**
  * Shared navbar component. Injected into all pages.
+ * Responsive: hamburger menu on mobile, full links on desktop.
  * Loads translations from JSON files for the current language.
  */
 (function () {
@@ -14,18 +15,19 @@
   };
 
   var refreshIcon = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>';
+  var hamburgerIcon = '<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>';
+  var closeIcon = '<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>';
 
   var currentLang = localStorage.getItem('lang') || navigator.language.slice(0, 2) || 'en';
   if (!['en', 'it', 'es'].includes(currentLang)) currentLang = 'en';
 
-  // Load translations and build navbar
   fetch('/static/i18n/' + currentLang + '.json')
     .then(function (r) { return r.json(); })
     .then(function (t) { buildNavbar(t.nav); })
     .catch(function () { buildNavbar(null); });
 
   function buildNavbar(t) {
-    if (!t) t = { dashboard: 'Dashboard', instruments: 'Instruments', performance: 'Performance', rebalance: 'Rebalance', sell_simulator: 'Sell Simulator', transactions: 'Transactions', refresh_prices: 'Refresh Prices', refreshing: 'refreshing...' };
+    if (!t) t = { dashboard: 'Dashboard', instruments: 'Instruments', performance: 'Performance', rebalance: 'Rebalance', sell_simulator: 'Sell Simulator', transactions: 'Transactions', methodology: 'Metrics', refresh_prices: 'Refresh Prices', refreshing: 'refreshing...' };
 
     var pages = [
       { href: '/', label: t.dashboard, icon: 'dashboard' },
@@ -39,18 +41,25 @@
 
     var current = window.location.pathname;
 
+    // ── Main nav container ──
     var nav = document.createElement('nav');
-    nav.className = 'border-b border-gray-200 dark:border-gray-700 px-6 py-2.5 flex items-center gap-1 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm sticky top-0 z-50';
+    nav.className = 'border-b border-gray-200 dark:border-gray-700 px-4 md:px-6 py-2.5 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm sticky top-0 z-50';
     nav.id = 'main-nav';
+
+    var navInner = document.createElement('div');
+    navInner.className = 'flex items-center gap-1';
+    nav.appendChild(navInner);
 
     // Brand
     var brand = document.createElement('a');
     brand.href = '/';
-    brand.className = 'text-sm font-semibold tracking-tight text-gray-900 dark:text-white mr-6 flex items-center gap-2';
+    brand.className = 'text-sm font-semibold tracking-tight text-gray-900 dark:text-white mr-4 md:mr-6 flex items-center gap-2';
     brand.innerHTML = '<svg class="w-5 h-5 text-indigo-500 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Portfolio';
-    nav.appendChild(brand);
+    navInner.appendChild(brand);
 
-    // Links
+    // Desktop links (hidden on mobile)
+    var desktopLinks = document.createElement('div');
+    desktopLinks.className = 'hidden lg:flex items-center gap-1';
     pages.forEach(function (page) {
       var a = document.createElement('a');
       a.href = page.href;
@@ -59,17 +68,18 @@
         ? 'px-3 py-2 text-sm text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center gap-2'
         : 'px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/50 dark:hover:bg-gray-800/50 rounded-lg transition flex items-center gap-2';
       a.innerHTML = icons[page.icon] + '<span>' + page.label + '</span>';
-      nav.appendChild(a);
+      desktopLinks.appendChild(a);
     });
+    navInner.appendChild(desktopLinks);
 
     // Spacer
     var spacer = document.createElement('div');
     spacer.className = 'flex-1';
-    nav.appendChild(spacer);
+    navInner.appendChild(spacer);
 
     // Refresh button
     var refreshBtn = document.createElement('button');
-    refreshBtn.className = 'px-3 py-1.5 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition flex items-center gap-2 mr-2';
+    refreshBtn.className = 'hidden md:flex px-3 py-1.5 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition items-center gap-2 mr-2';
 
     var refreshLabel = document.createElement('span');
     refreshLabel.className = 'flex items-center gap-1.5';
@@ -86,11 +96,8 @@
       fetch('/api/price-status')
         .then(function (r) { return r.json(); })
         .then(function (data) {
-          if (data.fetched_at) {
-            timestamp.textContent = '· ' + data.fetched_at;
-          } else {
-            timestamp.textContent = '';
-          }
+          if (data.fetched_at) { timestamp.textContent = '· ' + data.fetched_at; }
+          else { timestamp.textContent = ''; }
         })
         .catch(function () {});
     }
@@ -99,19 +106,12 @@
       refreshBtn.style.opacity = '0.5';
       timestamp.textContent = '· ' + t.refreshing;
       fetch('/api/refresh', { method: 'POST' })
-        .then(function () {
-          refreshBtn.style.opacity = '1';
-          window.location.reload();
-        })
-        .catch(function () {
-          refreshBtn.style.opacity = '1';
-          timestamp.textContent = '· failed';
-        });
+        .then(function () { refreshBtn.style.opacity = '1'; window.location.reload(); })
+        .catch(function () { refreshBtn.style.opacity = '1'; timestamp.textContent = '· failed'; });
     });
+    navInner.appendChild(refreshBtn);
 
-    nav.appendChild(refreshBtn);
-
-    // Language selector (dropdown with flags)
+    // Language selector
     var langs = [
       { code: 'en', flag: '🇬🇧', label: 'English' },
       { code: 'it', flag: '🇮🇹', label: 'Italiano' },
@@ -124,7 +124,7 @@
 
     var langBtn = document.createElement('button');
     langBtn.className = 'px-2 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition flex items-center gap-1.5';
-    langBtn.innerHTML = '<span>' + currentLangObj.flag + '</span><span class="text-xs uppercase">' + currentLang + '</span>';
+    langBtn.innerHTML = '<span>' + currentLangObj.flag + '</span><span class="hidden sm:inline text-xs uppercase">' + currentLang + '</span>';
 
     var langMenu = document.createElement('div');
     langMenu.className = 'absolute right-0 top-full mt-1 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 hidden z-50 min-w-[140px]';
@@ -133,22 +133,16 @@
       var item = document.createElement('button');
       item.className = 'w-full px-3 py-2 text-sm text-left flex items-center gap-2 hover:bg-gray-100 dark:hover:bg-gray-800 transition' + (lang.code === currentLang ? ' font-medium text-indigo-600 dark:text-indigo-400' : ' text-gray-700 dark:text-gray-300');
       item.innerHTML = '<span>' + lang.flag + '</span><span>' + lang.label + '</span>';
-      item.addEventListener('click', function () {
-        localStorage.setItem('lang', lang.code);
-        window.location.reload();
-      });
+      item.addEventListener('click', function () { localStorage.setItem('lang', lang.code); window.location.reload(); });
       langMenu.appendChild(item);
     });
 
-    langBtn.addEventListener('click', function (e) {
-      e.stopPropagation();
-      langMenu.classList.toggle('hidden');
-    });
+    langBtn.addEventListener('click', function (e) { e.stopPropagation(); langMenu.classList.toggle('hidden'); });
     document.addEventListener('click', function () { langMenu.classList.add('hidden'); });
 
     langWrapper.appendChild(langBtn);
     langWrapper.appendChild(langMenu);
-    nav.appendChild(langWrapper);
+    navInner.appendChild(langWrapper);
 
     // Theme toggle
     var sunIcon = '<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>';
@@ -156,17 +150,49 @@
 
     var themeBtn = document.createElement('button');
     themeBtn.className = 'p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition';
-    themeBtn.title = 'Toggle theme';
-    function updateThemeIcon() {
-      var isDark = document.documentElement.classList.contains('dark');
-      themeBtn.innerHTML = isDark ? sunIcon : moonIcon;
-    }
+    function updateThemeIcon() { themeBtn.innerHTML = document.documentElement.classList.contains('dark') ? sunIcon : moonIcon; }
     updateThemeIcon();
-    themeBtn.addEventListener('click', function () {
-      window.__toggleTheme();
-      updateThemeIcon();
+    themeBtn.addEventListener('click', function () { window.__toggleTheme(); updateThemeIcon(); });
+    navInner.appendChild(themeBtn);
+
+    // Hamburger button (visible on mobile only)
+    var hamburgerBtn = document.createElement('button');
+    hamburgerBtn.className = 'lg:hidden p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition ml-1';
+    hamburgerBtn.innerHTML = hamburgerIcon;
+    navInner.appendChild(hamburgerBtn);
+
+    // Mobile menu (hidden by default)
+    var mobileMenu = document.createElement('div');
+    mobileMenu.className = 'hidden lg:hidden border-t border-gray-200 dark:border-gray-700 mt-2 pt-2 pb-1 space-y-1';
+
+    pages.forEach(function (page) {
+      var a = document.createElement('a');
+      a.href = page.href;
+      var isActive = (page.href === '/' && current === '/') || (page.href !== '/' && current.startsWith(page.href));
+      a.className = isActive
+        ? 'block px-3 py-2.5 text-sm text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-800 rounded-lg flex items-center gap-3'
+        : 'block px-3 py-2.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100/50 dark:hover:bg-gray-800/50 rounded-lg transition flex items-center gap-3';
+      a.innerHTML = icons[page.icon] + '<span>' + page.label + '</span>';
+      mobileMenu.appendChild(a);
     });
-    nav.appendChild(themeBtn);
+
+    // Mobile refresh button
+    var mobileRefresh = document.createElement('button');
+    mobileRefresh.className = 'w-full px-3 py-2.5 text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition flex items-center gap-3 mt-2';
+    mobileRefresh.innerHTML = refreshIcon + ' ' + t.refresh_prices;
+    mobileRefresh.addEventListener('click', function () {
+      fetch('/api/refresh', { method: 'POST' }).then(function () { window.location.reload(); });
+    });
+    mobileMenu.appendChild(mobileRefresh);
+
+    nav.appendChild(mobileMenu);
+
+    // Toggle mobile menu
+    hamburgerBtn.addEventListener('click', function () {
+      var isOpen = !mobileMenu.classList.contains('hidden');
+      mobileMenu.classList.toggle('hidden');
+      hamburgerBtn.innerHTML = isOpen ? hamburgerIcon : closeIcon;
+    });
 
     document.body.prepend(nav);
 
