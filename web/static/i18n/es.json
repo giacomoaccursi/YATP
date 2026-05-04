@@ -112,7 +112,8 @@
     "action": "Acción",
     "buy": "Comprar",
     "sell": "Vender",
-    "on_target": "En objetivo"
+    "on_target": "En objetivo",
+    "total": "Total"
   },
   "sell_sim": {
     "title": "Simulador de Venta",

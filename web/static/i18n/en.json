@@ -112,7 +112,8 @@
     "action": "Action",
     "buy": "Buy",
     "sell": "Sell",
-    "on_target": "On target"
+    "on_target": "On target",
+    "total": "Total"
   },
   "sell_sim": {
     "title": "Sell Simulator",
