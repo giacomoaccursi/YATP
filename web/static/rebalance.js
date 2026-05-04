@@ -3,11 +3,6 @@
  * No business logic — all calculations done by /api/rebalance/simulate.
  */
 
-const CHART_COLORS = [
-  '#6366f1', '#22d3ee', '#f59e0b', '#ef4444',
-  '#a78bfa', '#34d399', '#fb923c', '#f472b6',
-];
-
 const { createApp, ref, computed, watch, onMounted, onUnmounted, nextTick } = Vue;
 
 (async function () {
@@ -31,22 +26,7 @@ const { createApp, ref, computed, watch, onMounted, onUnmounted, nextTick } = Vu
     });
 
     function renderDoughnut(canvas, labels, data, existing) {
-      if (existing) existing.destroy();
-      var t = chartTheme();
-      return new Chart(canvas, {
-        type: 'doughnut',
-        data: {
-          labels: labels,
-          datasets: [{ data: data, backgroundColor: CHART_COLORS.slice(0, data.length), borderColor: t.doughnutBorder, borderWidth: 2, hoverOffset: 8 }],
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false, cutout: '65%',
-          plugins: {
-            legend: { position: 'right', labels: { color: t.text, padding: 10, usePointStyle: true, pointStyle: 'circle', font: { size: 11 }, boxWidth: 8 } },
-            tooltip: chartTooltip(),
-          },
-        },
-      });
+      return createDoughnutChart(canvas, labels, data, existing);
     }
 
     function renderCharts() {

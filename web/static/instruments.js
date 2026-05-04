@@ -24,27 +24,7 @@ const { createApp, ref, onMounted, onUnmounted, nextTick } = Vue;
     let lastDetailData = null;
 
     function makeLineChart(canvas, labels, datasets, existing, opts) {
-      if (existing) existing.destroy();
-      var t = chartTheme();
-      return new Chart(canvas, {
-        type: 'line',
-        data: { labels: labels, datasets: datasets },
-        options: {
-          responsive: true,
-          interaction: { mode: 'index', intersect: false },
-          plugins: {
-            legend: {
-              labels: { color: t.text, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } },
-            },
-            tooltip: chartTooltip(opts.tooltipCallbacks || {}),
-          },
-          scales: chartScales({
-            xMaxTicks: 10,
-            beginAtZero: opts.beginAtZero || false,
-            yFormat: opts.yTickFormat,
-          }),
-        },
-      });
+      return createLineChart(canvas, labels, datasets, existing, opts);
     }
 
     function renderDetailCharts(data) {
