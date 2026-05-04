@@ -79,7 +79,7 @@
           <div class="text-2xl font-semibold mt-1">{{ fmt(summary.market_value) }} &euro;</div>
           <div v-if="dailyChange" class="text-xs mt-1 font-medium flex items-center gap-1" :class="pnlColor(dailyChange.amount)">
             <span class="arrow-pulse">{{ dailyChange.amount >= 0 ? '▲' : '▼' }}</span>
-            {{ fmtSigned(dailyChange.amount) }} &euro; ({{ fmtSigned(dailyChange.pct) }}%) today
+            {{ fmtSigned(dailyChange.amount) }} &euro; ({{ fmtSigned(dailyChange.pct) }}%) {{ $t('dashboard.today') }}
           </div>
         </template>
         <div v-else class="text-sm text-gray-500 dark:text-gray-500 mt-1">{{ $t('dashboard.no_market_data') }}</div>
