@@ -175,6 +175,18 @@
     "add_instrument": "Aggiungi Strumento",
     "net_value_label": "Valore Netto"
   },
+  "onboarding": {
+    "welcome": "Benvenuto in YAPT",
+    "subtitle": "Inizia in 3 semplici passi per monitorare le performance del tuo portafoglio.",
+    "skip": "Salta",
+    "step1_title": "Configura gli strumenti",
+    "step1_desc": "Aggiungi i tuoi ETF, azioni, obbligazioni con i relativi ticker nel file config o tramite il form transazioni.",
+    "step2_title": "Aggiungi transazioni",
+    "step2_desc": "Registra acquisti, vendite, dividendi e cedole. Puoi aggiungerli uno alla volta o importare un CSV.",
+    "step3_title": "Esplora il portafoglio",
+    "step3_desc": "Visualizza rendimenti, allocazione, grafici performance, metriche di rischio e suggerimenti di ribilanciamento.",
+    "cta": "Aggiungi la prima transazione"
+  },
   "methodology": {
     "title": "Metodologia",
     "subtitle": "Come viene calcolata ogni metrica — formule, assunzioni e fonti dati",

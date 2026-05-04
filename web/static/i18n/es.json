@@ -175,6 +175,18 @@
     "add_instrument": "Agregar Instrumento",
     "net_value_label": "Valor Neto"
   },
+  "onboarding": {
+    "welcome": "Bienvenido a YAPT",
+    "subtitle": "Comienza en 3 simples pasos para monitorear el rendimiento de tu portafolio.",
+    "skip": "Saltar",
+    "step1_title": "Configura instrumentos",
+    "step1_desc": "Agrega tus ETFs, acciones, bonos con sus tickers en el archivo config o mediante el formulario de transacciones.",
+    "step2_title": "Agrega transacciones",
+    "step2_desc": "Registra compras, ventas, dividendos y cupones. Puedes agregarlos uno a uno o importar un CSV.",
+    "step3_title": "Explora tu portafolio",
+    "step3_desc": "Visualiza rendimientos, asignación, gráficos de performance, métricas de riesgo y sugerencias de rebalanceo.",
+    "cta": "Agrega tu primera transacción"
+  },
   "methodology": {
     "title": "Metodología",
     "subtitle": "Cómo se calcula cada métrica — fórmulas, supuestos y fuentes de datos",

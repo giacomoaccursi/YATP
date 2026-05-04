@@ -37,6 +37,45 @@
 
   <main v-else class="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-8 space-y-6">
 
+    <!-- Onboarding (empty portfolio, not dismissed) -->
+    <section v-if="showOnboarding" class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-6 sm:p-8 space-y-6">
+      <div class="flex items-start justify-between">
+        <div>
+          <h2 class="text-xl font-semibold">{{ $t('onboarding.welcome') }}</h2>
+          <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ $t('onboarding.subtitle') }}</p>
+        </div>
+        <button @click="dismissOnboarding" class="text-sm text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition">{{ $t('onboarding.skip') }}</button>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div class="flex flex-col items-center text-center p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+          <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center mb-3">
+            <span class="text-indigo-600 dark:text-indigo-400 font-bold">1</span>
+          </div>
+          <h3 class="text-sm font-medium mb-1">{{ $t('onboarding.step1_title') }}</h3>
+          <p class="text-xs text-gray-600 dark:text-gray-400">{{ $t('onboarding.step1_desc') }}</p>
+        </div>
+        <div class="flex flex-col items-center text-center p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+          <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center mb-3">
+            <span class="text-indigo-600 dark:text-indigo-400 font-bold">2</span>
+          </div>
+          <h3 class="text-sm font-medium mb-1">{{ $t('onboarding.step2_title') }}</h3>
+          <p class="text-xs text-gray-600 dark:text-gray-400">{{ $t('onboarding.step2_desc') }}</p>
+        </div>
+        <div class="flex flex-col items-center text-center p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+          <div class="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center mb-3">
+            <span class="text-indigo-600 dark:text-indigo-400 font-bold">3</span>
+          </div>
+          <h3 class="text-sm font-medium mb-1">{{ $t('onboarding.step3_title') }}</h3>
+          <p class="text-xs text-gray-600 dark:text-gray-400">{{ $t('onboarding.step3_desc') }}</p>
+        </div>
+      </div>
+
+      <div class="flex justify-center">
+        <a href="/transactions" class="px-5 py-2.5 text-sm font-medium bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg transition">{{ $t('onboarding.cta') }}</a>
+      </div>
+    </section>
+
     <div class="flex items-center justify-between">
       <div>
         <h2 class="text-xl font-semibold">{{ $t('dashboard.title') }}</h2>

@@ -175,6 +175,18 @@
     "add_instrument": "Add Instrument",
     "net_value_label": "Net Value"
   },
+  "onboarding": {
+    "welcome": "Welcome to YAPT",
+    "subtitle": "Get started in 3 simple steps to track your portfolio performance.",
+    "skip": "Skip",
+    "step1_title": "Configure instruments",
+    "step1_desc": "Add your ETFs, stocks, bonds with their tickers in the config file or via the transaction form.",
+    "step2_title": "Add transactions",
+    "step2_desc": "Record your buys, sells, dividends and coupons. You can add them one by one or import a CSV.",
+    "step3_title": "Explore your portfolio",
+    "step3_desc": "See returns, allocation, performance charts, risk metrics and rebalancing suggestions.",
+    "cta": "Add your first transaction"
+  },
   "methodology": {
     "title": "Methodology",
     "subtitle": "How every metric is calculated — formulas, assumptions, and data sources",

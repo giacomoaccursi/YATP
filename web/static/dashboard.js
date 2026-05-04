@@ -23,6 +23,7 @@ const { createApp, ref, onMounted, onUnmounted, nextTick } = Vue;
     const valueChart = ref(null);
     const incomeChart = ref(null);
     const incomeMonths = ref([]);
+    const showOnboarding = ref(false);
     let allocChartInstance = null;
     let classChartInstance = null;
     let valueChartInstance = null;
@@ -135,6 +136,11 @@ const { createApp, ref, onMounted, onUnmounted, nextTick } = Vue;
         // Offline data always available
         offline.value = data.offline;
 
+        // Show onboarding if no transactions and not dismissed
+        if (data.offline && data.offline.transaction_count === 0 && !localStorage.getItem('onboarding_dismissed')) {
+          showOnboarding.value = true;
+        }
+
         // Market data may be null
         summary.value = data.summary;
         dailyChange.value = data.daily_change;
@@ -190,6 +196,11 @@ const { createApp, ref, onMounted, onUnmounted, nextTick } = Vue;
       nextTick(reRenderAll);
     }
 
+    function dismissOnboarding() {
+      localStorage.setItem('onboarding_dismissed', '1');
+      showOnboarding.value = false;
+    }
+
     onMounted(function () {
       fetchData();
       window.addEventListener('themechange', onThemeChange);
@@ -198,7 +209,7 @@ const { createApp, ref, onMounted, onUnmounted, nextTick } = Vue;
 
     return {
       loading, historyLoading, historyError, marketError, failedInstruments,
-      summary, offline, dailyChange, incomeMonths,
+      summary, offline, dailyChange, incomeMonths, showOnboarding, dismissOnboarding,
       allocChart, classChart, valueChart, incomeChart,
       fmt, fmtSigned, pnlColor,
     };
