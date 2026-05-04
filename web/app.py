@@ -5,6 +5,7 @@ import threading
 import os
 from flask import Flask, send_from_directory
 from web.api import register_api_routes
+from web.errors import register_error_handlers
 
 
 def create_app(config_path, transactions_path):
@@ -43,6 +44,7 @@ def create_app(config_path, transactions_path):
         return send_from_directory(templates_dir, "transactions.html")
 
     register_api_routes(app)
+    register_error_handlers(app)
     return app
 
 

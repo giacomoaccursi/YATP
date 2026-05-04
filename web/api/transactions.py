@@ -5,6 +5,7 @@ import os
 import pandas as pd
 from flask import Blueprint, jsonify, request, current_app
 
+from web.errors import ValidationError, APIError
 from web.cache import invalidate_transaction_cache
 from web.transaction_service import (
     load_summary_data, load_income_history, simulate_sell, compute_net_transaction_value,
@@ -47,7 +48,7 @@ def api_simulate_sell():
         security, shares,
     )
     if result is None:
-        return jsonify({"error": "Invalid instrument, not enough shares, or no market data"}), 400
+        raise ValidationError("Invalid instrument, not enough shares, or no market data")
     return jsonify(sell_simulation_to_dict(result))
 
 
@@ -82,7 +83,7 @@ def api_add_transaction():
     required = ["date", "type", "security"]
     missing = [field for field in required if not data.get(field)]
     if missing:
-        return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
+        raise ValidationError(f"Missing fields: {', '.join(missing)}")
 
     row = {
         "Date": data["date"] + " 00:00:00",
@@ -107,7 +108,7 @@ def api_add_transaction():
                 writer.writeheader()
             writer.writerow(row)
     except OSError as e:
-        return jsonify({"error": f"Failed to write transaction: {e}"}), 500
+        raise APIError(f"Failed to write transaction: {e}", code="IO_ERROR", status=500)
 
     invalidate_transaction_cache()
     return jsonify({"success": True})
@@ -120,16 +121,16 @@ def api_update_transaction(row_index):
     try:
         df = pd.read_csv(csv_path)
     except Exception as e:
-        return jsonify({"error": f"Failed to read transactions: {e}"}), 500
+        raise APIError(f"Failed to read transactions: {e}", code="IO_ERROR", status=500)
 
     if row_index < 0 or row_index >= len(df):
-        return jsonify({"error": "Invalid row index"}), 400
+        raise ValidationError("Invalid row index")
 
     data = request.get_json()
     required = ["date", "type", "security"]
     missing = [field for field in required if not data.get(field)]
     if missing:
-        return jsonify({"error": f"Missing fields: {', '.join(missing)}"}), 400
+        raise ValidationError(f"Missing fields: {', '.join(missing)}")
 
     df.at[row_index, "Date"] = data["date"] + " 00:00:00"
     df.at[row_index, "Type"] = data["type"]
@@ -145,7 +146,7 @@ def api_update_transaction(row_index):
     try:
         df.to_csv(csv_path, index=False)
     except OSError as e:
-        return jsonify({"error": f"Failed to save transaction: {e}"}), 500
+        raise APIError(f"Failed to save transaction: {e}", code="IO_ERROR", status=500)
     invalidate_transaction_cache()
     return jsonify({"success": True})
 
@@ -157,14 +158,14 @@ def api_delete_transaction(row_index):
     try:
         df = pd.read_csv(csv_path)
     except Exception as e:
-        return jsonify({"error": f"Failed to read transactions: {e}"}), 500
+        raise APIError(f"Failed to read transactions: {e}", code="IO_ERROR", status=500)
 
     if row_index < 0 or row_index >= len(df):
-        return jsonify({"error": "Invalid row index"}), 400
+        raise ValidationError("Invalid row index")
     df = df.drop(index=row_index).reset_index(drop=True)
     try:
         df.to_csv(csv_path, index=False)
     except OSError as e:
-        return jsonify({"error": f"Failed to save transaction: {e}"}), 500
+        raise APIError(f"Failed to save transaction: {e}", code="IO_ERROR", status=500)
     invalidate_transaction_cache()
     return jsonify({"success": True})

@@ -2,6 +2,7 @@
 
 from flask import Blueprint, jsonify, request, current_app
 
+from web.errors import ValidationError, ConflictError, NotFoundError
 from web.cache import clear_all_caches, get_price_fetch_time
 from web.portfolio_service import load_portfolio_data, load_offline_summary
 from web.history_service import load_portfolio_daily_change, load_instrument_history
@@ -66,13 +67,13 @@ def api_add_instrument():
     isin = (data.get("isin") or "").strip() or None
 
     if not security or not ticker:
-        return jsonify({"error": "Security name and ticker are required"}), 400
+        raise ValidationError("Security name and ticker are required")
 
     added = add_instrument_to_config(
         current_app.config["CONFIG_PATH"], security, ticker, instrument_type, capital_gains_rate, isin=isin,
     )
     if not added:
-        return jsonify({"error": "Instrument already exists"}), 409
+        raise ConflictError("Instrument already exists")
 
     clear_all_caches()
     return jsonify({"success": True})
@@ -85,7 +86,7 @@ def api_instrument_history(security):
         current_app.config["CONFIG_PATH"], current_app.config["TRANSACTIONS_PATH"], security
     )
     if data is None:
-        return jsonify({"error": "Instrument not found"}), 404
+        raise NotFoundError("Instrument not found")
     return jsonify(data)
 
 
