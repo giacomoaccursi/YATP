@@ -54,6 +54,10 @@ def create_app(config_path, transactions_path):
     def transactions_page():
         return send_from_directory(templates_dir, "transactions.html")
 
+    @app.route("/methodology")
+    def methodology_page():
+        return send_from_directory(templates_dir, "methodology.html")
+
     register_api_routes(app)
     register_error_handlers(app)
     return app
