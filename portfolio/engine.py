@@ -293,14 +293,23 @@ class PortfolioEngine:
     # ── Single metrics ──
 
     def daily_change(self):
-        """Portfolio value change from previous day. Returns dict or None."""
+        """Portfolio value change from previous day (market movement only). Returns dict or None."""
         if len(self._dates) < 2:
             return None
         previous_value = self._values[-2]
         current_value = self._values[-1]
         if previous_value <= 0:
             return None
-        change_amount = current_value - previous_value
+        # Subtract net new money added today to show only market movement
+        net_new_today = self._invested_list[-1] - self._invested_list[-2]
+        # Also account for sells (which reduce invested but add cash)
+        # Use: market change = current_value - previous_value - net_new_money
+        # net_new_money = buys - sells on the last day
+        from portfolio.portfolio import get_net_new_money_between
+        last_date = self._dates[-1]
+        prev_date = self._dates[-2]
+        net_new = get_net_new_money_between(prev_date, last_date, self._df)
+        change_amount = current_value - previous_value - net_new
         change_pct = calc_simple_return(change_amount, previous_value)
         return {"amount": round(change_amount, 2), "pct": round(change_pct, 2)}
 
