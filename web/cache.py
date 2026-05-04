@@ -1,9 +1,13 @@
 """Price caching layer. In-memory caches that persist while the server is running."""
 
+import time
 import requests
 from portfolio.market import fetch_current_price, fetch_price_history, clear_bond_price_cache
 
+PRICE_CACHE_TTL = 300  # 5 minutes
+
 _price_cache = {}
+_price_cache_time = 0
 _daily_change_cache = {}
 _price_history_cache = {}
 _price_fetch_time = None
@@ -12,8 +16,13 @@ _common_cache = None
 
 
 def get_cached_price(ticker, isin=None, instrument_type=None):
-    """Fetch current price with in-memory caching."""
-    global _price_fetch_time
+    """Fetch current price with in-memory caching. Expires after PRICE_CACHE_TTL seconds."""
+    global _price_fetch_time, _price_cache_time
+    if time.time() - _price_cache_time > PRICE_CACHE_TTL:
+        _price_cache.clear()
+        _daily_change_cache.clear()
+        _price_cache_time = time.time()
+        _price_fetch_time = None
     if ticker not in _price_cache:
         _price_cache[ticker] = fetch_current_price(ticker, isin=isin, instrument_type=instrument_type)
         if _price_fetch_time is None:
