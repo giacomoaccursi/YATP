@@ -1,4 +1,4 @@
-# Simple Portfolio Tracker
+# YAPT
 
 Personal portfolio tracker that calculates returns, P&L, tax estimates and allocation breakdowns from a CSV of financial transactions.
 

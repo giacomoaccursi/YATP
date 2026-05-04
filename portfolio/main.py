@@ -1,4 +1,4 @@
-"""Simple Portfolio Tracker"""
+"""YAPT"""
 
 import argparse
 from portfolio.loader import load_config, load_transactions
@@ -14,7 +14,7 @@ from portfolio.summary import build_summary
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Simple Portfolio Tracker")
+    parser = argparse.ArgumentParser(description="YAPT")
     parser.add_argument("--transactions", default="transactions.csv", help="Transactions CSV file")
     parser.add_argument("--config", default="config.json", help="Configuration JSON file")
     parser.add_argument("--export", metavar="FILE", help="Export report to JSON")
