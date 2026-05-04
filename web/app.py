@@ -17,6 +17,17 @@ def create_app(config_path, transactions_path):
         with open(transactions_path, "w", newline="") as f:
             f.write("Date,Type,Security,Shares,Quote,Amount,Fees,Taxes,Accrued Interest,Net Transaction Value\n")
 
+    # Ensure config file exists (create with minimal structure if missing)
+    if not os.path.exists(config_path):
+        import json
+        default_config = {
+            "tax": {},
+            "target_allocation": {},
+            "instruments": {},
+        }
+        with open(config_path, "w") as f:
+            json.dump(default_config, f, indent=2)
+
     app = Flask(
         __name__,
         static_folder=os.path.join(os.path.dirname(__file__), "static"),
