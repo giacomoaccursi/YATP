@@ -25,7 +25,7 @@
 
 <div id="app" v-cloak>
 
-  <main class="max-w-6xl mx-auto px-6 py-8 space-y-8">
+  <main class="max-w-6xl mx-auto px-3 sm:px-6 py-4 sm:py-8 space-y-8">
 
     <div>
       <h2 class="text-xl font-semibold">{{ $t('methodology.title') }}</h2>
@@ -35,7 +35,7 @@
     <!-- Category sections -->
     <section v-for="category in categories" :key="category.key" class="space-y-4">
       <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wider">{{ category.label }}</h3>
-      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <div v-for="metric in category.metrics" :key="metric.key"
              class="metric-card bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5"
              @click="openMetric(metric)">

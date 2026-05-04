@@ -35,7 +35,7 @@
     <div class="text-gray-600 dark:text-gray-400">{{ $t('dashboard.loading') }}</div>
   </div>
 
-  <main v-else class="max-w-7xl mx-auto px-6 py-8 space-y-6">
+  <main v-else class="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-8 space-y-6">
 
     <div class="flex items-center justify-between">
       <div>
@@ -65,7 +65,7 @@
     </div>
 
     <!-- Overview Cards -->
-    <section class="grid grid-cols-2 md:grid-cols-5 gap-4">
+    <section class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
       <!-- Invested -->
       <div class="bg-white dark:bg-[#1a1f2e] rounded-xl p-5 border border-gray-200 dark:border-gray-700 card-accent-blue" data-info="cost-basis">
         <div class="text-xs text-gray-600 dark:text-gray-400 uppercase tracking-wide">{{ $t('dashboard.invested') }}</div>
@@ -142,7 +142,7 @@
     </section>
 
     <!-- Allocation Charts -->
-    <section v-if="summary" class="grid md:grid-cols-2 gap-4">
+    <section v-if="summary" class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5">
         <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4">{{ $t('dashboard.allocation_instrument') }}</h3>
         <div style="height: 220px;"><canvas ref="allocChart"></canvas></div>

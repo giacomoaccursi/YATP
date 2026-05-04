@@ -32,7 +32,7 @@
     <div class="text-gray-600 dark:text-gray-400">{{ $t('rebalance.loading') }}</div>
   </div>
 
-  <main v-else class="max-w-7xl mx-auto px-6 py-8 space-y-6">
+  <main v-else class="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-8 space-y-6">
 
     <div>
       <h2 class="text-xl font-semibold">{{ $t('rebalance.title') }}</h2>
@@ -66,7 +66,7 @@
       </div>
     </section>
 
-    <section class="grid md:grid-cols-2 gap-4">
+    <section class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <div class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5">
         <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4">{{ $t('rebalance.current_allocation') }}</h3>
         <div style="height: 220px;"><canvas ref="currentChart"></canvas></div>

@@ -36,7 +36,7 @@
     <div class="text-gray-600 dark:text-gray-400">{{ $t('instruments.loading') }}</div>
   </div>
 
-  <main v-else class="max-w-screen-2xl mx-auto px-6 py-8 space-y-6">
+  <main v-else class="max-w-screen-2xl mx-auto px-3 sm:px-6 py-4 sm:py-8 space-y-6">
 
     <div>
       <h2 class="text-xl font-semibold">{{ $t('instruments.title') }}</h2>
@@ -44,7 +44,7 @@
     </div>
 
     <section class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 overflow-visible">
-      <div class="overflow-visible">
+      <div class="overflow-x-auto">
         <table class="w-full text-sm whitespace-nowrap">
           <thead class="text-xs text-gray-800 dark:text-gray-200 uppercase tracking-wider bg-gray-100 dark:bg-gray-800 border-b-2 border-indigo-500/20">
             <tr>
@@ -103,7 +103,7 @@
 
       <div v-if="detailLoading" class="text-center py-8 text-gray-600 dark:text-gray-400">{{ $t('instruments.loading_chart') }}</div>
 
-      <div v-else class="grid md:grid-cols-2 gap-4">
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="bg-white dark:bg-[#1a1f2e] rounded-xl border border-gray-200 dark:border-gray-700 p-5">
           <h3 class="text-sm font-medium text-gray-600 dark:text-gray-400 mb-4">{{ $t('instruments.price_vs_avg') }}</h3>
           <canvas ref="priceChart" height="180"></canvas>
