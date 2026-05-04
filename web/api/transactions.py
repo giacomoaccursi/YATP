@@ -96,13 +96,30 @@ def api_add_transaction():
 
     csv_path = get_paths()[1]
     file_exists = os.path.exists(csv_path)
+    full_fieldnames = list(row.keys())
 
     try:
-        with open(csv_path, "a", newline="") as f:
-            writer = csv.DictWriter(f, fieldnames=row.keys())
-            if not file_exists:
+        if file_exists:
+            # Read existing file, add missing columns if needed
+            with open(csv_path, "r") as f:
+                existing_header = [col.strip() for col in f.readline().strip().split(",")]
+            new_columns = [col for col in full_fieldnames if col not in existing_header]
+            if new_columns:
+                # Rewrite file with expanded header
+                import pandas as pd
+                df = pd.read_csv(csv_path)
+                for col in new_columns:
+                    df[col] = ""
+                df.to_csv(csv_path, index=False)
+                existing_header = existing_header + new_columns
+            with open(csv_path, "a", newline="") as f:
+                writer = csv.DictWriter(f, fieldnames=existing_header)
+                writer.writerow({k: row.get(k, "") for k in existing_header})
+        else:
+            with open(csv_path, "w", newline="") as f:
+                writer = csv.DictWriter(f, fieldnames=full_fieldnames)
                 writer.writeheader()
-            writer.writerow(row)
+                writer.writerow(row)
     except OSError as e:
         raise APIError(f"Failed to write transaction: {e}", code="IO_ERROR", status=500)
 
