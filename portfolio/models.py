@@ -77,3 +77,28 @@ class RebalanceAction:
     current_value: float
     target_value: float
     difference: float
+
+
+@dataclass
+class OfflineSummary:
+    """Portfolio summary from CSV only (no market data)."""
+    cost_basis: float
+    transaction_count: int
+    total_income: float
+    instruments_count: int
+
+
+@dataclass
+class SellSimulation:
+    """Result of a sell simulation."""
+    security: str
+    shares_to_sell: float
+    shares_held: float
+    current_price: float
+    avg_cost_per_share: float
+    gross_proceeds: float
+    cost_of_sold: float
+    gain: float
+    capital_gains_rate: float
+    estimated_tax: float
+    net_proceeds: float

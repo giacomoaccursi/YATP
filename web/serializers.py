@@ -95,6 +95,33 @@ def rebalance_to_dict(action):
     }
 
 
+def offline_summary_to_dict(summary):
+    """Convert OfflineSummary to API response dict."""
+    return {
+        "cost_basis": summary.cost_basis,
+        "transaction_count": summary.transaction_count,
+        "total_income": summary.total_income,
+        "instruments_count": summary.instruments_count,
+    }
+
+
+def sell_simulation_to_dict(simulation):
+    """Convert SellSimulation to API response dict."""
+    return {
+        "security": simulation.security,
+        "shares_to_sell": simulation.shares_to_sell,
+        "shares_held": simulation.shares_held,
+        "current_price": simulation.current_price,
+        "avg_cost_per_share": simulation.avg_cost_per_share,
+        "gross_proceeds": simulation.gross_proceeds,
+        "cost_of_sold": simulation.cost_of_sold,
+        "gain": simulation.gain,
+        "capital_gains_rate": simulation.capital_gains_rate,
+        "estimated_tax": simulation.estimated_tax,
+        "net_proceeds": simulation.net_proceeds,
+    }
+
+
 def period_to_dict(period):
     """Convert PeriodPerformance to API response dict."""
     if not period.available:

@@ -1,6 +1,7 @@
 """Rebalance service: current allocation vs target, simulation."""
 
 from portfolio.rebalance import calc_rebalance
+from portfolio.models import RebalanceAction
 from web.portfolio_service import load_portfolio_data
 
 
@@ -38,13 +39,13 @@ def simulate_rebalance(config_path, transactions_path, new_investment, custom_ta
         current_weight = (current_value / total_value) * 100 if total_value > 0 else 0
         target_weight = custom_targets.get(asset_class_name, 0)
         target_value = total_value * (target_weight / 100)
-        actions.append({
-            "asset_class": asset_class_name,
-            "current_value": round(current_value, 2),
-            "current_weight": round(current_weight, 2),
-            "target_weight": round(target_weight, 2),
-            "target_value": round(target_value, 2),
-            "difference": round(target_value - current_value, 2),
-        })
+        actions.append(RebalanceAction(
+            asset_class=asset_class_name,
+            current_value=round(current_value, 2),
+            current_weight=round(current_weight, 2),
+            target_weight=round(target_weight, 2),
+            target_value=round(target_value, 2),
+            difference=round(target_value - current_value, 2),
+        ))
 
     return actions

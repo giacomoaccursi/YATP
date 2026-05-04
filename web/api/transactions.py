@@ -9,7 +9,7 @@ from web.cache import invalidate_transaction_cache
 from web.transaction_service import (
     load_summary_data, load_income_history, simulate_sell, compute_net_transaction_value,
 )
-from web.serializers import transaction_row_to_dict, instrument_summary_to_dict
+from web.serializers import transaction_row_to_dict, instrument_summary_to_dict, sell_simulation_to_dict
 from portfolio.loader import load_transactions
 
 transactions_bp = Blueprint("transactions", __name__)
@@ -48,7 +48,7 @@ def api_simulate_sell():
     )
     if result is None:
         return jsonify({"error": "Invalid instrument, not enough shares, or no market data"}), 400
-    return jsonify(result)
+    return jsonify(sell_simulation_to_dict(result))
 
 
 @transactions_bp.route("/api/transactions/net-value", methods=["POST"])

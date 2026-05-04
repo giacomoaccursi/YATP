@@ -629,11 +629,11 @@ class TestSimulateRebalance:
         actions = simulate_rebalance("c.json", "t.csv", 500, {"ETF": 100})
 
         assert len(actions) == 1
-        assert actions[0]["asset_class"] == "ETF"
-        assert actions[0]["current_value"] == 1000.0
+        assert actions[0].asset_class == "ETF"
+        assert actions[0].current_value == 1000.0
         # Total = 1000 + 500 = 1500, target 100% = 1500
-        assert actions[0]["target_value"] == 1500.0
-        assert actions[0]["difference"] == 500.0
+        assert actions[0].target_value == 1500.0
+        assert actions[0].difference == 500.0
 
     @patch("web.rebalance_service.load_portfolio_data")
     def test_empty_portfolio(self, mock_load):
@@ -657,14 +657,14 @@ class TestSimulateSell:
         result = simulate_sell("c.json", "t.csv", "ETF_A", 5)
 
         assert result is not None
-        assert result["shares_to_sell"] == 5
-        assert result["current_price"] == 120.0
-        assert result["avg_cost_per_share"] == 100.0
-        assert result["gross_proceeds"] == 600.0
-        assert result["cost_of_sold"] == 500.0
-        assert result["gain"] == 100.0
-        assert result["estimated_tax"] == 26.0
-        assert result["net_proceeds"] == 574.0
+        assert result.shares_to_sell == 5
+        assert result.current_price == 120.0
+        assert result.avg_cost_per_share == 100.0
+        assert result.gross_proceeds == 600.0
+        assert result.cost_of_sold == 500.0
+        assert result.gain == 100.0
+        assert result.estimated_tax == 26.0
+        assert result.net_proceeds == 574.0
 
     @patch("web.transaction_service.get_cached_price")
     @patch("web.transaction_service.load_transactions")
@@ -676,9 +676,9 @@ class TestSimulateSell:
 
         result = simulate_sell("c.json", "t.csv", "ETF_A", 5)
 
-        assert result["gain"] == -100.0
-        assert result["estimated_tax"] == 0.0
-        assert result["net_proceeds"] == 400.0
+        assert result.gain == -100.0
+        assert result.estimated_tax == 0.0
+        assert result.net_proceeds == 400.0
 
     @patch("web.transaction_service.get_cached_price")
     @patch("web.transaction_service.load_transactions")

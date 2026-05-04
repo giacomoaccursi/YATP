@@ -5,7 +5,7 @@ import pandas as pd
 from portfolio.loader import load_config, load_transactions
 from portfolio.portfolio import build_portfolio
 from portfolio.analysis import analyze_instrument, analyze_portfolio
-from portfolio.models import InstrumentResult
+from portfolio.models import InstrumentResult, OfflineSummary
 from web.cache import get_cached_price, get_cached_daily_change, get_cached_price_history, get_common_cache, set_common_cache
 
 
@@ -83,16 +83,16 @@ def load_offline_summary(config_path, transactions_path):
     df = load_transactions(transactions_path)
 
     if df.empty:
-        return {"cost_basis": 0, "transaction_count": 0, "total_income": 0, "instruments_count": 0}
+        return OfflineSummary(cost_basis=0, transaction_count=0, total_income=0, instruments_count=0)
 
     portfolio = build_portfolio(df)
     cost_basis = sum(instrument_data.cost_basis for instrument_data in portfolio.values())
     total_income = sum(instrument_data.total_income for instrument_data in portfolio.values())
     instruments_count = sum(1 for instrument_data in portfolio.values() if instrument_data.shares_held > 0)
 
-    return {
-        "cost_basis": round(cost_basis, 2),
-        "transaction_count": len(df),
-        "total_income": round(total_income, 2),
-        "instruments_count": instruments_count,
-    }
+    return OfflineSummary(
+        cost_basis=round(cost_basis, 2),
+        transaction_count=len(df),
+        total_income=round(total_income, 2),
+        instruments_count=instruments_count,
+    )

@@ -6,7 +6,7 @@ from web.cache import clear_all_caches, get_price_fetch_time
 from web.portfolio_service import load_portfolio_data, load_offline_summary
 from web.history_service import load_portfolio_daily_change, load_instrument_history
 from web.transaction_service import load_instrument_names, add_instrument_to_config
-from web.serializers import instrument_to_dict, summary_to_dict
+from web.serializers import instrument_to_dict, summary_to_dict, offline_summary_to_dict
 
 portfolio_bp = Blueprint("portfolio", __name__)
 
@@ -19,7 +19,7 @@ def api_portfolio():
 
     offline = load_offline_summary(config_path, transactions_path)
     response = {
-        "offline": offline,
+        "offline": offline_summary_to_dict(offline),
         "instruments": [],
         "summary": None,
         "daily_change": None,

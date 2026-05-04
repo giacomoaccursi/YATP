@@ -27,4 +27,4 @@ def api_rebalance_simulate():
         current_app.config["CONFIG_PATH"], current_app.config["TRANSACTIONS_PATH"],
         new_investment, custom_targets,
     )
-    return jsonify({"actions": actions})
+    return jsonify({"actions": [rebalance_to_dict(a) for a in actions]})
