@@ -1,7 +1,8 @@
 """Performance API: history, periods, filtered views."""
 
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request
 
+from web.config import get_paths
 from web.history_service import (
     load_portfolio_history, load_performance_periods,
     load_instrument_performance_periods,
@@ -18,7 +19,7 @@ def api_portfolio_history():
     start_date = request.args.get("start_date")
     end_date = request.args.get("end_date")
     data = load_portfolio_history(
-        current_app.config["CONFIG_PATH"], current_app.config["TRANSACTIONS_PATH"],
+        *get_paths(),
         start_date=start_date, end_date=end_date,
     )
     return jsonify(data)
@@ -28,7 +29,7 @@ def api_portfolio_history():
 def api_instrument_periods(security):
     """Return performance metrics for standard periods for a single instrument."""
     periods = load_instrument_performance_periods(
-        current_app.config["CONFIG_PATH"], current_app.config["TRANSACTIONS_PATH"], security
+        *get_paths(), security
     )
     if not periods:
         return jsonify({"periods": []})
@@ -39,7 +40,7 @@ def api_instrument_periods(security):
 def api_performance_periods():
     """Return performance metrics for standard periods."""
     periods = load_performance_periods(
-        current_app.config["CONFIG_PATH"], current_app.config["TRANSACTIONS_PATH"]
+        *get_paths()
     )
     if not periods:
         return jsonify({"periods": []})
@@ -56,7 +57,7 @@ def api_filtered_history():
     if not securities:
         return jsonify({"dates": [], "values": [], "costs": [], "return_pcts": [], "total_return_pcts": [], "twr_pcts": [], "drawdown_pcts": []})
     result = load_filtered_history(
-        current_app.config["CONFIG_PATH"], current_app.config["TRANSACTIONS_PATH"],
+        *get_paths(),
         securities, start_date=start_date, end_date=end_date,
     )
     return jsonify(result)
@@ -70,7 +71,7 @@ def api_filtered_periods():
     if not securities:
         return jsonify({"periods": []})
     periods = load_filtered_performance_periods(
-        current_app.config["CONFIG_PATH"], current_app.config["TRANSACTIONS_PATH"], securities
+        *get_paths(), securities
     )
     if not periods:
         return jsonify({"periods": []})

@@ -1,7 +1,8 @@
 """Portfolio API: instruments, prices, refresh."""
 
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request
 
+from web.config import get_paths
 from web.errors import ValidationError, ConflictError, NotFoundError
 from web.cache import clear_all_caches, get_price_fetch_time
 from web.portfolio_service import load_portfolio_data, load_offline_summary
@@ -16,8 +17,7 @@ portfolio_bp = Blueprint("portfolio", __name__)
 @portfolio_bp.route("/api/portfolio")
 def api_portfolio():
     """Return full portfolio data. Always returns offline data; market data when available."""
-    config_path = current_app.config["CONFIG_PATH"]
-    transactions_path = current_app.config["TRANSACTIONS_PATH"]
+    config_path, transactions_path = get_paths()
 
     offline = load_offline_summary(config_path, transactions_path)
     response = {
@@ -50,7 +50,8 @@ def api_portfolio():
 @portfolio_bp.route("/api/instruments")
 def api_instruments():
     """Return list of configured instruments with their types."""
-    instrument_types = load_instrument_names(current_app.config["CONFIG_PATH"])
+    config_path, _ = get_paths()
+    instrument_types = load_instrument_names(config_path)
     return jsonify({
         "instruments": list(instrument_types.keys()),
         "instrument_types": instrument_types,
@@ -60,10 +61,11 @@ def api_instruments():
 @portfolio_bp.route("/api/instruments", methods=["POST"])
 def api_add_instrument():
     """Add a new instrument to the config."""
+    config_path, _ = get_paths()
     cleaned = validate_instrument_input(request.get_json())
 
     added = add_instrument_to_config(
-        current_app.config["CONFIG_PATH"],
+        config_path,
         cleaned["security"], cleaned["ticker"], cleaned["type"],
         cleaned["capital_gains_rate"], isin=cleaned["isin"],
     )
@@ -78,7 +80,7 @@ def api_add_instrument():
 def api_instrument_history(security):
     """Return price history and cost basis evolution for a single instrument."""
     data = load_instrument_history(
-        current_app.config["CONFIG_PATH"], current_app.config["TRANSACTIONS_PATH"], security
+        *get_paths(), security
     )
     if data is None:
         raise NotFoundError("Instrument not found")

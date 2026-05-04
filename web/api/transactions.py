@@ -3,10 +3,11 @@
 import csv
 import os
 import pandas as pd
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request
 
 from web.errors import ValidationError, APIError
 from web.cache import invalidate_transaction_cache
+from web.config import get_paths
 from web.transaction_service import (
     load_summary_data, load_income_history, simulate_sell, compute_net_transaction_value,
 )
@@ -20,7 +21,7 @@ transactions_bp = Blueprint("transactions", __name__)
 @transactions_bp.route("/api/summary")
 def api_summary():
     """Return transaction summary (no market data needed)."""
-    summary = load_summary_data(current_app.config["TRANSACTIONS_PATH"])
+    summary = load_summary_data(get_paths()[1])
     return jsonify({
         "total_transactions": summary.total_transactions,
         "total_invested": summary.total_invested,
@@ -34,7 +35,7 @@ def api_summary():
 @transactions_bp.route("/api/income/history")
 def api_income_history():
     """Return monthly income (dividends + coupons)."""
-    data = load_income_history(current_app.config["TRANSACTIONS_PATH"])
+    data = load_income_history(get_paths()[1])
     return jsonify({"months": data})
 
 
@@ -43,7 +44,7 @@ def api_simulate_sell():
     """Simulate selling shares of an instrument."""
     security, shares = validate_sell_simulation_input(request.get_json())
     result = simulate_sell(
-        current_app.config["CONFIG_PATH"], current_app.config["TRANSACTIONS_PATH"],
+        *get_paths(),
         security, shares,
     )
     if result is None:
@@ -68,7 +69,7 @@ def api_net_value():
 @transactions_bp.route("/api/transactions/list")
 def api_transactions_list():
     """Return all transactions from the CSV with row index."""
-    df = load_transactions(current_app.config["TRANSACTIONS_PATH"])
+    df = load_transactions(get_paths()[1])
     df = df.sort_values("Date", ascending=False)
     return jsonify({
         "transactions": [transaction_row_to_dict(idx, row) for idx, row in df.iterrows()],
@@ -93,7 +94,7 @@ def api_add_transaction():
         "Net Transaction Value": cleaned["net_transaction_value"],
     }
 
-    csv_path = current_app.config["TRANSACTIONS_PATH"]
+    csv_path = get_paths()[1]
     file_exists = os.path.exists(csv_path)
 
     try:
@@ -112,7 +113,7 @@ def api_add_transaction():
 @transactions_bp.route("/api/transactions/<int:row_index>", methods=["PUT"])
 def api_update_transaction(row_index):
     """Update a transaction by its row index."""
-    csv_path = current_app.config["TRANSACTIONS_PATH"]
+    csv_path = get_paths()[1]
     try:
         df = pd.read_csv(csv_path)
     except Exception as e:
@@ -149,7 +150,7 @@ def api_update_transaction(row_index):
 @transactions_bp.route("/api/transactions/<int:row_index>", methods=["DELETE"])
 def api_delete_transaction(row_index):
     """Delete a transaction by its row index."""
-    csv_path = current_app.config["TRANSACTIONS_PATH"]
+    csv_path = get_paths()[1]
     try:
         df = pd.read_csv(csv_path)
     except Exception as e:
