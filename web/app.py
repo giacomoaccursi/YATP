@@ -12,6 +12,11 @@ def create_app(config_path, transactions_path):
     """Create and configure the Flask app."""
     import logging
 
+    # Ensure transactions file exists (create with header if missing)
+    if not os.path.exists(transactions_path):
+        with open(transactions_path, "w", newline="") as f:
+            f.write("Date,Type,Security,Shares,Quote,Amount,Fees,Taxes,Accrued Interest,Net Transaction Value\n")
+
     app = Flask(
         __name__,
         static_folder=os.path.join(os.path.dirname(__file__), "static"),
